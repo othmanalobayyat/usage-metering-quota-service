@@ -234,10 +234,10 @@ Use one response shape everywhere:
 
 ### Phase 0 — Scaffold (October 15)
 
-- [ ] `config.ts` validates environment variables with Zod and fails fast if `DATABASE_URL` is missing.
-- [ ] `app.ts` exports an app factory; `server.ts` calls `listen` (Supertest needs the factory).
-- [ ] `GET /healthz` checks the DB connection, not just the process.
-- [ ] Dockerfile + Compose with PostgreSQL (`postgres:16`) health check; service uses `depends_on: condition: service_healthy`.
+- [x] `config.ts` validates environment variables with Zod and fails fast if `DATABASE_URL` is missing.
+- [x] `app.ts` exports an app factory; `server.ts` calls `listen` (Supertest needs the factory).
+- [x] `GET /healthz` checks the DB connection, not just the process.
+- [x] Dockerfile + Compose with PostgreSQL (`postgres:16`) health check; service uses `depends_on: condition: service_healthy`.
 
 **Defend it:** Why split `app.ts` from `server.ts`?
 
