@@ -32,11 +32,11 @@ Planned stack: TypeScript, Express, Drizzle ORM, PostgreSQL, Zod, Vitest + Super
 
 - Auth: `X-API-Key` header on everything except `POST /accounts` and `/healthz`. Keys are `mk_` + 32 random bytes, stored as a **SHA-256** hash (not bcrypt, because bcrypt on every request would hurt load-test performance).
 - Every query filters by `account_id`; never fetch by ID alone. Another account's resource returns **404**, not 403, so existence isn't leaked.
-- Users are addressed by `externalUserId` in URLs. `requestId` is scoped per account.
+- Users are addressed by `externalUserId` everywhere in the API (URLs, `/consume` body, `/requests` query). `requestId` is scoped per account.
 - A quota rejection is a business decision: **HTTP 200** with `status: "REJECTED"`, `reasonCode`, `rejectedBy` (`ACCOUNT`/`USER`), `limit`, and `remaining`. It is not an error code.
 - Replays return the stored original snapshot with `replayed: true`. The same `requestId` with different input returns 409 `IDEMPOTENCY_CONFLICT`.
 - One error shape, `{ error: { code, message } }`, with codes defined in a single const file (table in PLAN.md §4). A 500 never exposes details.
-- One shared plan-assignment guard for accounts and users: the plan type must match the target, and the plan must be predefined or owned by this account. No FK can enforce the ownership rule, so the guard is the only enforcement.
+- One shared plan-assignment guard for accounts and users, checked in this order: (1) the plan exists and is predefined or owned by this account, else 404; (2) the plan type matches the target, else 400. No FK can enforce the ownership rule, so the guard is the only enforcement.
 - Predefined plans are read-only (PATCH → 403). Custom plans cannot be deleted.
 - A DB CHECK on `requests` ties `status` to the nullability of `reason_code`/`rejected_by`/`limit_value`.
 - Usage reads never create rows; a missing month row means 0 consumed. History uses cursor pagination on `(created_at, id)`, never offset.

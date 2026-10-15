@@ -60,6 +60,7 @@ Nothing is ever deleted, so every foreign key uses the default `NO ACTION`.
 
 - `UNIQUE (account_id, external_user_id)`: the lookup key for every user route. A violation returns `ALREADY_EXISTS`. The same external ID can exist under different accounts.
 - `UNIQUE (account_id, id)`: lets `user_usage` and `requests` use composite FKs, so a usage or request row can never point at another account's user.
+- Index `(account_id, created_at, id)`: supports `GET /users` cursor pagination.
 
 ### `account_usage`
 
@@ -115,7 +116,7 @@ One row per decision, accepted or rejected. A replay is answered entirely from t
 
 ### Rules No Foreign Key Can Enforce
 
-These are enforced by the shared plan-assignment guard (Phase 2) on account creation, user registration, and both plan switches:
+These are enforced by the shared plan-assignment guard (Phase 2) on user registration and both plan switches:
 
 1. An account's `plan_id` must reference a plan with `type = 'ACCOUNT'`.
 2. A user's `plan_id` must reference a plan with `type = 'USER'`.
@@ -145,26 +146,26 @@ For every `(account_id, month)`: `account_usage.units_used = SUM(user_usage.unit
 
 The `X-API-Key` header is required on every endpoint except account creation and health checks.
 
-Users are addressed by `external_user_id` in URLs.
+Users are addressed by `externalUserId` everywhere in the API: URLs, the `/consume` body, and the `/requests` query. Internal user UUIDs never appear in the API.
 
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/healthz` | Liveness + DB check |
 | POST | `/accounts` | Create account, returns plaintext API key **once** (defaults to Starter) |
-| GET | `/account` | Account info, current plan, current month usage |
+| GET | `/account` | Account info, current plan (incl. `monthlyLimit`, `perRequestLimit`), current month usage |
 | PUT | `/account/plan` | Switch account plan `{ planId }` |
 | GET | `/plans` | Predefined + this account's custom plans (`?type=ACCOUNT\|USER`) |
 | GET | `/plans/:id` | One plan (404 if another account's custom plan) |
 | POST | `/plans` | Create custom plan |
 | PATCH | `/plans/:id` | Update own custom plan (403 for predefined) |
 | POST | `/users` | Register user `{ externalUserId, name?, planId? }` (defaults to Basic) |
-| GET | `/users` | List users (paginated) |
-| GET | `/users/:externalUserId` | User + plan + current usage |
+| GET | `/users?limit=&cursor=` | List users, cursor pagination on `(created_at, id)` like history |
+| GET | `/users/:externalUserId` | User + plan (incl. `monthlyLimit`, `perRequestLimit`) + current usage |
 | PUT | `/users/:externalUserId/plan` | Switch user plan |
-| POST | `/consume` | `{ userId, units, requestId }` → decision |
+| POST | `/consume` | `{ externalUserId, units, requestId }` → decision |
 | GET | `/usage?month=YYYY-MM` | Account consumed/remaining for a month |
 | GET | `/users/:externalUserId/usage?month=YYYY-MM` | User consumed/remaining |
-| GET | `/requests?userId=&month=&limit=&cursor=` | Request history, newest first |
+| GET | `/requests?externalUserId=&month=&limit=&cursor=` | Request history, newest first (unknown `externalUserId` → 404) |
 
 ### Consume Response
 
@@ -189,6 +190,7 @@ Example response:
 
 Rules:
 
+- Accepted responses always include `reasonCode`, `rejectedBy`, and `limit`, set to `null`.
 - `remaining` represents allowances **after the original decision**.
 - A retried `requestId` returns the stored response with `replayed: true`.
 - Replayed values represent the original snapshot, not current balances.
@@ -226,20 +228,20 @@ Use one response shape everywhere:
 - Rejections return 200 with `status: "REJECTED"`.
 - `requestId` is scoped per account.
 - Custom plans cannot be deleted (avoids orphaned assignments).
-- Account creation is unauthenticated (or behind an `ADMIN_TOKEN`).
+- Account creation is unauthenticated.
 - New accounts default to Starter, new users to Basic.
 - Cross-account access returns 404.
 
-### Phase 0 — Scaffold (October 14)
+### Phase 0 — Scaffold (October 15)
 
 - [ ] `config.ts` validates environment variables with Zod and fails fast if `DATABASE_URL` is missing.
 - [ ] `app.ts` exports an app factory; `server.ts` calls `listen` (Supertest needs the factory).
 - [ ] `GET /healthz` checks the DB connection, not just the process.
-- [ ] Dockerfile + Compose with PostgreSQL health check; service uses `depends_on: condition: service_healthy`.
+- [ ] Dockerfile + Compose with PostgreSQL (`postgres:16`) health check; service uses `depends_on: condition: service_healthy`.
 
 **Defend it:** Why split `app.ts` from `server.ts`?
 
-### Phase 1 — Data Layer + Seed (October 14)
+### Phase 1 — Data Layer + Seed (October 15)
 
 - [ ] Drizzle schema matching Section 3; generate migrations.
 - [ ] Container entrypoint runs migrate → seed → start.
@@ -278,28 +280,34 @@ CHECK (
 - What happens if the seed runs twice?
 - `Accounts.plan_id` and `Plans.account_id` point at each other. Why doesn't that break inserts?
 
-### Phase 2 — Auth, Accounts, Plans, Users (October 14)
+### Phase 2 — Auth, Accounts, Plans, Users (October 16)
 
 - [ ] API keys: 32 random bytes, `mk_` prefix, store **SHA-256** hash (not bcrypt: keys are high-entropy, and bcrypt per request would wreck the load test).
 - [ ] Auth middleware: hash header → look up → attach `req.account`, else 401.
 - [ ] Zod validation on every body and query.
+  - `units`, `monthlyLimit`, `perRequestLimit`: max `2147483647`.
+  - `requestId`: 1–128 characters.
 - [ ] Central error middleware with one error shape.
 - [ ] Error codes in one const file (table in Section 4). No quota code: a rejection is a decision, not an error.
-- [ ] Endpoints: accounts, account plan, plans CRUD, users CRUD, user plan switch.
-- [ ] One shared plan-assignment guard for accounts and users:
-  - Plan type matches target (rules 1, 2).
-  - Plan is predefined OR owned by this account (rule 3).
+- [ ] Endpoints: accounts, account plan, plans: create, list, get, update (no delete), users: `POST /users`, `GET /users`, `GET /users/:externalUserId`, `PUT /users/:externalUserId/plan`.
+- [ ] `GET /users`: cursor pagination on `(created_at, id)`, same as history.
+- [ ] `POST /users`: missing `planId` means use the default plan (Basic). `PUT /account/plan` and `PUT /users/:externalUserId/plan` require `planId` (missing → 400).
+- [ ] One shared plan-assignment guard for accounts and users, checked in this order:
+  1. Plan exists and is predefined OR owned by this account (rule 3), else 404.
+  2. Plan type matches target (rules 1, 2), else 400.
   - Add a comment above it: rule 3 is enforced here, not by a foreign key.
 - [ ] Every query filters by `account_id`. Nothing is fetched by ID alone.
 - [ ] Tests: missing key → 401; invalid key → 401.
 - [ ] Tests: account B gets 404 on account A's users and plans.
 - [ ] Tests: PATCH predefined plan → 403; wrong plan type → 400.
+- [ ] Tests: `PUT /users/:externalUserId/plan` and `PUT /account/plan` with another account's custom plan → 404.
+- [ ] Tests: `GET /users` cursor pagination returns pages in order with no duplicates or gaps.
 
 **Defend it:**
 - Rule 3 can't be enforced with an FK. Where is it enforced, and what's the risk?
 - Why 404 instead of 403 for another account's resources?
 
-### Phase 3 — Consume (October 15)
+### Phase 3 — Consume (October 17)
 
 The core. Write its tests the same day.
 
@@ -367,29 +375,32 @@ A consume that read the old plan and commits after the update is logically order
 - Why isn't the pre-check enough on its own?
 - A plan update commits while a consume is in flight. Which plan does the consume use, and why is that still correct?
 
-### Phase 4 — Usage + History (October 16)
+### Phase 4 — Usage + History (October 18)
 
 - [ ] Usage endpoints: missing month row = 0 consumed; never create rows on read.
 - [ ] History: cursor pagination on `(created_at, id)`.
-- [ ] Index `(account_id, month, created_at DESC)` if history filters by month.
+- [ ] Month filter uses the Section 3 index `(account_id, month, created_at DESC, id DESC)`.
 - [ ] Tests: page order, month filter, account isolation.
 
 **Defend it:** Why a cursor instead of offset when rows are inserted concurrently?
 
-### Phase 5 — Example Client (October 17)
+### Phase 5 — Example Client (October 18)
 
 - [ ] Simple web page served by its own small Express container.
-- [ ] Demo: create account, then a custom account plan with 60 units/month assigned to it.
+- [ ] Demo: create account, then a custom account plan with 200 units/month · 50/request assigned to it.
 - [ ] Demo: register Alice (Basic) and Bob (Premium).
-- [ ] Demo: Alice 10 → accepted; Alice 25 → rejected by user per-request.
-- [ ] Demo: Bob consumes until account cap → rejected by account monthly.
-- [ ] Demo: switch Alice to Premium → 25 now accepted, client code unchanged.
+- [ ] Demo, in this order:
+  1. Alice 10 → accepted.
+  2. Alice 25 → rejected by user per-request.
+  3. Switch Alice to Premium.
+  4. Alice 25 → accepted, client code unchanged.
+  5. Bob consumes in chunks of 50 or fewer until the account cap → rejected by account monthly.
 - [ ] Display decision, reason, `rejectedBy`, both remaining values.
 - [ ] Client in Compose, waits for service healthy.
 
 **Defend it:** What exactly changed between Alice's rejected and accepted 25-unit requests?
 
-### Phase 6 — Load Testing (October 18)
+### Phase 6 — Load Testing (October 19)
 
 Start only after correctness tests pass. If time is short, the minimum is: hot-account scenario, invariant check, one before/after number.
 
@@ -412,7 +423,9 @@ Start only after correctness tests pass. If time is short, the minimum is: hot-a
 - [ ] Account/user model, getting and using API keys.
 - [ ] Rules, check order, plan changes, retry behavior, predefined limits.
 - [ ] Replay returns the original snapshot; plan-change guarantee under concurrency.
-- [ ] Assumptions with reasoning, design decisions, known limitations.
+- [ ] Assumptions with reasoning, design decisions, known limitations. Assumptions include:
+  - Only the current plan assignment is stored.
+  - Past months: remaining is calculated against the current plan.
 - [ ] Load test results and exact reproduction commands.
 
 ### Phase 8 — Buffer (October 20)
