@@ -4,9 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Usage Metering and Quota Service: a backend that other applications call to check and consume units against account-level and user-level plan limits. The repo is pre-scaffold: only `docs/REQUIREMENTS.md` (the brief) and `docs/PLAN.md` (the phased implementation plan, decisions, and API) exist. Read `docs/PLAN.md` before starting any phase. Don't tick checklist items in PLAN.md. The developer ticks them after review and tests pass.
+Usage Metering and Quota Service: a backend that other applications call to check and consume units against account-level and user-level plan limits. Phase 0 (scaffold) is done: config validation, app factory + server, `GET /healthz` with a DB check, Dockerfile and Compose. No schema, migrations or seed yet. `docs/REQUIREMENTS.md` is the brief and `docs/PLAN.md` is the phased implementation plan, decisions, and API. Read `docs/PLAN.md` before starting any phase. Don't tick checklist items in PLAN.md. The developer ticks them after review and tests pass.
 
-Planned stack: TypeScript, Express, Drizzle ORM, PostgreSQL, Zod, Vitest + Supertest, Docker Compose, k6 (Compose profile `load`). Once `package.json` exists, add the real build/lint/test commands (including running a single Vitest test) to this file.
+Planned stack: TypeScript, Express, Drizzle ORM, PostgreSQL, Zod, Vitest + Supertest, Docker Compose, k6 (Compose profile `load`).
+
+## Commands
+
+- `npm install`: install dependencies (Node 22+).
+- `npm run build`: compile `src/` to `dist/` (`tsconfig.build.json`).
+- `npm run dev`: run `src/server.ts` with tsx in watch mode (needs `DATABASE_URL`; see `.env.example`).
+- `npm start`: run the compiled server (`node dist/server.js`).
+- `npm run typecheck`: `tsc --noEmit` over `src/` and `tests/`.
+- `npm run lint`: ESLint (flat config, typescript-eslint).
+- `npm test`: run all Vitest tests once. `npm run test:watch` for watch mode.
+- Single test file: `npx vitest run tests/healthz.test.ts`. Single test by name: `npx vitest run -t "returns 503"`.
+- `docker compose up --build`: start PostgreSQL 16 + the API on `http://localhost:3000`. `docker compose down -v` also drops the DB volume. The DB is published on host port `${DB_PORT:-5433}`.
 
 ## Architecture (as planned)
 
