@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
 
@@ -16,3 +17,8 @@ export function createDb(pool: pg.Pool) {
 }
 
 export type Db = ReturnType<typeof createDb>;
+
+/** The /healthz DB check: one round trip that fails if the database is unreachable. */
+export async function pingDb(db: Db): Promise<void> {
+  await db.execute(sql`select 1`);
+}

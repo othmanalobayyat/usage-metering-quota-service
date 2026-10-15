@@ -97,7 +97,7 @@ One row per decision, accepted or rejected. A replay is answered entirely from t
 | `user_id` | `uuid NOT NULL` | |
 | `request_id` | `text NOT NULL` | Supplied by the caller. |
 | `units` | `integer NOT NULL` | `CHECK (units > 0)` |
-| `month` | `date NOT NULL` | The usage month the decision counted against. |
+| `month` | `date NOT NULL` | The usage month the decision counted against. `CHECK (EXTRACT(DAY FROM month) = 1)`, the same CHECK as the usage tables. Deliberate addition: the history month filter matches this column against `toUtcMonth()` values, so a mid-month date would silently drop out of results. |
 | `status` | `request_status NOT NULL` | |
 | `reason_code` | `reason_code NULL` | |
 | `rejected_by` | `rule_owner NULL` | |

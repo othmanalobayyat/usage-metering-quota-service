@@ -1,20 +1,22 @@
-import { sql } from 'drizzle-orm';
 import pg from 'pg';
 import type { DbPing } from '../../src/routes/health.js';
-import { createDb, createPool, type Db } from '../../src/db/client.js';
+import { createDb, createPool, pingDb, type Db } from '../../src/db/client.js';
+import { seedPlans } from '../../src/db/seed.js';
+import { systemClock } from '../../src/lib/clock.js';
 
 /**
  * Shared test-database helper for integration tests.
  *
- * Points at the Compose PostgreSQL by default (`docker compose up -d db`).
- * Override with TEST_DATABASE_URL. DATABASE_URL is deliberately not used, so a
- * test run can't truncate a dev database by accident.
+ * Points at a separate `quota_test` database on the Compose PostgreSQL by default
+ * (`docker compose up -d db`). Override with TEST_DATABASE_URL. DATABASE_URL is
+ * deliberately not used, so a test run can't truncate a dev database by accident.
+ * tests/global-setup.ts creates, migrates and seeds it before any test file runs.
  *
  * Integration suites skip when the DB is unreachable. Set REQUIRE_DB=1 (e.g. in CI)
  * to make an unreachable DB a hard failure instead of a skip.
  */
 export const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL ?? 'postgres://quota:quota@localhost:5433/quota';
+  process.env.TEST_DATABASE_URL ?? 'postgres://quota:quota@localhost:5433/quota_test';
 
 /** A URL nothing listens on, for exercising the "DB is down" path with a real driver. */
 export const UNREACHABLE_DATABASE_URL = 'postgres://quota:quota@127.0.0.1:1/quota';
@@ -36,9 +38,7 @@ export function createTestDb(databaseUrl: string = TEST_DATABASE_URL): TestDb {
   return {
     pool,
     db,
-    pingDb: async () => {
-      await db.execute(sql`select 1`);
-    },
+    pingDb: () => pingDb(db),
     close: () => pool.end(),
   };
 }
@@ -83,15 +83,19 @@ export async function dbAvailable(): Promise<boolean> {
 }
 
 /**
- * Empties every table in the public schema and resets identities, so each test starts clean.
+ * Empties every table in the public schema, resets identities and re-seeds the predefined
+ * plans, so each test starts from the same state as a freshly started container.
  * Drizzle keeps its migration journal in the `drizzle` schema, so migrations survive this.
- * Note: with the default URL this wipes the Compose DB's data.
  */
 export async function resetDatabase(pool: pg.Pool): Promise<void> {
   const { rows } = await pool.query<{ tablename: string }>(
     `select tablename from pg_tables where schemaname = 'public'`,
   );
-  if (rows.length === 0) return;
-  const tables = rows.map((r) => `"public"."${r.tablename.replace(/"/g, '""')}"`).join(', ');
-  await pool.query(`truncate table ${tables} restart identity cascade`);
+  if (rows.length > 0) {
+    const tables = rows.map((r) => `"public"."${r.tablename.replace(/"/g, '""')}"`).join(', ');
+    await pool.query(`truncate table ${tables} restart identity cascade`);
+  }
+  if (rows.some((r) => r.tablename === 'plans')) {
+    await seedPlans(createDb(pool), systemClock);
+  }
 }

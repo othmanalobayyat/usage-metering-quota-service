@@ -12,6 +12,8 @@ ENV NODE_ENV=production
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
+COPY drizzle ./drizzle
+COPY --chmod=755 docker-entrypoint.sh ./
 USER node
 EXPOSE 3000
-CMD ["node", "dist/server.js"]
+CMD ["./docker-entrypoint.sh"]

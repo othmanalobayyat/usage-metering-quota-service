@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Usage Metering and Quota Service: a backend that other applications call to check and consume units against account-level and user-level plan limits. Phase 0 (scaffold) is done: config validation, app factory + server, `GET /healthz` with a DB check, Dockerfile and Compose. No schema, migrations or seed yet. `docs/REQUIREMENTS.md` is the brief and `docs/PLAN.md` is the phased implementation plan, decisions, and API. Read `docs/PLAN.md` before starting any phase. Don't tick checklist items in PLAN.md. The developer ticks them after review and tests pass.
+Usage Metering and Quota Service: a backend that other applications call to check and consume units against account-level and user-level plan limits. Phases 0–1 are done: config validation, app factory + server, `GET /healthz` with a DB check, Dockerfile and Compose; Drizzle schema + migration (`drizzle/`), idempotent seed of predefined plans, container entrypoint migrate → seed → start, `lib/month.ts`, injectable clock, and a separate `quota_test` database for integration tests. No auth or API routes besides `/healthz` yet. `docs/REQUIREMENTS.md` is the brief and `docs/PLAN.md` is the phased implementation plan, decisions, and API. Read `docs/PLAN.md` before starting any phase. Don't tick checklist items in PLAN.md. The developer ticks them after review and tests pass.
 
 Planned stack: TypeScript, Express, Drizzle ORM, PostgreSQL, Zod, Vitest + Supertest, Docker Compose, k6 (Compose profile `load`).
 
@@ -38,7 +38,7 @@ Planned stack: TypeScript, Express, Drizzle ORM, PostgreSQL, Zod, Vitest + Super
 5. Recheck `requests` for the `requestId` after locking. This recheck is the real idempotency guarantee.
 6. Load account and user plans in **one join query after the lock**.
 7. `evaluate()`. If accepted, increment both usage rows. Insert the request row with snapshots (plan IDs, limit, remaining). COMMIT.
-8. On a unique violation (`23505`), roll back, re-read, and return the stored decision.
+8. On a unique violation (`23505`), roll back, re-read, and return the stored decision (step 12 in PLAN.md).
 
 ## Invariants and conventions
 
