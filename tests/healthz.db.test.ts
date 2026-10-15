@@ -15,7 +15,7 @@ describe.skipIf(!(await dbAvailable()))('GET /healthz against the real database'
   });
 
   it('returns 200 when the database is up', async () => {
-    const app = createApp({ pingDb: testDb.pingDb });
+    const app = createApp({ db: testDb.db, pingDb: testDb.pingDb });
     const res = await request(app).get('/healthz');
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ status: 'ok', db: 'up' });
@@ -35,7 +35,7 @@ describe('GET /healthz with a real driver and no database', () => {
 
   it('returns 503 when the database refuses connections', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    const app = createApp({ pingDb: testDb.pingDb });
+    const app = createApp({ db: testDb.db, pingDb: testDb.pingDb });
     const res = await request(app).get('/healthz');
     expect(res.status).toBe(503);
     expect(res.body).toEqual({ status: 'unavailable', db: 'down' });

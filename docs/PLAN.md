@@ -282,26 +282,26 @@ CHECK (
 
 ### Phase 2 — Auth, Accounts, Plans, Users (October 16)
 
-- [ ] API keys: 32 random bytes, `mk_` prefix, store **SHA-256** hash (not bcrypt: keys are high-entropy, and bcrypt per request would wreck the load test).
-- [ ] Auth middleware: hash header → look up → attach `req.account`, else 401.
-- [ ] Zod validation on every body and query.
+- [x] API keys: 32 random bytes, `mk_` prefix, store **SHA-256** hash (not bcrypt: keys are high-entropy, and bcrypt per request would wreck the load test).
+- [x] Auth middleware: hash header → look up → attach `req.account`, else 401.
+- [x] Zod validation on every body and query.
   - `units`, `monthlyLimit`, `perRequestLimit`: max `2147483647`.
   - `requestId`: 1–128 characters.
-- [ ] Central error middleware with one error shape.
-- [ ] Error codes in one const file (table in Section 4). No quota code: a rejection is a decision, not an error.
-- [ ] Endpoints: accounts, account plan, plans: create, list, get, update (no delete), users: `POST /users`, `GET /users`, `GET /users/:externalUserId`, `PUT /users/:externalUserId/plan`.
-- [ ] `GET /users`: cursor pagination on `(created_at, id)`, same as history.
-- [ ] `POST /users`: missing `planId` means use the default plan (Basic). `PUT /account/plan` and `PUT /users/:externalUserId/plan` require `planId` (missing → 400).
-- [ ] One shared plan-assignment guard for accounts and users, checked in this order:
+- [x] Central error middleware with one error shape.
+- [x] Error codes in one const file (table in Section 4). No quota code: a rejection is a decision, not an error.
+- [x] Endpoints: accounts, account plan, plans: create, list, get, update (no delete), users: `POST /users`, `GET /users`, `GET /users/:externalUserId`, `PUT /users/:externalUserId/plan`.
+- [x] `GET /users`: cursor pagination on `(created_at, id)`, same as history.
+- [x] `POST /users`: missing `planId` means use the default plan (Basic). `PUT /account/plan` and `PUT /users/:externalUserId/plan` require `planId` (missing → 400).
+- [x] One shared plan-assignment guard for accounts and users, checked in this order:
   1. Plan exists and is predefined OR owned by this account (rule 3), else 404.
   2. Plan type matches target (rules 1, 2), else 400.
   - Add a comment above it: rule 3 is enforced here, not by a foreign key.
-- [ ] Every query filters by `account_id`. Nothing is fetched by ID alone.
-- [ ] Tests: missing key → 401; invalid key → 401.
-- [ ] Tests: account B gets 404 on account A's users and plans.
-- [ ] Tests: PATCH predefined plan → 403; wrong plan type → 400.
-- [ ] Tests: `PUT /users/:externalUserId/plan` and `PUT /account/plan` with another account's custom plan → 404.
-- [ ] Tests: `GET /users` cursor pagination returns pages in order with no duplicates or gaps.
+- [x] Every query filters by `account_id`. Nothing is fetched by ID alone.
+- [x] Tests: missing key → 401; invalid key → 401.
+- [x] Tests: account B gets 404 on account A's users and plans.
+- [x] Tests: PATCH predefined plan → 403; wrong plan type → 400.
+- [x] Tests: `PUT /users/:externalUserId/plan` and `PUT /account/plan` with another account's custom plan → 404.
+- [x] Tests: `GET /users` cursor pagination returns pages in order with no duplicates or gaps.
 
 **Defend it:**
 - Rule 3 can't be enforced with an FK. Where is it enforced, and what's the risk?

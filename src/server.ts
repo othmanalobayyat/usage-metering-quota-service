@@ -15,7 +15,7 @@ const pool = createPool(config.DATABASE_URL);
 pool.on('error', (err) => console.error('pg pool error', err));
 const db = createDb(pool);
 
-const app = createApp({ pingDb: () => pingDb(db) });
+const app = createApp({ db, pingDb: () => pingDb(db) });
 
 const server = app.listen(config.PORT, () => {
   console.log(`quota-service listening on port ${config.PORT}`);

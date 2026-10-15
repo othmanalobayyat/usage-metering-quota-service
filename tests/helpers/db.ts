@@ -43,6 +43,13 @@ export function createTestDb(databaseUrl: string = TEST_DATABASE_URL): TestDb {
   };
 }
 
+/** A Db stand-in for unit tests that build the app without a database; any use throws. */
+export const noDb = new Proxy({} as Db, {
+  get(_target, prop) {
+    throw new Error(`noDb: tried to use db.${String(prop)} in a test without a database`);
+  },
+});
+
 let reachable: Promise<boolean> | undefined;
 
 /** True if the test DB accepts connections. Probed once per test file. */

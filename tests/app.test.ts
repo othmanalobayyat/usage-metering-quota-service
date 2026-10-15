@@ -4,20 +4,22 @@ import path from 'node:path';
 import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
 import { createApp } from '../src/app.js';
+import { noDb } from './helpers/db.js';
 
 const root = path.resolve(import.meta.dirname, '..');
 
 describe('createApp', () => {
   it('builds the app without listening', () => {
     const createServer = vi.spyOn(http, 'createServer');
-    const app = createApp({ pingDb: async () => {} });
+    const app = createApp({ db: noDb, pingDb: async () => {} });
     expect(typeof app).toBe('function');
     expect(createServer).not.toHaveBeenCalled();
   });
 
   it('returns a fresh app per call, wired to its own deps', async () => {
-    const up = createApp({ pingDb: async () => {} });
+    const up = createApp({ db: noDb, pingDb: async () => {} });
     const down = createApp({
+      db: noDb,
       pingDb: async () => {
         throw new Error('down');
       },
@@ -28,7 +30,7 @@ describe('createApp', () => {
   });
 
   it('does not send X-Powered-By', async () => {
-    const res = await request(createApp({ pingDb: async () => {} })).get('/healthz');
+    const res = await request(createApp({ db: noDb, pingDb: async () => {} })).get('/healthz');
     expect(res.headers['x-powered-by']).toBeUndefined();
   });
 });
