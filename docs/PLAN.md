@@ -243,17 +243,17 @@ Use one response shape everywhere:
 
 ### Phase 1 — Data Layer + Seed (October 15)
 
-- [ ] Drizzle schema matching Section 3; generate migrations.
-- [ ] Container entrypoint runs migrate → seed → start.
-- [ ] Seed predefined plans with **fixed UUIDs** and `ON CONFLICT (id) DO NOTHING`.
-- [ ] Predefined limits:
+- [x] Drizzle schema matching Section 3; generate migrations.
+- [x] Container entrypoint runs migrate → seed → start.
+- [x] Seed predefined plans with **fixed UUIDs** and `ON CONFLICT (id) DO NOTHING`.
+- [x] Predefined limits:
   - Starter: 10,000/month · 100/request.
   - Pro: 100,000/month · 1,000/request.
   - Basic: 1,000/month · 20/request.
   - Premium: 5,000/month · 100/request.
-- [ ] `lib/month.ts`: implement `toUtcMonth(date)`. Every month calculation goes through it.
-- [ ] Injectable clock (`now()` passed into services) so tests can cross a month boundary.
-- [ ] Add a real CHECK constraint on Requests tying `status` to `reason_code`, `rejected_by`, and `limit_value`:
+- [x] `lib/month.ts`: implement `toUtcMonth(date)`. Every month calculation goes through it.
+- [x] Injectable clock (`now()` passed into services) so tests can cross a month boundary.
+- [x] Add a real CHECK constraint on Requests tying `status` to `reason_code`, `rejected_by`, and `limit_value`:
 
 ```sql
 CHECK (
