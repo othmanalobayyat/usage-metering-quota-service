@@ -1,4 +1,4 @@
-# Assumptions (Phase 2)
+# Assumptions 
 
 Behavior that docs/PLAN.md §4 leaves unspecified, with the reason for each choice.
 
@@ -13,3 +13,4 @@ Behavior that docs/PLAN.md §4 leaves unspecified, with the reason for each choi
 - **Body-parser errors → 400:** malformed JSON, an oversized body, or a bad charset returns 400 `VALIDATION_ERROR`, because §4 maps invalid bodies to that one code (an oversized body would otherwise be a 413).
 - **User `remaining` uses the user's plan only:** the user view reports the user's own allowance, while the account view reports the shared allowance. Mixing the two would hide which limit applies.
 - **Custom plans may reuse predefined names:** uniqueness is per owner (`UNIQUE NULLS NOT DISTINCT (account_id, name)`), so an account may create its own "Starter". Plans are always referenced by ID, so a name collision is never ambiguous.
+- **A monthly limit of 0 blocks all requests (it does not mean unlimited):** the schema allows `monthly_limit >= 0`, and the monthly rule accepts only when `used + units <= monthlyLimit`, so a limit of 0 rejects every request (units are always at least 1). Reading 0 as "unlimited" would need a special case in every rule and in every `remaining` calculation, and it would turn a typo or an unset value into unlimited usage. A 0 limit is also useful on purpose, for example to suspend a user or account without deleting anything.
