@@ -4,6 +4,7 @@ import { systemClock, type Clock } from './lib/clock.js';
 import { requireApiKey } from './middleware/auth.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
 import { accountRouter, accountsRouter } from './routes/accounts.js';
+import { consumeRouter } from './routes/consume.js';
 import { healthRouter, type DbPing } from './routes/health.js';
 import { plansRouter } from './routes/plans.js';
 import { usersRouter } from './routes/users.js';
@@ -32,6 +33,7 @@ export function createApp(deps: AppDeps): Express {
   app.use('/account', auth, accountRouter(services));
   app.use('/plans', auth, plansRouter(services));
   app.use('/users', auth, usersRouter(services));
+  app.use('/consume', auth, consumeRouter(services));
 
   app.use(notFoundHandler);
   app.use(errorHandler);

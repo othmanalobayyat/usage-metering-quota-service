@@ -12,3 +12,6 @@ export const planIdBodySchema = z.strictObject({ planId: uuidSchema });
 
 /** `limit` query param for cursor-paginated lists. */
 export const pageLimitSchema = z.coerce.number().int().min(1).max(100).default(20);
+
+/** Caller-supplied idempotency key, scoped per account. */
+export const requestIdSchema = z.string().min(1).max(128);
