@@ -356,17 +356,17 @@ A consume that read the old plan and commits after the update is logically order
 
 #### Phase 3 Checklist
 
-- [ ] `rules.ts` + unit tests for `evaluate()` alone.
-- [ ] Implement the transaction steps above.
-- [ ] Response: remaining after decision, `replayed: true` on stored replies.
-- [ ] Test: accepted request adds N to both totals.
-- [ ] Test: 25 units on Basic → `REJECTED`, `USER`, `PER_REQUEST_LIMIT_EXCEEDED`.
-- [ ] Test: 10 units with 5 left on the account → `REJECTED`, `ACCOUNT`, `MONTHLY_LIMIT_EXCEEDED`.
-- [ ] Test: a rejection changes no usage.
-- [ ] Test: retry returns identical response; same `requestId` with different units → 409.
-- [ ] Test: plan switch keeps usage; allowance lowered below usage → remaining 0 and rejected.
-- [ ] Test: new month starts at zero; old month still queryable.
-- [ ] Test: 50 parallel consumes never exceed the allowance; account usage = sum of user usage.
+- [x] `rules.ts` + unit tests for `evaluate()` alone.
+- [x] Implement the transaction steps above.
+- [x] Response: remaining after decision, `replayed: true` on stored replies.
+- [x] Test: accepted request adds N to both totals.
+- [x] Test: 25 units on Basic → `REJECTED`, `USER`, `PER_REQUEST_LIMIT_EXCEEDED`.
+- [x] Test: 10 units with 5 left on the account → `REJECTED`, `ACCOUNT`, `MONTHLY_LIMIT_EXCEEDED`.
+- [x] Test: a rejection changes no usage.
+- [x] Test: retry returns identical response; same `requestId` with different units → 409.
+- [x] Test: plan switch keeps usage; allowance lowered below usage → remaining 0 and rejected.
+- [x] Test: new month starts at zero; old month still queryable.
+- [x] Test: 50 parallel consumes never exceed the allowance; account usage = sum of user usage.
 
 **Defend it:**
 - Why `FOR UPDATE` instead of check-then-update?
