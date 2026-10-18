@@ -1,0 +1,1897 @@
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id", "account_id", "user_id", "request_id", "units", "month", "status", "reason_code", "rejected_by", "limit_value", "account_plan_id", "user_plan_id", "remaining_account", "remaining_user", "created_at" from "requests" where ("requests"."account_id" = $1 and "requests"."request_id" = $2)
+params: 03dff859-1680-4ab8-81ec-27a03ffe04f5,f5e0610e-53-1
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    ... 2 lines matching cause stack trace ...
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "id", "account_id", "user_id", "request_id", "units", "month", "status", "reason_code", "rejected_by", "limit_value", "account_plan_id", "user_plan_id", "remaining_account", "remaining_user", "created_at" from "requests" where ("requests"."account_id" = $1 and "requests"."request_id" = $2)',
+  params: [ '03dff859-1680-4ab8-81ec-27a03ffe04f5', 'f5e0610e-53-1' ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at runNextTicks (node:internal/process/task_queues:64:5)
+      at listOnTimeout (node:internal/timers:547:9)
+      at process.processTimers (node:internal/timers:521:7)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async findRequest (file:///app/dist/services/consume.service.js:32:19)
+      at async consume (file:///app/dist/services/consume.service.js:53:19)
+      at async file:///app/dist/routes/consume.js:17:18
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at runNextTicks (node:internal/process/task_queues:64:5)
+      at listOnTimeout (node:internal/timers:547:9)
+      at process.processTimers (node:internal/timers:521:7)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id", "account_id", "user_id", "request_id", "units", "month", "status", "reason_code", "rejected_by", "limit_value", "account_plan_id", "user_plan_id", "remaining_account", "remaining_user", "created_at" from "requests" where ("requests"."account_id" = $1 and "requests"."request_id" = $2)
+params: 03dff859-1680-4ab8-81ec-27a03ffe04f5,f5e0610e-84-1
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    ... 2 lines matching cause stack trace ...
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "id", "account_id", "user_id", "request_id", "units", "month", "status", "reason_code", "rejected_by", "limit_value", "account_plan_id", "user_plan_id", "remaining_account", "remaining_user", "created_at" from "requests" where ("requests"."account_id" = $1 and "requests"."request_id" = $2)',
+  params: [ '03dff859-1680-4ab8-81ec-27a03ffe04f5', 'f5e0610e-84-1' ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at runNextTicks (node:internal/process/task_queues:64:5)
+      at listOnTimeout (node:internal/timers:547:9)
+      at process.processTimers (node:internal/timers:521:7)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async findRequest (file:///app/dist/services/consume.service.js:32:19)
+      at async consume (file:///app/dist/services/consume.service.js:53:19)
+      at async file:///app/dist/routes/consume.js:17:18
+}
+unhandled error DrizzleQueryError: Failed query: select "id" from "users" where ("users"."account_id" = $1 and "users"."external_user_id" = $2)
+params: 03dff859-1680-4ab8-81ec-27a03ffe04f5,u39
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async consume (file:///app/dist/services/consume.service.js:45:20)
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "id" from "users" where ("users"."account_id" = $1 and "users"."external_user_id" = $2)',
+  params: [ '03dff859-1680-4ab8-81ec-27a03ffe04f5', 'u39' ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at runNextTicks (node:internal/process/task_queues:64:5)
+      at listOnTimeout (node:internal/timers:547:9)
+      at process.processTimers (node:internal/timers:521:7)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async consume (file:///app/dist/services/consume.service.js:45:20)
+      at async file:///app/dist/routes/consume.js:17:18
+}
+unhandled error DrizzleQueryError: Failed query: select "id", "account_id", "user_id", "request_id", "units", "month", "status", "reason_code", "rejected_by", "limit_value", "account_plan_id", "user_plan_id", "remaining_account", "remaining_user", "created_at" from "requests" where ("requests"."account_id" = $1 and "requests"."request_id" = $2)
+params: 03dff859-1680-4ab8-81ec-27a03ffe04f5,f5e0610e-111-1
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    ... 2 lines matching cause stack trace ...
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "id", "account_id", "user_id", "request_id", "units", "month", "status", "reason_code", "rejected_by", "limit_value", "account_plan_id", "user_plan_id", "remaining_account", "remaining_user", "created_at" from "requests" where ("requests"."account_id" = $1 and "requests"."request_id" = $2)',
+  params: [ '03dff859-1680-4ab8-81ec-27a03ffe04f5', 'f5e0610e-111-1' ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at runNextTicks (node:internal/process/task_queues:64:5)
+      at listOnTimeout (node:internal/timers:547:9)
+      at process.processTimers (node:internal/timers:521:7)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async findRequest (file:///app/dist/services/consume.service.js:32:19)
+      at async consume (file:///app/dist/services/consume.service.js:53:19)
+      at async file:///app/dist/routes/consume.js:17:18
+}
+unhandled error DrizzleQueryError: Failed query: select "id" from "users" where ("users"."account_id" = $1 and "users"."external_user_id" = $2)
+params: 03dff859-1680-4ab8-81ec-27a03ffe04f5,u66
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async consume (file:///app/dist/services/consume.service.js:45:20)
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "id" from "users" where ("users"."account_id" = $1 and "users"."external_user_id" = $2)',
+  params: [ '03dff859-1680-4ab8-81ec-27a03ffe04f5', 'u66' ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at runNextTicks (node:internal/process/task_queues:64:5)
+      at listOnTimeout (node:internal/timers:547:9)
+      at process.processTimers (node:internal/timers:521:7)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async consume (file:///app/dist/services/consume.service.js:45:20)
+      at async file:///app/dist/routes/consume.js:17:18
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id", "account_id", "user_id", "request_id", "units", "month", "status", "reason_code", "rejected_by", "limit_value", "account_plan_id", "user_plan_id", "remaining_account", "remaining_user", "created_at" from "requests" where ("requests"."account_id" = $1 and "requests"."request_id" = $2)
+params: 03dff859-1680-4ab8-81ec-27a03ffe04f5,f5e0610e-185-1
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    ... 2 lines matching cause stack trace ...
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "id", "account_id", "user_id", "request_id", "units", "month", "status", "reason_code", "rejected_by", "limit_value", "account_plan_id", "user_plan_id", "remaining_account", "remaining_user", "created_at" from "requests" where ("requests"."account_id" = $1 and "requests"."request_id" = $2)',
+  params: [ '03dff859-1680-4ab8-81ec-27a03ffe04f5', 'f5e0610e-185-1' ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at runNextTicks (node:internal/process/task_queues:64:5)
+      at listOnTimeout (node:internal/timers:547:9)
+      at process.processTimers (node:internal/timers:521:7)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async findRequest (file:///app/dist/services/consume.service.js:32:19)
+      at async consume (file:///app/dist/services/consume.service.js:53:19)
+      at async file:///app/dist/routes/consume.js:17:18
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id", "account_id", "user_id", "request_id", "units", "month", "status", "reason_code", "rejected_by", "limit_value", "account_plan_id", "user_plan_id", "remaining_account", "remaining_user", "created_at" from "requests" where ("requests"."account_id" = $1 and "requests"."request_id" = $2)
+params: 03dff859-1680-4ab8-81ec-27a03ffe04f5,f5e0610e-77-1
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    ... 2 lines matching cause stack trace ...
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "id", "account_id", "user_id", "request_id", "units", "month", "status", "reason_code", "rejected_by", "limit_value", "account_plan_id", "user_plan_id", "remaining_account", "remaining_user", "created_at" from "requests" where ("requests"."account_id" = $1 and "requests"."request_id" = $2)',
+  params: [ '03dff859-1680-4ab8-81ec-27a03ffe04f5', 'f5e0610e-77-1' ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at runNextTicks (node:internal/process/task_queues:64:5)
+      at listOnTimeout (node:internal/timers:547:9)
+      at process.processTimers (node:internal/timers:521:7)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async findRequest (file:///app/dist/services/consume.service.js:32:19)
+      at async consume (file:///app/dist/services/consume.service.js:53:19)
+      at async file:///app/dist/routes/consume.js:17:18
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id" from "users" where ("users"."account_id" = $1 and "users"."external_user_id" = $2)
+params: 03dff859-1680-4ab8-81ec-27a03ffe04f5,u108
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async consume (file:///app/dist/services/consume.service.js:45:20)
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "id" from "users" where ("users"."account_id" = $1 and "users"."external_user_id" = $2)',
+  params: [ '03dff859-1680-4ab8-81ec-27a03ffe04f5', 'u108' ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async consume (file:///app/dist/services/consume.service.js:45:20)
+      at async file:///app/dist/routes/consume.js:17:18
+}
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at runNextTicks (node:internal/process/task_queues:64:5)
+      at listOnTimeout (node:internal/timers:547:9)
+      at process.processTimers (node:internal/timers:521:7)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at runNextTicks (node:internal/process/task_queues:64:5)
+      at listOnTimeout (node:internal/timers:547:9)
+      at process.processTimers (node:internal/timers:521:7)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at runNextTicks (node:internal/process/task_queues:64:5)
+      at listOnTimeout (node:internal/timers:547:9)
+      at process.processTimers (node:internal/timers:521:7)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at runNextTicks (node:internal/process/task_queues:64:5)
+      at listOnTimeout (node:internal/timers:547:9)
+      at process.processTimers (node:internal/timers:521:7)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at process.processTimers (node:internal/timers:518:9)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at runNextTicks (node:internal/process/task_queues:64:5)
+      at process.processTimers (node:internal/timers:518:9)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id", "account_id", "user_id", "request_id", "units", "month", "status", "reason_code", "rejected_by", "limit_value", "account_plan_id", "user_plan_id", "remaining_account", "remaining_user", "created_at" from "requests" where ("requests"."account_id" = $1 and "requests"."request_id" = $2)
+params: 03dff859-1680-4ab8-81ec-27a03ffe04f5,f5e0610e-64-6
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    ... 2 lines matching cause stack trace ...
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "id", "account_id", "user_id", "request_id", "units", "month", "status", "reason_code", "rejected_by", "limit_value", "account_plan_id", "user_plan_id", "remaining_account", "remaining_user", "created_at" from "requests" where ("requests"."account_id" = $1 and "requests"."request_id" = $2)',
+  params: [ '03dff859-1680-4ab8-81ec-27a03ffe04f5', 'f5e0610e-64-6' ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at runNextTicks (node:internal/process/task_queues:64:5)
+      at listOnTimeout (node:internal/timers:547:9)
+      at process.processTimers (node:internal/timers:521:7)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async findRequest (file:///app/dist/services/consume.service.js:32:19)
+      at async consume (file:///app/dist/services/consume.service.js:53:19)
+      at async file:///app/dist/routes/consume.js:17:18
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at runNextTicks (node:internal/process/task_queues:64:5)
+      at listOnTimeout (node:internal/timers:547:9)
+      at process.processTimers (node:internal/timers:521:7)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id", "account_id", "user_id", "request_id", "units", "month", "status", "reason_code", "rejected_by", "limit_value", "account_plan_id", "user_plan_id", "remaining_account", "remaining_user", "created_at" from "requests" where ("requests"."account_id" = $1 and "requests"."request_id" = $2)
+params: 03dff859-1680-4ab8-81ec-27a03ffe04f5,f5e0610e-86-7
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    ... 2 lines matching cause stack trace ...
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "id", "account_id", "user_id", "request_id", "units", "month", "status", "reason_code", "rejected_by", "limit_value", "account_plan_id", "user_plan_id", "remaining_account", "remaining_user", "created_at" from "requests" where ("requests"."account_id" = $1 and "requests"."request_id" = $2)',
+  params: [ '03dff859-1680-4ab8-81ec-27a03ffe04f5', 'f5e0610e-86-7' ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at runNextTicks (node:internal/process/task_queues:64:5)
+      at listOnTimeout (node:internal/timers:547:9)
+      at process.processTimers (node:internal/timers:521:7)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async findRequest (file:///app/dist/services/consume.service.js:32:19)
+      at async consume (file:///app/dist/services/consume.service.js:53:19)
+      at async file:///app/dist/routes/consume.js:17:18
+}
+unhandled error DrizzleQueryError: Failed query: select "id" from "users" where ("users"."account_id" = $1 and "users"."external_user_id" = $2)
+params: 03dff859-1680-4ab8-81ec-27a03ffe04f5,u89
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async consume (file:///app/dist/services/consume.service.js:45:20)
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "id" from "users" where ("users"."account_id" = $1 and "users"."external_user_id" = $2)',
+  params: [ '03dff859-1680-4ab8-81ec-27a03ffe04f5', 'u89' ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at runNextTicks (node:internal/process/task_queues:64:5)
+      at listOnTimeout (node:internal/timers:547:9)
+      at process.processTimers (node:internal/timers:521:7)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async consume (file:///app/dist/services/consume.service.js:45:20)
+      at async file:///app/dist/routes/consume.js:17:18
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at runNextTicks (node:internal/process/task_queues:64:5)
+      at listOnTimeout (node:internal/timers:547:9)
+      at process.processTimers (node:internal/timers:521:7)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '1fc067bae993a65f1c241ac13e1302665c74826ee159fdf6e8baac903652f345'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18

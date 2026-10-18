@@ -1,0 +1,5 @@
+
+hot_account: 2066 consumes in 20s with 200 VUs → 103.3 req/s
+  latency p50 2044.7ms  p95 2267.8ms  p99 2530.5ms  max 2819.8ms
+  errors (non-200) 0 (0.00%)  accepted 2066  rejected 0  fresh 2066  replayed 0
+SUMMARY_JSON {"scenario":"hot_account","runId":"76c60ef4","vus":200,"durationSeconds":20,"requests":2066,"rps":103.3,"p50":2044.6975889999999,"p95":2267.849109,"p99":2530.475175849999,"max":2819.817099,"errors":0,"errorRate":0,"accepted":2066,"rejected":0,"replayed":0,"fresh":2066}

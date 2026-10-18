@@ -10,14 +10,14 @@
 #   api.log     API container log lines written during the run
 #   run.txt     everything this script printed, including the summaries below
 #
-# Usage:    [VUS=50] [DURATION=30s] load/run.sh hot-account|many-accounts|retry-storm
+# Usage:    [WORKERS=1] [VUS=50] [DURATION=30s] load/run.sh hot-account|many-accounts|retry-storm
 # Requires: bash, Docker with Compose v2, jq (parses k6's SUMMARY_JSON line), od.
 # Assumes nothing else uses the API or DB during the run: the index scan deltas count all traffic.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-usage="usage: [VUS=n] [DURATION=30s] load/run.sh hot-account|many-accounts|retry-storm"
+usage="usage: [WORKERS=n] [VUS=n] [DURATION=30s] load/run.sh hot-account|many-accounts|retry-storm"
 scenario="${1:?$usage}"
 [[ -f "load/$scenario.js" ]] || { echo "unknown scenario: $scenario ($usage)" >&2; exit 2; }
 command -v jq >/dev/null || { echo "load/run.sh needs jq to parse k6's summary line" >&2; exit 2; }
@@ -65,6 +65,9 @@ db_ctr="$(docker compose ps --format '{{.Name}}' db)"
   echo "k6_image $(docker compose --profile load config --format json | jq -r '.services.k6.image')"
   echo "db_image $(docker compose config --format json | jq -r '.services.db.image')"
   echo "api_node $(docker compose exec -T api node --version)"
+  echo "api_workers_env $(docker compose exec -T api printenv WORKERS)"
+  # Primary + workers in cluster mode, one process with WORKERS=1.
+  echo "api_node_processes $(docker compose exec -T api sh -c 'ps -o comm= | grep -c "^node$"')"
   "${psql_db[@]}" -At -F ' ' -c "SELECT 'pg_' || name, current_setting(name) FROM pg_settings
     WHERE name IN ('server_version', 'max_connections', 'shared_buffers', 'synchronous_commit', 'fsync', 'wal_sync_method')
     ORDER BY name"

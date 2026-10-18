@@ -1,0 +1,5 @@
+
+many_accounts: 7922 consumes in 30s with 50 VUs → 264.1 req/s
+  latency p50 180.5ms  p95 293.9ms  p99 398.5ms  max 938.4ms
+  errors (non-200) 0 (0.00%)  accepted 7922  rejected 0  fresh 7922  replayed 0
+SUMMARY_JSON {"scenario":"many_accounts","runId":"ba3add95","vus":50,"durationSeconds":30,"requests":7922,"rps":264.1,"p50":180.510223,"p95":293.93155915,"p99":398.49507049999994,"max":938.4383,"errors":0,"errorRate":0,"accepted":7922,"rejected":0,"replayed":0,"fresh":7922}

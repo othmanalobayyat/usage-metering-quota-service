@@ -1,0 +1,7 @@
+captured_utc 2026-10-18T16:34:57Z (after session b94e9fcc finished)
+CPU(s):                                  12
+Model name:                              13th Gen Intel(R) Core(TM) i5-1334U
+Thread(s) per core:                      2
+Core(s) per socket:                      10
+Socket(s):                               1
+CPU(s) scaling MHz:                      30%

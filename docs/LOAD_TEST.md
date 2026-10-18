@@ -1,6 +1,6 @@
-# Load Test: Phase 6 Baseline
+# Load Test: Phase 6
 
-Baseline only. Nothing in `src/` was changed and no setting was tuned: the API, its pool and PostgreSQL run exactly as `docker compose up --build` starts them. The "one improvement, re-run, compare" item in docs/PLAN.md Phase 6 is **not done yet**. Section 6 lists the candidates.
+Sections 1–7 are the baseline, kept as measured: one API process, nothing tuned, exactly as `docker compose up --build` started it before `WORKERS` existed. Section 6 lists the candidate improvements. Section 8 implements one of them, several API processes with `node:cluster` (§6 item 3), and compares it with the baseline in the same session.
 
 **Where the numbers come from.** Every number below comes from one of these saved files in `load/results/`, or is arithmetic on them shown inline:
 
@@ -11,6 +11,7 @@ Baseline only. Nothing in `src/` was changed and no setting was tuned: the API, 
 | retry storm, 50 VUs | `load/run.sh retry-storm` | `retry-storm-6d0745d1-*` |
 | stress probe: hot account, 200 VUs, 20s | `VUS=200 DURATION=20s load/run.sh hot-account` | `hot-account-c2df73fc-*` |
 | uncontended timings | `load/uncontended.sh` | `uncontended-a08fa988.txt` |
+| §8 comparison: WORKERS=1 vs 4, 14 runs | `load/compare.sh` | `compare-b94e9fcc.txt` (index, medians), the 14 run IDs it lists, `compare-b94e9fcc-host.txt` |
 
 Each `run.sh` run saves `-env.txt` (host, versions, settings), `-k6.txt`, `-pg.txt` (pg_stat_activity samples), `-cpu.txt`, `-idx.txt`/`-idx-delta.txt` (index scan counters), `-sql.txt` (invariants), `-api.log`, and `-run.txt` (the full console output, including the summaries quoted below).
 
@@ -56,6 +57,7 @@ load/run.sh many-accounts
 load/run.sh retry-storm
 VUS=200 DURATION=20s load/run.sh hot-account     # the stress probe
 load/uncontended.sh                              # single-request timings (§4)
+load/compare.sh                                  # WORKERS=1 vs WORKERS=4, alternating (§8)
 ```
 
 `load/run.sh <scenario>` does the following, and prints and saves everything to `load/results/<scenario>-<run_id>-*`:
@@ -212,7 +214,7 @@ Idempotency held under this race: zero 409s, and fresh decisions = request rows 
 - **At 4× the VUs:** hot-account throughput stays flat, and requests start failing on the 2s pool wait timeout.
 - **Correctness:** every invariant and the fresh = rows check held in every run.
 
-## 6. Proposed improvements (not implemented)
+## 6. Proposed improvements (as proposed after the baseline; item 3 is measured in §8)
 
 Effects are estimates derived from the measurements above.
 
@@ -222,7 +224,7 @@ Effects are estimates derived from the measurements above.
 
 ## 7. Not verified
 
-- **None of the §6 effects was implemented or measured.** They are the arithmetic shown, under the stated assumptions.
+- **§6 items 1 and 2 were not implemented or measured.** Their effects are the arithmetic shown, under the stated assumptions. Item 3 is measured in §8, and part of its expected effect turned out wrong.
 - **The split of the 11.7 ms lock hold is an estimate** (see §4). The API's per-statement cost can't be measured without instrumenting `src/`.
 - **The retry-storm path split assumes no other traffic during the run.** The index counter counts every scan. The cross-check against the burst arithmetic agrees to within 1.
 - **Monthly-limit enforcement under load is only weakly exercised.** Checks 2 and 3 pass, but with 2,000,000,000-unit allowances no run came near a limit, by design. The Phase 3 test "50 parallel consumes never exceed the allowance" remains the evidence for that.
@@ -232,3 +234,123 @@ Effects are estimates derived from the measurements above.
 - **CPU figures are coarse.** `docker stats` samples are ~2s apart (13–18 per run) and include a few samples from k6 setup and teardown.
 - **The DB-side statement timings are an approximation.** They come from psql with literal values inside a rolled-back transaction, and COMMIT's cost is taken from `pg_test_fsync`.
 - **Leftover rows:** `load/uncontended.sh` and every load run leave their accounts in the Compose DB volume, and all of them pass the invariants. `docker compose down -v` removes them.
+
+## 8. Improvement: several API processes (`node:cluster`)
+
+### What changed
+
+- `src/server.ts`: a new `WORKERS` env var (`src/config.ts`, 1–8; default 4 when measured, now 1, see the decision below). With `WORKERS` > 1 the primary forks that many workers, replaces any that die, and on SIGTERM/SIGINT sends SIGTERM to every worker and exits when they have all shut down. Each worker runs the unchanged server: its own `createPool()` (pg's default of 10 connections) and its own `app.listen`. The workers share the port through `node:cluster`'s round-robin. `WORKERS=1` skips the cluster and runs the server in one process, as before.
+- `docker-compose.yml` passes `WORKERS: ${WORKERS:-1}` to the API; it was `${WORKERS:-4}` when §8 was measured, and `load/compare.sh` sets `WORKERS` explicitly on every run either way. `load/run.sh` now records `api_workers_env` and `api_node_processes` in `-env.txt`.
+- No change to `consume.service.ts`, the pool settings, or any business logic.
+- Added after the measurement, so not exercised by the §8 runs, and neither affects a healthy server:
+  - **Crash-loop cap:** a worker that dies before it listens, or within 1s of listening, counts as an early death. After 5 in a row the primary logs it and exits 1 instead of restarting forever. A worker that stays up 1s after listening resets the count.
+  - **Listen errors:** a listen error such as `EADDRINUSE` now logs and exits 1, with any `WORKERS` value. Before, Express 5 handed the error to the listen callback, which ignored it: the process logged "listening" and stayed up without listening.
+  - **Compose:** the API service has `stop_grace_period: 15s`, so the primary's 12s backstop can fire before Docker's SIGKILL. Docker's default is 10s.
+
+The 4 workers really ran with 10 connections each. Every W4 run's `-env.txt` shows `api_workers_env 4` and `api_node_processes 5` (primary + 4), and the pg_stat_activity samples show 38.4–40.0 connections on average (below). Every W1 run shows `api_workers_env 1`, `api_node_processes 1` and 9.8–10.0 connections.
+
+### Method
+
+The host is shared, and the baseline numbers in §3 were taken in another session: many accounts ran at 167.7 req/s then, and at 187.3–209.5 req/s with the same single process in this session. So §3 is not compared with §8. Instead, `load/compare.sh` ran both configurations back to back in one session (`compare-b94e9fcc.txt`, 2026-10-18 16:19–16:32 UTC), alternating W1 and W4 so drift hits both sides alike:
+
+- 3 rounds of: many accounts W1, W4, then hot account W1, W4 (50 VUs, 30s each);
+- then the stress probe once with each: hot account at 200 VUs for 20s, W1 then W4.
+
+Every run is an ordinary `load/run.sh` run, so each has the full set of files from §2. `run.sh` recreates the API container when `WORKERS` changes. Medians are taken per metric over the 3 runs, so the median p95 and the median RPS can come from different runs.
+
+| Order | Scenario | WORKERS | Run ID | Consumes | RPS | p50 | p95 | p99 | Errors |
+|---:|---|---:|---|---:|---:|---:|---:|---:|---:|
+| 1 | many accounts | 1 | 2e26d886 | 6,034 | 201.1 | 241.6 ms | 324.8 ms | 380.5 ms | 0 |
+| 2 | many accounts | 4 | 866f87e6 | 7,931 | 264.4 | 178.2 ms | 286.1 ms | 377.5 ms | 0 |
+| 3 | hot account | 1 | 8eae1167 | 2,630 | 87.7 | 546.1 ms | 813.3 ms | 1,086.8 ms | 0 |
+| 4 | hot account | 4 | 56878af8 | 2,420 | 80.7 | 737.6 ms | 1,312.2 ms | 1,661.8 ms | 0 |
+| 5 | many accounts | 1 | 23227c21 | 5,620 | 187.3 | 246.8 ms | 409.1 ms | 609.4 ms | 0 |
+| 6 | many accounts | 4 | ba3add95 | 7,922 | 264.1 | 180.5 ms | 293.9 ms | 398.5 ms | 0 |
+| 7 | hot account | 1 | 3811ff67 | 2,661 | 88.7 | 543.0 ms | 788.7 ms | 1,033.5 ms | 0 |
+| 8 | hot account | 4 | 97c9f0f1 | 2,437 | 81.2 | 698.6 ms | 1,094.2 ms | 1,420.1 ms | 0 |
+| 9 | many accounts | 1 | 0c597c7a | 6,284 | 209.5 | 231.5 ms | 306.6 ms | 357.1 ms | 0 |
+| 10 | many accounts | 4 | fc5e9fa8 | 7,851 | 261.7 | 180.6 ms | 292.3 ms | 381.3 ms | 0 |
+| 11 | hot account | 1 | e9a4f095 | 2,856 | 95.2 | 523.8 ms | 604.3 ms | 741.5 ms | 0 |
+| 12 | hot account | 4 | a30ec57d | 1,850 | 61.7 | 764.2 ms | 1,877.4 ms | 2,382.5 ms | 0 |
+| 13 | hot account, 200 VUs, 20s | 1 | 76c60ef4 | 2,066 | 103.3 | 2,044.7 ms | 2,267.8 ms | 2,530.5 ms | 0 |
+| 14 | hot account, 200 VUs, 20s | 4 | f5e0610e | 1,914 | 95.7 | 2,280.3 ms | 2,819.9 ms | 3,365.7 ms | 206 |
+
+Correctness held in all 14 runs. All four global invariants are 0 in every `-sql.txt`, and k6 fresh responses = request rows in every run (`k6 fresh=… request rows=… OK` in each `-run.txt`), including run 14, which had errors.
+
+### Results (medians of 3, 50 VUs, 30s)
+
+| Scenario | | RPS | p50 | p95 | p99 | Errors |
+|---|---|---:|---:|---:|---:|---:|
+| many accounts | WORKERS=1 | 201.1 | 241.6 ms | 324.8 ms | 380.5 ms | 0 in all 3 |
+| | WORKERS=4 | **264.1** | **180.5 ms** | **292.3 ms** | 381.3 ms | 0 in all 3 |
+| | change | **+31.3%** | −25.3% | −10.0% | +0.2% | |
+| hot account | WORKERS=1 | 88.7 | 543.0 ms | 788.7 ms | 1,033.5 ms | 0 in all 3 |
+| | WORKERS=4 | **80.7** | **737.6 ms** | **1,312.2 ms** | **1,661.8 ms** | 0 in all 3 |
+| | change | **−9.0%** | +35.8% | +66.4% | +60.8% | |
+
+The ranges don't overlap: many accounts W1 187.3–209.5 vs W4 261.7–264.4 req/s, hot account W1 87.7–95.2 vs W4 61.7–81.2 req/s.
+
+### Supporting samples (medians of the 3 runs' `-run.txt` summaries)
+
+| Scenario | WORKERS | Conns | Running | Waiting on a lock | Idle in transaction | Samples with a lock waiter | API CPU avg | DB CPU avg |
+|---|---:|---:|---:|---:|---:|---|---:|---:|
+| many accounts | 1 | 9.81 | 1.00 | 0.12 | 6.05 | 4, 9, 7 of 62–64 | 116% | 116% |
+| many accounts | 4 | 38.87 | 2.15 | 2.44 | 24.05 | 58, 57, 56 of 61–63 | 430% | 245% |
+| hot account | 1 | 9.85 | 0.51 | 8.23 | 0.92 | 61, 61, 61 of 61–63 | 75% | 59% |
+| hot account | 4 | 39.45 | 0.68 | 37.48 | 0.85 | 61, 61, 61 of 61–62 | 120% | 73% |
+
+### Many accounts: +31%, but far from 4×
+
+The improvement is real: 264.1 vs 201.1 req/s, with the same ordering in every round. By Little's law, 50 / 264.1 = 189 ms against a measured p50 of 180.5 ms, so the gain is shorter queueing. The API still looks like the limit: connections spend most of their time idle in transaction (24.05 of 38.87), waiting for a worker to send the next statement, and API CPU is 430% of one core, about 108% per worker. Each worker is as busy as the single process was.
+
+Throughput per worker fell, though: 264.1 / 4 = 66 req/s against 201.1 for the single process. API CPU per request went from 116% / 201.1 ≈ 5.8 ms to 430% / 264.1 ≈ 16.3 ms. This was not investigated, so the cause is not verified. The likely reason is the host: `compare-b94e9fcc-host.txt` shows a laptop CPU (i5-1334U) with 12 threads on 10 cores, so only 2 cores are hyperthreaded. Those are the chip's 2 performance cores; the other 8 are efficiency cores (Intel's spec, not measured here). Four busy workers, the DB at 245% and k6 can't all run on fast cores at full clock. The DB is not the limit: it went from 116% to 245% of one core, out of 12.
+
+A new, smaller effect: with 4× the concurrent transactions on the same 100 accounts, two consumes on one account now collide often. Samples with a lock waiter went from 4–9 of ~63 to 56–58 of ~62, but with only 2.44 waiters on average out of 38.87 connections.
+
+### Hot account: worse, not flat
+
+Expected flat, measured 9% slower, with much worse tails (p95 +66%). The extra 30 connections do nothing but wait: 37.48 of 39.45 wait on the `account_usage` row lock, against 8.23 of 9.85 with one process. The time between two decisions on the account rose from 1 / 88.7 = 11.3 ms to 1 / 80.7 = 12.4 ms.
+
+Why more waiters make the lock slower was not measured. A likely explanation: the waiters queue on the row's tuple lock and on the holder's transaction ID (`transactionid+tuple` in the samples), and when the holder commits, Postgres doesn't hand the row to the waiters in strict arrival order. With 37 waiters instead of 8, a request can lose that race many times in a row. This fits the long p95/p99 tails, and run 12 (61.7 req/s, p99 2,382.5 ms) varied the most. API CPU rose too (75% → 120%) with fewer requests served.
+
+### Stress probe (200 VUs): pool timeouts went up, not down
+
+| | WORKERS=1 (76c60ef4) | WORKERS=4 (f5e0610e) |
+|---|---:|---:|
+| RPS | 103.3 | 95.7 |
+| p50 / p95 / p99 | 2,044.7 / 2,267.8 / 2,530.5 ms | 2,280.3 / 2,819.9 / 3,365.7 ms |
+| Errors (non-200) | **0** | **206 (10.76%)** |
+| Conns / waiting on a lock | 9.91 / 8.20 | 40.00 / 36.73 |
+
+All 206 errors in `hot-account-f5e0610e-api.log` are pg-pool's `timeout exceeded when trying to connect`: a request waited more than `connectionTimeoutMillis` (2s) for a free connection in its worker's pool. 174 failed when consume opened its transaction (`inTransaction`), and 32 were wrapped by Drizzle as `Failed query`: 21 on the auth lookup (`accounts`), 7 on the fast-path `requests` lookup and 4 on the user lookup. Fresh responses still equal request rows (1,708), so nothing was half-written.
+
+The expectation was that 4× the pool capacity would remove these timeouts. It doesn't, because on the hot account more connections only move requests from the pool queue into the lock queue, and total throughput stays at ~100 req/s. The number of requests waiting for a connection barely changes: 200 − 10 = 190 waiting with one process, and 200 − 40 = 160 with 4. Each worker's queue now drains only as fast as its own 10 connections win the row lock. Given the unfair hand-off described above, one worker's connections can lose for a while, and the requests queued behind them pass 2s. This explanation is not verified, because per-worker pool wait times weren't measured.
+
+The W1 probe is also no proof that W1 is safe at 200 VUs. The baseline probe with the same settings (`hot-account-c2df73fc`, §4) had 8 pool timeouts, and this one had 0. Each configuration ran once, so the error rate per configuration isn't established, only that W4 was far worse in this session.
+
+### Conclusion
+
+- **Many accounts gain:** +31% RPS and −25% p50 on this host, with every invariant intact.
+- **A hot account regresses:** −9% RPS, much longer tails (p95 +66%), and at 200 VUs, many more pool timeouts (206 vs 0).
+- **A hot account needs a shorter lock hold, not more processes or connections:** §6 items 1 (fewer round trips under the lock) and 2 (duplicates off the hot row). A cap on in-flight transactions per account, so extra connections don't pile up on one row, would protect the tails. None of these is implemented.
+
+### Decision: the default is `WORKERS=1`
+
+The cluster code and the `WORKERS` option stay, but `src/config.ts` and `docker-compose.yml` now default to 1 process. The reason is which case matters more. **Product assumption, not measured:** a hot account, one company with many users, is the common case for this service. No traffic data backs this; it's also recorded in docs/ASSUMPTIONS.md. A hot account regresses with 4 workers: −9% RPS and p95 +66% (medians of 3), and 206 pool timeouts against 0 at 200 VUs. That last figure comes from **one probe per configuration**, so it's a single sample: the baseline probe with `WORKERS=1` had 8 timeouts in an earlier session. Many accounts gain 31%, but under that assumption it's the less common case, and the gain doesn't justify a slower, less reliable hot account. More processes can't fix a hot account, because its limit is the `account_usage` row lock. The real fix is a shorter lock hold, §6 item 1 (fewer round trips while the row is locked).
+
+`WORKERS` > 1 is worth setting when the traffic is spread over many accounts, so no single account row is contended, and the single API process is the limit (API CPU near 100% of one core, connections mostly idle in transaction). The §8 runs used `WORKERS=4` explicitly (`load/compare.sh` sets it per run), so they are unaffected by this change. The §1–7 baseline is the `WORKERS=1` behavior.
+
+### Not verified (§8)
+
+- **Why per-worker throughput fell to a third:** the hybrid-core explanation is a hypothesis. CPU frequency, core placement and k6's own CPU weren't recorded. The P-core/E-core split comes from Intel's spec, not from a measurement.
+- **Why 37 lock waiters are slower than 8:** the unfair hand-off is a likely explanation, not a measured one.
+- **Per-worker pool wait times and how cluster round-robin spread requests** weren't measured. The pool-timeout explanation is inferred from the totals.
+- **3 runs per configuration, 1 probe each:** medians of 3 show the direction clearly where the ranges don't overlap, but not the size precisely. Each probe ran once, so its error rate is a single sample, and W1's error rate at 200 VUs has varied between 0 and 8 errors across sessions.
+- **Retry storm wasn't re-run with `WORKERS=4`.** It is lock-bound like hot account, so the same regression is likely but unmeasured.
+- **Other host load during the session** wasn't recorded. Alternating the configurations limits its effect but doesn't remove it.
+- **What `tests/server.db.test.ts` covers** (real processes under tsx, against the test DB):
+  - `WORKERS=1`: SIGTERM with no requests in flight exits 0, with the old log lines. A taken port exits 1.
+  - `WORKERS=2`: SIGKILL of one worker gets it replaced, and `/healthz` still answers. Then SIGTERM with idle workers stops both and the primary exits 0.
+  - `WORKERS=2` with the port taken: every worker dies before listening, and the primary exits 1 after the 5th.
+- **What it doesn't cover:** SIGINT (Ctrl+C), in either mode. The restart delay itself: the test checks the `restarting in 1000ms` log line, not the timing. The count reset after a worker stays up. Draining in-flight requests on shutdown, because every SIGTERM test runs with idle workers. The 10s forced exit per worker and the primary's 12s backstop. None of it under load.
+- **Manual check in the container, no saved output:** with `WORKERS=4`, before the crash-loop cap existed: `kill -9` on one worker (it was replaced), then `docker compose stop api` (graceful, exit code 0). The result was only read off the terminal and no output was saved, so by this document's rules it isn't evidence. It wasn't repeated with `stop_grace_period: 15s`.

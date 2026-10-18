@@ -14,6 +14,12 @@ describe('loadConfig', () => {
     const config = loadConfig({ DATABASE_URL: 'postgres://u:p@localhost:5432/db' });
     expect(config.PORT).toBe(3000);
     expect(config.NODE_ENV).toBe('development');
+    expect(config.WORKERS).toBe(1);
+  });
+
+  it('coerces WORKERS', () => {
+    const config = loadConfig({ DATABASE_URL: 'postgres://u:p@localhost:5432/db', WORKERS: '4' });
+    expect(config.WORKERS).toBe(4);
   });
 
   it('coerces PORT', () => {
@@ -37,6 +43,10 @@ describe('loadConfig validation', () => {
 
   it.each(['0', '65536', '80.5', 'abc'])('rejects PORT=%s', (PORT) => {
     expect(() => loadConfig({ DATABASE_URL, PORT })).toThrow(/PORT/);
+  });
+
+  it.each(['0', '9', '2.5', 'abc'])('rejects WORKERS=%s', (WORKERS) => {
+    expect(() => loadConfig({ DATABASE_URL, WORKERS })).toThrow(/WORKERS/);
   });
 
   it('rejects an unknown NODE_ENV', () => {

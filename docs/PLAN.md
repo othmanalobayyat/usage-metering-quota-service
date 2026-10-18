@@ -404,14 +404,14 @@ A consume that read the old plan and commits after the update is logically order
 
 Start only after correctness tests pass. If time is short, the minimum is: hot-account scenario, invariant check, one before/after number.
 
-- [ ] k6 via its Docker image under Compose profile `load`.
-- [ ] Scenario: many users, one account (hot row).
-- [ ] Scenario: many accounts.
-- [ ] Scenario: retry storm with repeated `requestId`s.
-- [ ] SQL invariant check after each run: account usage = sum of user usage.
-- [ ] Record RPS, p50/p95/p99, error rate.
-- [ ] One improvement, re-run, compare (pool size, fewer round trips).
-- [ ] Write up the bottleneck: the account usage row lock serializes one account's users.
+- [x] k6 via its Docker image under Compose profile `load`.
+- [x] Scenario: many users, one account (hot row).
+- [x] Scenario: many accounts.
+- [x] Scenario: retry storm with repeated `requestId`s.
+- [x] SQL invariant check after each run: account usage = sum of user usage.
+- [x] Record RPS, p50/p95/p99, error rate.
+- [x] One improvement, re-run, compare (pool size, fewer round trips).
+- [x] Write up the bottleneck: the account usage row lock serializes one account's users.
 
 **Defend it:**
 - Why does one account behave differently from many accounts?

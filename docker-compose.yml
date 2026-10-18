@@ -20,6 +20,12 @@ services:
     environment:
       DATABASE_URL: postgres://quota:quota@db:5432/quota
       PORT: 3000
+      # API processes (node:cluster), each with its own pool of 10. The default, 1, runs a single
+      # process; more helps many accounts but slows a hot account (docs/LOAD_TEST.md §8).
+      WORKERS: ${WORKERS:-1}
+    # Workers force their own exit after 10s and the cluster primary SIGKILLs stragglers at 12s;
+    # Docker's default 10s grace would SIGKILL everything first.
+    stop_grace_period: 15s
     ports:
       - "3000:3000"
     depends_on:

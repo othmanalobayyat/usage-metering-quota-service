@@ -43,4 +43,8 @@ describe.skipIf(config === null)('docker-compose.yml', () => {
     expect(api.build).toBeDefined();
     expect(api.environment?.DATABASE_URL).toMatch(/^postgres(ql)?:\/\/.*@db:5432\//);
   });
+
+  it.skipIf(process.env.WORKERS !== undefined)('runs one API process unless WORKERS is set', () => {
+    expect(api.environment?.WORKERS).toBe('1');
+  });
 });

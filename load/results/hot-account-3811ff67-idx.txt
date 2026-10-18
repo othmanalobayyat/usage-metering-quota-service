@@ -1,0 +1,8 @@
+index scans before:
+account_usage_account_id_month_pk 217678
+requests_account_id_request_id_unique 158893
+user_usage_user_id_month_pk 232951
+index scans after:
+account_usage_account_id_month_pk 226078
+requests_account_id_request_id_unique 164215
+user_usage_user_id_month_pk 240939

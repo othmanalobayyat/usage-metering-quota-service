@@ -1,0 +1,5 @@
+
+many_accounts: 6284 consumes in 30s with 50 VUs → 209.5 req/s
+  latency p50 231.5ms  p95 306.6ms  p99 357.1ms  max 601.0ms
+  errors (non-200) 0 (0.00%)  accepted 6284  rejected 0  fresh 6284  replayed 0
+SUMMARY_JSON {"scenario":"many_accounts","runId":"0c597c7a","vus":50,"durationSeconds":30,"requests":6284,"rps":209.5,"p50":231.45594599999998,"p95":306.63309784999996,"p99":357.05598255000007,"max":600.95576,"errors":0,"errorRate":0,"accepted":6284,"rejected":0,"replayed":0,"fresh":6284}
