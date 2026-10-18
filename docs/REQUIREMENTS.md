@@ -1,169 +1,105 @@
-# Requirements — Usage Metering and Quota Service
+# Final Project: Usage Metering and Quota Service
 
-## 1. Project Overview
+**Estimated time:** 42 hours (Beginning of 12/10/2026 - End of 20/10/2026)
 
-**Estimated Time:** 42 hours  
-**Timeline:** Beginning of 12/10/2026 – End of 20/10/2026 (1 week)  
-**Technology Stack:** TypeScript, SQL, and PostgreSQL
+## Overview
 
-Build a backend service that other applications can call to track usage and determine whether their users are allowed to perform an action. The service supports plans for both the calling application and its individual users.
+Build a backend service that other applications call to track usage and decide whether their users can perform an action. The service supports plans for both the calling application and its individual users.
 
-For example, imagine a company running a document processing application. The company has a shared monthly allowance, and each user has an individual allowance. Before processing a document, the application's backend asks the service to consume units for a particular user. The service checks both allowances, records the decision, and counts the usage if the request is accepted.
+Imagine a company running a document processing application. The company has a shared monthly allowance, and each user has an individual allowance. Before processing a document, the application's backend asks your service to consume units for a particular user. Your service checks both allowances, records the decision, and counts the usage if the request is accepted.
 
-The application can choose predefined plans or create and configure its own plans through the API. Changes to plan settings should take effect without redeploying the service.
+The application can choose predefined plans or create and configure its own plans through your API. Changes to plan settings should take effect without redeploying the service.
 
-One service and one database are sufficient for this project.
+**Timeline:** 1 week.
 
-## 2. Product Assumptions
+**Stack:** TypeScript and SQL, with PostgreSQL. One service and one database are enough.
 
-Some product behavior and business rules are intentionally left unspecified.
+## Product Assumptions
 
-For cases the brief does not define:
-- Choose sensible behavior.
-- Document the assumption and its reasoning in the README.
-- Continue implementing without waiting for clarification.
-- Keep these choices consistent with the stated requirements.
-- Apply them consistently throughout the service.
+Some product behavior and business rules are intentionally left unspecified. For cases the brief does not define, choose sensible behavior, document your assumption and reasoning in the README, and continue implementing without waiting for clarification. Keep these choices consistent with the stated requirements and apply them consistently throughout the service.
 
-## 3. Accounts, Users, Plans, and Units
+## Accounts, Users, and Plans
 
-### 3.1. Account
+| Concept | Meaning |
+|---|---|
+| Account | An application or company calling your service. Its plan defines limits shared by all its users. |
+| User | A user of that application, registered under an account. Their plan defines their individual limits. |
+| Plan | A named set of configurable rules that can be assigned to an account or a user. |
+| Units | The amount consumed by an action, such as document processing credits. Use one resource throughout the project. |
 
-An account represents an application or company calling the service.
+An account has an account plan, and each user has a user plan. The two plans apply together. Giving a user a larger allowance does not increase the account's shared allowance.
 
-- Each account has an account plan.
-- The account plan defines limits shared by all its users.
-- Each account must have its own API key.
-- Each account's users and usage must remain separate from those of other accounts.
+The calling application must supply an API key in a request header for operations on an account and its users. The key identifies the calling account and grants access only to that account's data. Reject missing or invalid keys, and validate that any supplied user belongs to the identified account.
 
-### 3.2. User
+## Core Features
 
-A user represents a user of an application registered under an account.
+- **Manage accounts and users:** Create accounts and issue an API key for each one. Register users under accounts, and assign or change their plans. Keep each account's users and usage separate.
+- **Provide predefined plans:** Include ready-to-use plans for both accounts and users when the service starts. For example, offer Starter and Pro account plans, and Basic and Premium user plans. Choose sensible example limits and document them.
+- **Support custom plans:** Let an account create, view, and update its own plans, then assign them to the account or its users. Several users may share the same plan definition while keeping separate usage totals. Predefined plans can remain read-only.
+- **Consume units:** Identify the account through its API key and accept a user identifier, a positive whole number of units, and a request identifier. Accept the full amount only if all applicable account and user rules allow it. A rejection consumes nothing.
+- **Explain decisions:** Return whether the request was accepted. For a rejection, identify a rule that prevented it and whether that rule belongs to the account or user. Let callers inspect the plans and limits currently applied to each.
+- **Show usage and history:** Return consumed and remaining units for both the account and its users. Allow callers to view previous months' usage and request outcomes. Simple pagination is enough for history.
+- **Preserve data:** Store accounts, users, plans, assignments, usage, and request history in the database so they survive a restart.
 
-- Each user belongs to an account.
-- Each user has a user plan.
-- The user plan defines the user's individual limits.
-- Users can have their plans assigned or changed.
-- The service must validate that a supplied user belongs to the account identified by the API key.
+Choose and document your own API endpoints, request and response formats, and database design.
 
-### 3.3. Plan
+## How Plans Affect Consumption
 
-A plan is a named set of configurable rules that can be assigned to an account or a user.
+Support these two rule types for both account and user plans:
 
-- An account has an account plan.
-- Each user has a user plan.
-- The account and user plans apply together.
-- Several users may share the same plan definition while maintaining separate usage totals.
-- Accounts can create, view, and update their own custom plans.
-- Custom plans can be assigned to the account itself or to its users.
-- Predefined plans can remain read-only.
-- Plan settings must be changeable through the API without redeploying the service.
+- **Monthly allowance:** The total units available during a UTC calendar month.
+- **Maximum units per request:** The largest amount that can be consumed in a single request.
 
-### 3.4. Units
+Every request must satisfy both plans. For example, an account might allow 10,000 units per month and 100 per request, while a user's plan allows 1,000 per month and 20 per request.
 
-Units represent the amount consumed by an action, such as document processing credits.
+- A request for 25 units is rejected by the user's per-request limit, even if both monthly allowances have enough units remaining.
+- A request for 10 units is accepted when both have enough remaining. It adds 10 to the user's usage and 10 to the account's shared usage, representing the same action.
+- If the account has only five units remaining, that 10-unit request is rejected even if the user has plenty left.
 
-Use one resource throughout the project.
+The account's usage is the sum of accepted usage across its users. Users sharing a plan do not share their individual allowance. New usage belongs to the UTC month when it is processed. Each new month starts with zero usage at both levels, while previous months remain available for queries.
 
-## 4. Authentication and Account Isolation
+## Changing and Extending Rules
 
-The calling application must supply an API key in a request header for operations involving an account and its users.
+Plan changes apply to new requests after the update succeeds. Updating an account's custom plan affects its assigned account or users. Switching plans preserves units already consumed; it does not grant a fresh monthly allowance. If a monthly allowance is reduced below existing usage, show zero remaining allowance and reject further consumption at that level until allowance becomes available again. Changes must preserve past request history.
 
-Requirements:
+You are free to decide how rules are represented, configured, and evaluated. Explain how any additional rules interact with account and user plans, and demonstrate their behavior.
 
-- Create accounts and issue an API key for each account.
-- Use the API key to identify the calling account.
-- Grant access only to the identified account's data.
-- Reject requests with missing or invalid API keys.
-- Validate that any supplied user belongs to the identified account.
-- Keep each account's users and usage separate.
+## Example Application or Client
 
-## 5. Core Features
+Include a small working application or client that calls the service using an account's API key on behalf of its users. A simple web page or command-line application is enough; the document processing or other business action can be simulated.
 
-### 5.1. Manage Accounts and Users
+Demonstrate users under the same account with different plans. Show an accepted action, a rejection caused by a user limit, and a rejection caused by the shared account limit. Then configure or switch a plan and show how it changes what a user can do without changing the client code. Display the decision and remaining allowances, and include instructions for running the example.
 
-- Create accounts.
-- Issue an API key for each account.
-- Register users under accounts.
-- Assign plans to accounts and users.
-- Change account and user plans.
-- Keep each account's users and usage separate from other accounts.
+Provide a Docker Compose file that starts the full stack with `docker compose up --build`, including the usage metering service, PostgreSQL, the example application or client, and any additional dependencies. Handle database initialization and predefined plan setup as part of startup. Document any required configuration and how to access or interact with the example client.
 
-### 5.2. Provide Predefined Plans
+## Performance
 
-Include ready-to-use plans for both accounts and users when the service starts.
+Pay attention to performance while ensuring usage totals and decisions remain correct as rules change and requests arrive concurrently. Test your service under load and include evidence of the results, along with a brief explanation of how you tested it and what you learned. You choose the tools and implementation approach.
 
-Examples:
+## What We're Looking For
 
-- **Starter:** Account plan.
-- **Pro:** Account plan.
-- **Basic:** User plan.
-- **Premium:** User plan.
+How you design and implement the required behavior is part of the project. Be ready to explain your choices and discuss limitations.
 
-Choose sensible example limits and document them in the README.
+| Area | What we're looking at |
+|---|---|
+| Correctness | Accurate account and user totals, correct application of both plans, and predictable behavior when plans change. |
+| Reliability | Safe retries, correct handling of competing requests, preserved data, and useful errors. |
+| Performance | Evidence of performance testing, an understanding of bottlenecks, and improvements that preserve correctness. |
+| Design and Code Quality | A thoughtful schema, readable TypeScript, and clear organization of rules, accounting, and API handling. |
+| Local Setup | A working Docker Compose setup that runs the complete stack, including the example client. |
+| Documentation and Usability | Straightforward setup, clear API examples, reproducible tests, and a client that demonstrates the effect on users. |
+| Understanding and Judgment | Ownership of the implementation, thoughtful product decisions with documented assumptions, explained tradeoffs, and sensible choices about scope and custom rules. |
 
-### 5.3. Support Custom Plans
+A reliable, well-explained core is more valuable than unfinished extras. Billing, payments, refunds, multiple resource types, end-user login, role-based permission management, and distributed infrastructure are outside the required scope.
 
-- Allow an account to create its own plans.
-- Allow an account to view its own plans.
-- Allow an account to update its own plans.
-- Allow custom plans to be assigned to the account or its users.
-- Allow several users to share the same plan definition.
-- Maintain separate usage totals for each user, even when they share a plan.
-- Predefined plans can remain read-only.
-- Changes to plan settings must take effect without redeploying the service.
+## Deliverables
 
-### 5.4. Consume Units
+- A GitHub repository containing the service, predefined plans, and example application or client, with straightforward local setup instructions.
+- A Docker Compose file and the Dockerfiles or images needed to run the complete stack, including the example client.
+- A README explaining the API, account and user model, how to obtain and use API keys, supported rules, plan changes, retry behavior, product assumptions, main design decisions, and known limitations.
+- Automated tests covering the important behaviors above, including API key validation and account isolation.
+- Performance test results, along with committed tests, scripts, custom tools, and configuration needed to reproduce them. Include the commands and required dependencies.
 
-The service must accept a consumption request containing:
+AI tools are welcome. Be ready to trace a request through your code, explain your decisions, and debug or make a small change during the discussion.
 
-- A user identifier.
-- A positive whole number of units.
-- A request identifier.
-
-The account must be identified through its API key.
-
-The service must:
-
-- Check all applicable account and user rules.
-- Accept the full requested amount only if all applicable rules allow it.
-- Reject the request if any applicable rule does not allow it.
-- Consume nothing when a request is rejected.
-- Record the request and its decision.
-- Count usage when the request is accepted.
-
-Giving a user a larger allowance does not increase the account's shared allowance.
-
-### 5.5. Explain Decisions
-
-- Return whether a consumption request was accepted or rejected.
-- For a rejected request, identify the rule that prevented it.
-- Identify whether the blocking rule belongs to the account or the user.
-- Allow callers to inspect the plans and limits currently applied to each account and user.
-
-### 5.6. Show Usage and History
-
-The service must provide usage information for both accounts and users.
-
-- Return consumed units.
-- Return remaining units.
-- Support usage information for the current month.
-- Allow callers to view usage from previous months.
-- Allow callers to view previous request outcomes.
-- Provide request history.
-- Support simple pagination for history.
-
-### 5.7. Preserve Data
-
-Store the following information in the database so it survives service restarts:
-
-- Accounts.
-- Users.
-- Plans.
-- Plan assignments.
-- Usage records.
-- Request history.
-
-## 6. Expected Outcome
-
-Deliver a backend service that allows calling applications to manage accounts and users, configure plans, consume units, enforce account-level and user-level limits, inspect usage and request history, and preserve all relevant data in PostgreSQL across restarts.
+**Project Submission:** Deadline: End of 20/10/2026
