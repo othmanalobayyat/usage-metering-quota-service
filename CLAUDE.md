@@ -63,7 +63,7 @@ Numbered as in docs/PLAN.md §6 Phase 3 (the code comments use the same numbers)
 - A DB CHECK on `requests` ties `status` to the nullability of `reason_code`/`rejected_by`/`limit_value`.
 - Usage reads never create rows; a missing month row means 0 consumed. History uses cursor pagination on `(created_at, id)`, never offset.
 - Invariant (asserted in tests and after load runs): account usage = sum of its users' usage.
-- Unspecified product behavior: pick something sensible, apply it consistently, and add the assumption with its reasoning to docs/ASSUMPTIONS.md. Phase 7 copies them into the README, as the brief requires.
+- Unspecified product behavior: pick something sensible, apply it consistently, and add the assumption with its reasoning to the Assumptions section of README.md (known limitations go under its Known limitations), as the brief requires.
 - Out of scope: Redis, distributed infrastructure, a complex frontend. The example client is a simple page in its own small Express container.
 
 ## Workflow rules

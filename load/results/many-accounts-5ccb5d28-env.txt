@@ -1,0 +1,21 @@
+run_id 5ccb5d28
+scenario many-accounts
+vus 50 (default)
+duration 30s (default)
+started_utc 2026-10-18T18:43:20Z
+host_cpus 12
+host_mem_total_mib 7625
+host_swap_used_mib 1871
+docker 29.9.0
+compose 5.6.0
+k6_image grafana/k6:1.3.0
+db_image postgres:16
+api_node v22.23.3
+api_workers_env 4
+api_node_processes 5
+pg_fsync on
+pg_max_connections 100
+pg_server_version 16.15 (Debian 16.15-1.pgdg13+2)
+pg_shared_buffers 128MB
+pg_synchronous_commit on
+pg_wal_sync_method fdatasync

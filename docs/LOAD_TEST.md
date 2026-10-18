@@ -12,6 +12,8 @@ Sections 1–7 are the baseline, kept as measured: one API process, nothing tune
 | stress probe: hot account, 200 VUs, 20s | `VUS=200 DURATION=20s load/run.sh hot-account` | `hot-account-c2df73fc-*` |
 | uncontended timings | `load/uncontended.sh` | `uncontended-a08fa988.txt` |
 | §8 comparison: WORKERS=1 vs 4, 14 runs | `load/compare.sh` | `compare-b94e9fcc.txt` (index, medians), the 14 run IDs it lists, `compare-b94e9fcc-host.txt` |
+| §8 replication: the same 14 runs, second session | `load/compare.sh` | `compare-66ef619b.txt` (index, medians) and the 14 run IDs it lists |
+| §8 extra stress probe, WORKERS=1 | `VUS=200 DURATION=20s load/run.sh hot-account` | `hot-account-fc0db82b-*` |
 
 Each `run.sh` run saves `-env.txt` (host, versions, settings), `-k6.txt`, `-pg.txt` (pg_stat_activity samples), `-cpu.txt`, `-idx.txt`/`-idx-delta.txt` (index scan counters), `-sql.txt` (invariants), `-api.log`, and `-run.txt` (the full console output, including the summaries quoted below).
 
@@ -313,7 +315,24 @@ Expected flat, measured 9% slower, with much worse tails (p95 +66%). The extra 3
 
 Why more waiters make the lock slower was not measured. A likely explanation: the waiters queue on the row's tuple lock and on the holder's transaction ID (`transactionid+tuple` in the samples), and when the holder commits, Postgres doesn't hand the row to the waiters in strict arrival order. With 37 waiters instead of 8, a request can lose that race many times in a row. This fits the long p95/p99 tails, and run 12 (61.7 req/s, p99 2,382.5 ms) varied the most. API CPU rose too (75% → 120%) with fewer requests served.
 
-### Stress probe (200 VUs): pool timeouts went up, not down
+### Replication: a second session (`compare-66ef619b.txt`)
+
+`load/compare.sh` was run again, unchanged, on the same host (session `66ef619b`, 2026-10-18 18:35–18:47 UTC, 14 runs in the same order as above). Medians of 3, 50 VUs, 30s, from the medians block at the end of `compare-66ef619b.txt`:
+
+| Scenario | | RPS | p50 | p95 | p99 | Errors |
+|---|---|---:|---:|---:|---:|---:|
+| many accounts | WORKERS=1 | 197.5 | 242.4 ms | 335.0 ms | 396.6 ms | 0 in all 3 |
+| | WORKERS=4 | **267.6** | **177.7 ms** | **285.2 ms** | 374.7 ms | 0 in all 3 |
+| | change | **+35.5%** | −26.7% | −14.9% | −5.5% | |
+| hot account | WORKERS=1 | 95.9 | 520.8 ms | 601.9 ms | 685.0 ms | 0 in all 3 |
+| | WORKERS=4 | **86.1** | **684.6 ms** | **1,028.5 ms** | **1,223.1 ms** | 0 in all 3 |
+| | change | **−10.2%** | +31.5% | +70.9% | +78.6% | |
+
+The ranges don't overlap again: many accounts W1 196.3–209.8 vs W4 266.1–268.4 req/s, hot account W1 95.6–96.2 vs W4 86.0–86.1 req/s. Both directions match the first session (many accounts +31.3%, hot account −9.0%). All four global invariants are 0 in all 14 `-sql.txt` files, and k6 fresh responses = request rows in every `-run.txt`.
+
+### Stress probe (200 VUs): both configurations fail on the pool wait
+
+First session:
 
 | | WORKERS=1 (76c60ef4) | WORKERS=4 (f5e0610e) |
 |---|---:|---:|
@@ -326,17 +345,31 @@ All 206 errors in `hot-account-f5e0610e-api.log` are pg-pool's `timeout exceeded
 
 The expectation was that 4× the pool capacity would remove these timeouts. It doesn't, because on the hot account more connections only move requests from the pool queue into the lock queue, and total throughput stays at ~100 req/s. The number of requests waiting for a connection barely changes: 200 − 10 = 190 waiting with one process, and 200 − 40 = 160 with 4. Each worker's queue now drains only as fast as its own 10 connections win the row lock. Given the unfair hand-off described above, one worker's connections can lose for a while, and the requests queued behind them pass 2s. This explanation is not verified, because per-worker pool wait times weren't measured.
 
-The W1 probe is also no proof that W1 is safe at 200 VUs. The baseline probe with the same settings (`hot-account-c2df73fc`, §4) had 8 pool timeouts, and this one had 0. Each configuration ran once, so the error rate per configuration isn't established, only that W4 was far worse in this session.
+That first-session contrast (0 vs 206) did not hold up. Every 200-VU hot-account probe, same settings (200 VUs, 20s):
+
+| Run | When | WORKERS | Consumes | RPS | p50 | p95 | p99 | Errors (non-200) |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| `c2df73fc` | baseline session (§4) | 1 | 1,902 | 95.1 | 2,305.5 ms | 2,507.5 ms | 2,546.2 ms | 8 (0.42%) |
+| `76c60ef4` | first comparison session | 1 | 2,066 | 103.3 | 2,044.7 ms | 2,267.8 ms | 2,530.5 ms | 0 |
+| `f5e0610e` | first comparison session | 4 | 1,914 | 95.7 | 2,280.3 ms | 2,819.9 ms | 3,365.7 ms | 206 (10.76%) |
+| `fc0db82b` | standalone, 2026-10-18 18:34 UTC | 1 | 1,799 | 90.0 | 2,335.2 ms | 2,923.2 ms | 3,242.5 ms | 225 (12.51%) |
+| `a20894b9` | second comparison session | 1 | 2,052 | 102.6 | 2,080.3 ms | 2,310.6 ms | 2,618.7 ms | 0 |
+| `a7959b5d` | second comparison session | 4 | 1,921 | 96.1 | 2,191.8 ms | 3,005.9 ms | 3,462.9 ms | 171 (8.90%) |
+
+`fc0db82b` was a single `VUS=200 DURATION=20s load/run.sh hot-account` run with `WORKERS=1` (`api_workers_env 1`, `api_node_processes 1` in its `-env.txt`), started a minute before the second comparison session. Every error in `fc0db82b` and `a7959b5d` is the same pool wait timeout as above: 192 when consume opened its transaction and 33 wrapped by Drizzle in `fc0db82b`, 153 and 18 in `a7959b5d`. Fresh responses = request rows in every probe (1,574 and 1,750 in those two), and all invariants are 0.
+
+So at 200 VUs **both configurations fail on the 2s pool wait**: WORKERS=1 had 8, 0, 225 and 0 errors in four probes, WORKERS=4 had 206 and 171 in two. W1's error count swings from 0 to 225 between runs with the same settings, so these samples can't rank the two configurations. **The 200-VU comparison is inconclusive.** What all six probes agree on is that throughput stays at 90.0–103.3 req/s and p50 at 2.0–2.3 s, because the row lock is still the limit, and that past the pool's 2s wait, requests fail with either setting.
 
 ### Conclusion
 
-- **Many accounts gain:** +31% RPS and −25% p50 on this host, with every invariant intact.
-- **A hot account regresses:** −9% RPS, much longer tails (p95 +66%), and at 200 VUs, many more pool timeouts (206 vs 0).
+- **Many accounts gain:** +31.3% RPS in the first session and +35.5% in the second (medians of 3), with every invariant intact.
+- **A hot account regresses:** −9.0% RPS and p95 +66.4% in the first session, −10.2% RPS and p95 +70.9% in the second.
+- **At 200 VUs, the hot account fails on the pool wait with either setting.** The probes don't show which setting fails less.
 - **A hot account needs a shorter lock hold, not more processes or connections:** §6 items 1 (fewer round trips under the lock) and 2 (duplicates off the hot row). A cap on in-flight transactions per account, so extra connections don't pile up on one row, would protect the tails. None of these is implemented.
 
 ### Decision: the default is `WORKERS=1`
 
-The cluster code and the `WORKERS` option stay, but `src/config.ts` and `docker-compose.yml` now default to 1 process. The reason is which case matters more. **Product assumption, not measured:** a hot account, one company with many users, is the common case for this service. No traffic data backs this; it's also recorded in docs/ASSUMPTIONS.md. A hot account regresses with 4 workers: −9% RPS and p95 +66% (medians of 3), and 206 pool timeouts against 0 at 200 VUs. That last figure comes from **one probe per configuration**, so it's a single sample: the baseline probe with `WORKERS=1` had 8 timeouts in an earlier session. Many accounts gain 31%, but under that assumption it's the less common case, and the gain doesn't justify a slower, less reliable hot account. More processes can't fix a hot account, because its limit is the `account_usage` row lock. The real fix is a shorter lock hold, §6 item 1 (fewer round trips while the row is locked).
+The cluster code and the `WORKERS` option stay, but `src/config.ts` and `docker-compose.yml` now default to 1 process. The reason is which case matters more. **Product assumption, not measured:** a hot account, one company with many users, is the common case for this service. No traffic data backs this; it's also recorded in the README's Assumptions section. The decision rests on the 50-VU results, replicated in two sessions: with 4 workers a hot account is 9.0% and 10.2% slower, with p95 66.4% and 70.9% longer, while many accounts gain 31.3% and 35.5%. Under that assumption many accounts is the less common case, and the gain doesn't justify a slower hot account with longer tails. The 200-VU pool timeouts are not part of the reason: both settings have them, and the probes are inconclusive. More processes can't fix a hot account, because its limit is the `account_usage` row lock. The real fix is a shorter lock hold, §6 item 1 (fewer round trips while the row is locked).
 
 `WORKERS` > 1 is worth setting when the traffic is spread over many accounts, so no single account row is contended, and the single API process is the limit (API CPU near 100% of one core, connections mostly idle in transaction). The §8 runs used `WORKERS=4` explicitly (`load/compare.sh` sets it per run), so they are unaffected by this change. The §1–7 baseline is the `WORKERS=1` behavior.
 
@@ -345,7 +378,8 @@ The cluster code and the `WORKERS` option stay, but `src/config.ts` and `docker-
 - **Why per-worker throughput fell to a third:** the hybrid-core explanation is a hypothesis. CPU frequency, core placement and k6's own CPU weren't recorded. The P-core/E-core split comes from Intel's spec, not from a measurement.
 - **Why 37 lock waiters are slower than 8:** the unfair hand-off is a likely explanation, not a measured one.
 - **Per-worker pool wait times and how cluster round-robin spread requests** weren't measured. The pool-timeout explanation is inferred from the totals.
-- **3 runs per configuration, 1 probe each:** medians of 3 show the direction clearly where the ranges don't overlap, but not the size precisely. Each probe ran once, so its error rate is a single sample, and W1's error rate at 200 VUs has varied between 0 and 8 errors across sessions.
+- **3 runs per configuration per session, 2 sessions:** medians of 3 show the direction clearly where the ranges don't overlap, and the second session agrees on it, but they don't pin the size precisely (+31.3% vs +35.5%, −9.0% vs −10.2%).
+- **The 200-VU error rate per configuration isn't established:** 4 probes with W1 (8, 0, 225, 0 errors) and 2 with W4 (206, 171). Why W1 sometimes passes and sometimes fails at the same settings wasn't investigated.
 - **Retry storm wasn't re-run with `WORKERS=4`.** It is lock-bound like hot account, so the same regression is likely but unmeasured.
 - **Other host load during the session** wasn't recorded. Alternating the configurations limits its effect but doesn't remove it.
 - **What `tests/server.db.test.ts` covers** (real processes under tsx, against the test DB):

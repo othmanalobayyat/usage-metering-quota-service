@@ -6,12 +6,21 @@
 #   then once: hot-account at 200 VUs for 20s, W1 then W4 (the stress probe)
 # The session index (order, scenario, workers, VUs, run ID, key k6 numbers) goes to
 # load/results/compare-<session>.txt, and the medians per scenario and WORKERS at the end.
+# On exit, even after a failure, the API is recreated with WORKERS=1, the Compose default:
+# the last run leaves it on WORKERS=4.
 #
 # Usage:    [ROUNDS=3] load/compare.sh
 # Requires: what load/run.sh requires.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
+
+restore_default() {
+  echo "restoring the API to WORKERS=1" >&2
+  WORKERS=1 docker compose --progress quiet up -d --wait db api ||
+    echo "could not restore WORKERS=1; run: WORKERS=1 docker compose up -d --wait db api" >&2
+}
+trap restore_default EXIT
 
 rounds="${ROUNDS:-3}"
 session="$(od -An -N4 -tx1 /dev/urandom | tr -d ' \n')"

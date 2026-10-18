@@ -1,0 +1,71 @@
+18:35:14.265|1|0|0|0|1|-|-
+18:35:14.266|1|0|0|0|1|-|-
+18:35:14.767|1|0|0|0|1|-|-
+18:35:15.267|1|0|0|0|1|-|-
+18:35:15.767|1|0|0|0|1|-|-
+18:35:16.267|6|0|0|0|6|-|-
+18:35:16.767|6|1|0|0|5|-|-
+18:35:17.267|6|1|0|0|5|-|-
+18:35:17.767|10|1|1|7|1|transactionid|insert into "account_usage" ("account_id", "month", "units_used", "updated_at") values ($1, $2, $3, $4) on conflict do nothing
+18:35:18.267|10|0|0|4|6|-|-
+18:35:18.767|10|3|1|5|1|transactionid|insert into "user_usage" ("user_id", "account_id", "month", "units_used", "updated_at") values ($1, $2, $3, $4, $5) on conflict do nothing
+18:35:19.267|10|3|0|7|0|-|-
+18:35:19.767|10|2|0|1|7|-|-
+18:35:20.267|10|1|1|4|4|transactionid|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+18:35:20.767|10|0|0|8|2|-|-
+18:35:21.267|10|1|0|4|5|-|-
+18:35:21.767|10|4|0|5|1|-|-
+18:35:22.266|10|9|0|1|0|-|-
+18:35:22.767|10|3|0|7|0|-|-
+18:35:23.267|10|1|0|7|2|-|-
+18:35:23.767|10|1|1|6|2|transactionid|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+18:35:24.267|10|0|0|5|5|-|-
+18:35:24.767|10|2|0|8|0|-|-
+18:35:25.267|10|1|0|6|3|-|-
+18:35:25.767|10|6|0|2|2|-|-
+18:35:26.267|10|2|0|5|3|-|-
+18:35:26.767|10|1|0|9|0|-|-
+18:35:27.267|10|2|0|5|3|-|-
+18:35:27.766|10|1|0|7|2|-|-
+18:35:28.266|10|0|0|8|2|-|-
+18:35:28.767|10|2|1|5|2|transactionid|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+18:35:29.267|10|0|1|6|3|transactionid|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+18:35:29.767|10|1|0|7|2|-|-
+18:35:30.267|10|1|0|6|3|-|-
+18:35:30.766|10|2|0|6|2|-|-
+18:35:31.267|10|2|0|5|3|-|-
+18:35:31.767|10|2|0|6|2|-|-
+18:35:32.267|10|1|0|8|1|-|-
+18:35:32.767|10|0|0|4|6|-|-
+18:35:33.267|10|1|0|5|4|-|-
+18:35:33.767|10|0|0|8|2|-|-
+18:35:34.267|10|1|0|5|4|-|-
+18:35:34.766|10|1|0|6|3|-|-
+18:35:35.267|10|1|0|8|1|-|-
+18:35:35.766|10|2|0|6|2|-|-
+18:35:36.266|10|0|0|7|3|-|-
+18:35:36.767|10|2|0|5|3|-|-
+18:35:37.267|10|1|0|6|3|-|-
+18:35:37.766|10|1|0|6|3|-|-
+18:35:38.267|10|0|0|5|5|-|-
+18:35:38.766|10|0|0|8|2|-|-
+18:35:39.267|10|1|0|7|2|-|-
+18:35:39.766|10|1|0|8|1|-|-
+18:35:40.267|10|2|0|5|3|-|-
+18:35:40.767|10|1|1|5|3|transactionid|insert into "account_usage" ("account_id", "month", "units_used", "updated_at") values ($1, $2, $3, $4) on conflict do nothing
+18:35:41.267|10|1|0|6|3|-|-
+18:35:41.767|10|1|1|6|2|transactionid|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+18:35:42.267|10|1|0|6|3|-|-
+18:35:42.767|10|1|0|6|3|-|-
+18:35:43.266|10|2|1|4|3|transactionid|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+18:35:43.767|10|1|1|6|2|transactionid|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+18:35:44.267|10|0|0|7|3|-|-
+18:35:44.766|10|2|0|7|1|-|-
+18:35:45.267|10|1|0|6|3|-|-
+18:35:45.767|10|1|0|5|4|-|-
+18:35:46.267|10|0|0|8|2|-|-
+18:35:46.767|10|0|1|5|4|transactionid|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+18:35:47.267|10|1|0|5|4|-|-
+18:35:47.767|10|1|0|5|4|-|-
+18:35:48.266|10|0|0|0|10|-|-
+18:35:48.766|10|0|0|0|10|-|-
