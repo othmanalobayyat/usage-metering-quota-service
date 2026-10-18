@@ -419,14 +419,14 @@ Start only after correctness tests pass. If time is short, the minimum is: hot-a
 
 ### Phase 7 — README (October 19)
 
-- [ ] API reference with curl examples and error code table.
-- [ ] Account/user model, getting and using API keys.
-- [ ] Rules, check order, plan changes, retry behavior, predefined limits.
-- [ ] Replay returns the original snapshot; plan-change guarantee under concurrency.
-- [ ] Assumptions with reasoning, design decisions, known limitations. Assumptions include:
+- [x] API reference with curl examples and error code table.
+- [x] Account/user model, getting and using API keys.
+- [x] Rules, check order, plan changes, retry behavior, predefined limits.
+- [x] Replay returns the original snapshot; plan-change guarantee under concurrency.
+- [x] Assumptions with reasoning, design decisions, known limitations. Assumptions include:
   - Only the current plan assignment is stored.
   - Past months: remaining is calculated against the current plan.
-- [ ] Load test results and exact reproduction commands.
+- [x] Load test results and exact reproduction commands.
 
 ### Phase 8 — Buffer (October 20)
 

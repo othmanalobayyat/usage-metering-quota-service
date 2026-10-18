@@ -386,6 +386,79 @@ describe.skipIf(!(await dbAvailable()))('POST /consume', () => {
       await as().put('/users/alice/plan', { planId: PREDEFINED_PLAN_IDS.PREMIUM });
       expect((await consume('alice', 25)).body.status).toBe('ACCEPTED');
     });
+
+    it('updating a custom user plan affects every user assigned to it', async () => {
+      const planId = await createCustomPlan(app, account.apiKey, { name: 'shared', type: 'USER', monthlyLimit: 1_000, perRequestLimit: 50 });
+      await addUser('alice', planId);
+      await addUser('bob', planId);
+      expect((await consume('alice', 30)).body.status).toBe('ACCEPTED');
+      expect((await consume('bob', 30)).body.status).toBe('ACCEPTED');
+
+      expect((await as().patch(`/plans/${planId}`, { perRequestLimit: 10 })).status).toBe(200);
+
+      for (const user of ['alice', 'bob']) {
+        const res = await consume(user, 30);
+        expect(res.status).toBe(200);
+        expect(res.body).toMatchObject({
+          status: 'REJECTED',
+          reasonCode: 'PER_REQUEST_LIMIT_EXCEEDED',
+          rejectedBy: 'USER',
+          limit: 10,
+          remaining: { account: 10_000 - 60, user: 1_000 - 30 },
+        });
+        expect(await userUnits(user)).toBe(30);
+      }
+      expect(await accountUnits()).toBe(60);
+    });
+
+    it('plan changes preserve past request history', async () => {
+      const userPlanId = await createCustomPlan(app, account.apiKey, { name: 'custom-user', type: 'USER', monthlyLimit: 200, perRequestLimit: 50 });
+      await addUser('alice', userPlanId);
+      current = new Date('2026-10-15T12:00:00Z');
+      expect((await consume('alice', 20, 'accepted-before')).body.status).toBe('ACCEPTED');
+      current = new Date('2026-10-15T12:00:01Z');
+      expect((await consume('alice', 60, 'rejected-before')).body.rejectedBy).toBe('USER');
+
+      // Edit the plan the earlier requests were decided under, then move both the user and the account off their plans.
+      expect((await as().patch(`/plans/${userPlanId}`, { monthlyLimit: 100, perRequestLimit: 10 })).status).toBe(200);
+      expect((await as().put('/users/alice/plan', { planId: PREDEFINED_PLAN_IDS.PREMIUM })).status).toBe(200);
+      const accountPlanId = await setAccountPlan(500, 40);
+      current = new Date('2026-10-15T12:00:02Z');
+      expect((await consume('alice', 30, 'after')).body.status).toBe('ACCEPTED');
+
+      const res = await as().get('/requests');
+      expect(res.status).toBe(200);
+      expect(res.body.data).toEqual([
+        expect.objectContaining({
+          requestId: 'after',
+          status: 'ACCEPTED',
+          limit: null,
+          remaining: { account: 500 - 50, user: 5_000 - 50 },
+          accountPlanId,
+          userPlanId: PREDEFINED_PLAN_IDS.PREMIUM,
+        }),
+        expect.objectContaining({
+          requestId: 'rejected-before',
+          units: 60,
+          status: 'REJECTED',
+          reasonCode: 'PER_REQUEST_LIMIT_EXCEEDED',
+          rejectedBy: 'USER',
+          limit: 50,
+          remaining: { account: 10_000 - 20, user: 200 - 20 },
+          accountPlanId: PREDEFINED_PLAN_IDS.STARTER,
+          userPlanId,
+        }),
+        expect.objectContaining({
+          requestId: 'accepted-before',
+          units: 20,
+          status: 'ACCEPTED',
+          limit: null,
+          remaining: { account: 10_000 - 20, user: 200 - 20 },
+          accountPlanId: PREDEFINED_PLAN_IDS.STARTER,
+          userPlanId,
+        }),
+      ]);
+    });
   });
 
   describe('months', () => {

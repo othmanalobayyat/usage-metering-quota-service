@@ -9,7 +9,7 @@ Stack: TypeScript, Express 5, Drizzle ORM, PostgreSQL 16, Zod, Vitest + Supertes
 1. [Quick start](#quick-start): [demo client](#demo-client), [tests](#tests), [configuration](#configuration), [running without Docker](#running-the-api-without-docker)
 2. [Accounts, users and API keys](#accounts-users-and-api-keys)
 3. [API reference](#api-reference): [errors](#errors)
-4. [Rules](#rules): [predefined plans](#predefined-plans), [check order](#check-order), [plan changes](#plan-changes), [retries and replays](#retries-and-replays), [plan changes under concurrency](#plan-changes-under-concurrency)
+4. [Rules](#rules): [supported rules](#supported-rules), [predefined plans](#predefined-plans), [check order](#check-order), [plan changes](#plan-changes), [retries and replays](#retries-and-replays), [plan changes under concurrency](#plan-changes-under-concurrency)
 5. [Design decisions](#design-decisions): [the consume transaction](#the-consume-transaction), [other decisions](#other-decisions), [WORKERS](#workers)
 6. [Assumptions](#assumptions)
    - [API shape](#api-shape)
@@ -38,6 +38,8 @@ This starts three services:
 | `client` | `http://localhost:8081` (`CLIENT_PORT`) | Example client. Starts after the API is healthy. |
 
 No manual steps are needed on a fresh clone. The seed is idempotent, so restarting the API is safe. `docker compose down -v` stops everything and drops the database volume.
+
+All data (accounts, plans, usage, request history) is in PostgreSQL, on the named Compose volume `db-data`. It survives `docker compose restart` and `docker compose down` followed by `up`. Only `docker compose down -v` deletes it.
 
 ### Demo client
 
@@ -1139,6 +1141,23 @@ curl -s http://localhost:3000/nope -H "X-API-Key: $KEY"
 
 ## Rules
 
+### Supported rules
+
+Each plan sets two limits, and both apply at account level (shared by all the account's users) and at user level:
+
+- **Monthly allowance** (`monthlyLimit`): units that can be consumed per UTC calendar month.
+- **Maximum units per request** (`perRequestLimit`): the largest `units` a single consume may ask for.
+
+No additional rule types are implemented.
+
+An additional rule would fit into the plans the same way. Take a daily cap as the example:
+
+- **It is defined on both plan types.** Plans get a `dailyLimit` column, so `ACCOUNT` and `USER` plans each set their own cap, custom plans can change it, and switching or editing a plan takes effect on the next consume like the other limits.
+- **It takes a place in the check order, and the first failure still wins.** For example: user per-request → account per-request → user daily → account daily → user monthly → account monthly. Where it goes decides which `reasonCode` a caller sees when several limits would fail.
+- **It has an owner and a reason.** A failure reports `rejectedBy: USER` or `ACCOUNT`, depending on which plan's cap blocked it, and a new `reasonCode` such as `DAILY_LIMIT_EXCEEDED`, with that cap as `limit`.
+- **It is all or nothing.** If the request would take today's usage over the cap, the whole request is rejected and nothing is consumed, as with the existing rules.
+- **It goes in `evaluate()`, without changing the transaction.** The rule is one more entry in the rule list in `src/services/rules.ts`, and `evaluate()` stays pure. The consume transaction keeps its steps and its lock order: it passes today's account and user usage to `evaluate()` alongside the monthly totals, read under the same usage row locks.
+
 ### Predefined plans
 
 Seeded on every start with fixed IDs. They are read-only.
@@ -1305,6 +1324,7 @@ Behavior the brief leaves unspecified, with the reason for each choice.
 
 - **History filtered by both `externalUserId` and `month` has no exact index:** that query uses `(account_id, user_id, created_at DESC, id DESC)` and checks `month` row by row, so an old month of a busy user scans that user's newer rows first. It's still in index order, with no Sort. An index on `(account_id, user_id, month, created_at DESC, id DESC)` would fix it at scale.
 - **Only the current plan assignment is stored.** There is no plan history, so a past month's `remaining` is computed against the current plan. Each request row keeps the plan IDs it was decided against, but not the limits those plans had at the time: a later `PATCH` of a custom plan changes what that ID means.
+- **`GET /users` doesn't include usage.** List entries have no `usage`, so a caller that wants per-user usage needs one request per user (`GET /users/:externalUserId` or `GET /users/:externalUserId/usage`).
 - **One account's consumes are serialized** on its usage row lock, so a single account's throughput is bounded by the interval between decisions on that row ([bottlenecks](#bottlenecks)).
 - **Under overload, requests fail on the pool wait.** A request that waits more than 2s for a free connection gets a 500 ([pool timeouts](#pool-timeouts-at-200-vus)).
 
