@@ -17,6 +17,8 @@ Sections 1–7 are the baseline, kept as measured: one API process, nothing tune
 
 Each `run.sh` run saves `-env.txt` (host, versions, settings), `-k6.txt`, `-pg.txt` (pg_stat_activity samples), `-cpu.txt`, `-idx.txt`/`-idx-delta.txt` (index scan counters), `-sql.txt` (invariants), `-api.log`, and `-run.txt` (the full console output, including the summaries quoted below).
 
+Two things in these files look like failures but aren't. The `FATAL: terminating connection due to administrator command` line in `-pg.err` is the sampler being stopped at the end of the run (`pg_terminate_backend`). The stack traces in the 200-VU runs' `-api.log` files are the expected pool timeouts (§4 and §8 stress probes).
+
 ## 1. Setup
 
 | | |

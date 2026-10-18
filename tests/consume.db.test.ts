@@ -148,6 +148,25 @@ describe.skipIf(!(await dbAvailable()))('POST /consume', () => {
       expect((await consume('alice', 5)).body).toMatchObject({ status: 'ACCEPTED', remaining: { account: 0 } });
     });
 
+    it("a larger user allowance doesn't raise the account's", async () => {
+      await addUser('bob', PREDEFINED_PLAN_IDS.PREMIUM); // 5,000/mo · 100/req
+      await setAccountPlan(250, 100); // account monthly limit well below bob's
+      expect((await consume('bob', 100)).body.status).toBe('ACCEPTED');
+      expect((await consume('bob', 100)).body.status).toBe('ACCEPTED');
+
+      const res = await consume('bob', 100);
+      expect(res.status).toBe(200);
+      expect(res.body).toMatchObject({
+        status: 'REJECTED',
+        reasonCode: 'MONTHLY_LIMIT_EXCEEDED',
+        rejectedBy: 'ACCOUNT',
+        limit: 250,
+        remaining: { account: 50, user: 5_000 - 200 },
+      });
+      expect(await accountUnits()).toBe(200);
+      expect(await userUnits('bob')).toBe(200);
+    });
+
     it('a rejection changes no usage but is recorded', async () => {
       await consume('alice', 10);
       const before = { account: await accountUnits(), user: await userUnits('alice') };

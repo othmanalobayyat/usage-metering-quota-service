@@ -112,6 +112,27 @@ describe.skipIf(!(await dbAvailable()))('usage endpoints', () => {
       expect((await as().get('/usage')).body.consumed).toBe(55);
     });
 
+    it('users sharing a plan keep separate usage totals', async () => {
+      await as().post('/users', { externalUserId: 'carol' }); // Basic, same plan as alice
+      await consume('alice', 12);
+      await consume('carol', 20);
+      await consume('carol', 10);
+      await consume('alice', 3);
+      expect((await as().get('/users/alice/usage')).body).toEqual({
+        externalUserId: 'alice',
+        month: '2026-10',
+        consumed: 15,
+        remaining: 1_000 - 15,
+      });
+      expect((await as().get('/users/carol/usage')).body).toEqual({
+        externalUserId: 'carol',
+        month: '2026-10',
+        consumed: 30,
+        remaining: 1_000 - 30,
+      });
+      expect((await as().get('/usage')).body.consumed).toBe(45);
+    });
+
     it('a month with no usage row reads as 0 and creates no row', async () => {
       expect((await as().get('/users/alice/usage?month=2026-09')).body).toEqual({
         externalUserId: 'alice',
