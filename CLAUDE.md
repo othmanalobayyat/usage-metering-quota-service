@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Usage Metering and Quota Service: a backend that other applications call to check and consume units against account-level and user-level plan limits. Phases 0–1 are done: config validation, app factory + server, `GET /healthz` with a DB check, Dockerfile and Compose; Drizzle schema + migration (`drizzle/`), idempotent seed of predefined plans, container entrypoint migrate → seed → start, `lib/month.ts`, injectable clock, and a separate `quota_test` database for integration tests. Phase 2 is done: SHA-256 API keys + `X-API-Key` auth middleware, error codes (`src/errors/codes.ts`) with central error/404 middleware, the shared plan-assignment guard (`src/services/plan-guard.ts`), and the accounts, account plan, plans, and users endpoints (`GET /users` cursor-paginated). Phase 3 is done: `rules.ts` `evaluate()`, `consume.service.ts` (the 12 transaction steps) and `POST /consume`. Phase 4 is done: `GET /usage`, `GET /users/:externalUserId/usage` (`?month=YYYY-MM`, default the current UTC month) and `GET /requests` (history, newest first, cursor-paginated, filters `externalUserId` and `month`). Phase 5 is implemented and awaiting review: the example client in `client/` (its own TypeScript Express server, Dockerfile and `package.json`). `POST /demo/run` runs the Phase 5 demo server-to-server on a fresh account, and the page renders each step. In Compose it's the `client` service on `http://localhost:${CLIENT_PORT:-8081}`, and it waits for the API's `/healthz` healthcheck. No load tests yet. `docs/REQUIREMENTS.md` is the brief and `docs/PLAN.md` is the phased implementation plan, decisions, and API. Read `docs/PLAN.md` before starting any phase. Don't tick checklist items in PLAN.md. The developer ticks them after review and tests pass.
+Usage Metering and Quota Service: a backend that other applications call to check and consume units against account-level and user-level plan limits. Phases 0–1 are done: config validation, app factory + server, `GET /healthz` with a DB check, Dockerfile and Compose; Drizzle schema + migration (`drizzle/`), idempotent seed of predefined plans, container entrypoint migrate → seed → start, `lib/month.ts`, injectable clock, and a separate `quota_test` database for integration tests. Phase 2 is done: SHA-256 API keys + `X-API-Key` auth middleware, error codes (`src/errors/codes.ts`) with central error/404 middleware, the shared plan-assignment guard (`src/services/plan-guard.ts`), and the accounts, account plan, plans, and users endpoints (`GET /users` cursor-paginated). Phase 3 is done: `rules.ts` `evaluate()`, `consume.service.ts` (the 12 transaction steps) and `POST /consume`. Phase 4 is done: `GET /usage`, `GET /users/:externalUserId/usage` (`?month=YYYY-MM`, default the current UTC month) and `GET /requests` (history, newest first, cursor-paginated, filters `externalUserId` and `month`). Phase 5 is done: the example client in `client/` (its own TypeScript Express server, Dockerfile and `package.json`). `POST /demo/run` runs the Phase 5 demo server-to-server on a fresh account, and the page renders each step. In Compose it's the `client` service on `http://localhost:${CLIENT_PORT:-8081}`, and it waits for the API's `/healthz` healthcheck. The Phase 6 baseline is implemented and awaiting review: k6 scripts in `load/` (Compose service `k6`, profile `load`), and results, bottleneck and proposed improvements in `docs/LOAD_TEST.md`. The "one improvement, re-run, compare" item isn't done. `docs/REQUIREMENTS.md` is the brief and `docs/PLAN.md` is the phased implementation plan, decisions, and API. Read `docs/PLAN.md` before starting any phase. Don't tick checklist items in PLAN.md. The developer ticks them after review and tests pass.
 
 Planned stack: TypeScript, Express, Drizzle ORM, PostgreSQL, Zod, Vitest + Supertest, Docker Compose, k6 (Compose profile `load`).
 
@@ -18,6 +18,7 @@ Planned stack: TypeScript, Express, Drizzle ORM, PostgreSQL, Zod, Vitest + Super
 - `npm run lint`: ESLint (flat config, typescript-eslint).
 - `npm test`: run all Vitest tests once. `npm run test:watch` for watch mode.
 - Single test file: `npx vitest run tests/healthz.test.ts`. Single test by name: `npx vitest run -t "returns 503"`.
+- `load/run.sh hot-account|many-accounts|retry-storm`: one k6 load run (30s) plus pg_stat_activity samples, CPU, API errors and the SQL invariant check. `load/uncontended.sh`: single-request timings (API and DB side). Both save their output to `load/results/`, which docs/LOAD_TEST.md cites.
 - `docker compose up --build`: start PostgreSQL 16 + the API on `http://localhost:3000`. `docker compose down -v` also drops the DB volume. The DB is published on host port `${DB_PORT:-5433}`.
 
 ## Architecture (as planned)
@@ -31,14 +32,20 @@ Planned stack: TypeScript, Express, Drizzle ORM, PostgreSQL, Zod, Vitest + Super
 
 ### Consume transaction (`consume.service.ts`): keep this exact order
 
-1. Resolve the user by `(account_id, external_user_id)`, else 404.
-2. Fast-path `requestId` lookup outside the transaction. This is an optimization only.
-3. BEGIN → upsert this month's usage rows (`ON CONFLICT DO NOTHING`, account then user).
-4. `SELECT ... FOR UPDATE` the **account usage row first, then the user row**. This lock order prevents deadlocks.
-5. Recheck `requests` for the `requestId` after locking. This recheck is the real idempotency guarantee.
-6. Load account and user plans in **one join query after the lock**.
-7. `evaluate()`. If accepted, increment both usage rows. Insert the request row with snapshots (plan IDs, limit, remaining). COMMIT.
-8. On a unique violation (`23505`), roll back, re-read, and return the stored decision (step 12 in PLAN.md).
+Numbered as in docs/PLAN.md §6 Phase 3 (the code comments use the same numbers).
+
+1. Validate input; resolve the user by `(account_id, external_user_id)`, else 404.
+2. Fast-path `requestId` lookup outside the transaction (same input → stored decision, different → 409). An optimization only.
+3. BEGIN.
+4. Upsert this month's usage rows (`ON CONFLICT DO NOTHING`, account then user).
+5. `SELECT ... FOR UPDATE` the **account usage row first, then the user row**. This lock order prevents deadlocks.
+6. Recheck `requests` for the `requestId` after locking. This recheck is the real idempotency guarantee.
+7. Load account and user plans in **one join query after the lock**.
+8. `evaluate()`.
+9. If accepted, increment both usage rows.
+10. Insert the request row with snapshots (plan IDs, limit, remaining).
+11. COMMIT.
+12. On a unique violation (`23505`), roll back, re-read, and return the stored decision.
 
 ## Invariants and conventions
 

@@ -1,0 +1,110 @@
+unhandled error DrizzleQueryError: Failed query: select "id" from "users" where ("users"."account_id" = $1 and "users"."external_user_id" = $2)
+params: bbe8f6dd-a3fe-4f9d-8b5f-45f4fa713e4b,u185
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async consume (file:///app/dist/services/consume.service.js:45:20)
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "id" from "users" where ("users"."account_id" = $1 and "users"."external_user_id" = $2)',
+  params: [ 'bbe8f6dd-a3fe-4f9d-8b5f-45f4fa713e4b', 'u185' ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async consume (file:///app/dist/services/consume.service.js:45:20)
+      at async file:///app/dist/routes/consume.js:17:18
+}
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 8f6b087c59d90b997475c97d5ebf2dbcf01f918e3d898b2a42fd31222a411814
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '8f6b087c59d90b997475c97d5ebf2dbcf01f918e3d898b2a42fd31222a411814'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at runNextTicks (node:internal/process/task_queues:64:5)
+      at listOnTimeout (node:internal/timers:547:9)
+      at process.processTimers (node:internal/timers:521:7)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 8f6b087c59d90b997475c97d5ebf2dbcf01f918e3d898b2a42fd31222a411814
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '8f6b087c59d90b997475c97d5ebf2dbcf01f918e3d898b2a42fd31222a411814'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error Error: timeout exceeded when trying to connect
+    at /app/node_modules/pg-pool/index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:64:5)
+    at listOnTimeout (node:internal/timers:547:9)
+    at process.processTimers (node:internal/timers:521:7)
+    at async inTransaction (file:///app/dist/db/client.js:30:20)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 8f6b087c59d90b997475c97d5ebf2dbcf01f918e3d898b2a42fd31222a411814
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '8f6b087c59d90b997475c97d5ebf2dbcf01f918e3d898b2a42fd31222a411814'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
+unhandled error DrizzleQueryError: Failed query: select "id" from "accounts" where "accounts"."api_key_hash" = $1
+params: 8f6b087c59d90b997475c97d5ebf2dbcf01f918e3d898b2a42fd31222a411814
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    at async file:///app/dist/middleware/auth.js:16:27 {
+  query: 'select "id" from "accounts" where "accounts"."api_key_hash" = $1',
+  params: [
+    '8f6b087c59d90b997475c97d5ebf2dbcf01f918e3d898b2a42fd31222a411814'
+  ],
+  cause: Error: timeout exceeded when trying to connect
+      at /app/node_modules/pg-pool/index.js:45:11
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/middleware/auth.js:16:27
+}
