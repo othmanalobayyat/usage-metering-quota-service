@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import type { Clock } from '../src/lib/clock.js';
-import { toUtcMonth } from '../src/lib/month.js';
+import { parseYearMonth, toUtcMonth } from '../src/lib/month.js';
 
 describe('toUtcMonth', () => {
   it('returns the first day of the month as YYYY-MM-01', () => {
@@ -74,6 +74,27 @@ describe('toUtcMonth', () => {
       expect(toUtcMonth(firstInstantOfNovUtc)).toBe('2026-11-01');
     });
   });
+});
+
+describe('parseYearMonth', () => {
+  it('parses YYYY-MM as the first instant of that UTC month', () => {
+    expect(parseYearMonth('2026-10')?.toISOString()).toBe('2026-10-01T00:00:00.000Z');
+    expect(parseYearMonth('2026-12')?.toISOString()).toBe('2026-12-01T00:00:00.000Z');
+    expect(toUtcMonth(parseYearMonth('2027-01')!)).toBe('2027-01-01');
+  });
+
+  it('keeps years below 100 instead of mapping them to the 1900s', () => {
+    expect(toUtcMonth(parseYearMonth('0042-03')!)).toBe('0042-03-01');
+    expect(toUtcMonth(parseYearMonth('0001-01')!)).toBe('0001-01-01');
+    expect(toUtcMonth(parseYearMonth('9999-12')!)).toBe('9999-12-01');
+  });
+
+  it.each(['', '2026', '2026-1', '2026-00', '2026-13', '2026-10-01', '26-10', ' 2026-10', '2026-10 ', '2026/10', '0000-01', '+2026-10', '２０２６-10'])(
+    'rejects %j',
+    (raw) => {
+      expect(parseYearMonth(raw)).toBeUndefined();
+    },
+  );
 });
 
 describe('injected clock', () => {

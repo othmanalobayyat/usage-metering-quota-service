@@ -2,10 +2,11 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { notFound } from '../errors/app-error.js';
 import { decodeCursor } from '../lib/cursor.js';
-import { externalUserIdSchema, pageLimitSchema, planIdBodySchema, uuidSchema } from '../lib/schemas.js';
+import { externalUserIdSchema, pageCursorSchema, pageLimitSchema, planIdBodySchema, usageQuerySchema, uuidSchema } from '../lib/schemas.js';
 import { parseInput } from '../lib/validate.js';
 import { accountOf } from '../middleware/auth.js';
 import type { ServiceDeps } from '../services/deps.js';
+import { getUserUsage } from '../services/usage.service.js';
 import { getUser, listUsers, registerUser, setUserPlan } from '../services/users.service.js';
 
 const registerUserSchema = z.strictObject({
@@ -16,7 +17,7 @@ const registerUserSchema = z.strictObject({
 
 const listUsersQuerySchema = z.object({
   limit: pageLimitSchema,
-  cursor: z.string().min(1).optional(),
+  cursor: pageCursorSchema,
 });
 
 /** An externalUserId that fails validation can't exist, so it's a 404 like any unknown user. */
@@ -43,6 +44,12 @@ export function usersRouter(deps: ServiceDeps): Router {
 
   router.get('/:externalUserId', async (req, res) => {
     res.json(await getUser(deps, accountOf(req).id, externalUserIdParam(req.params.externalUserId)));
+  });
+
+  router.get('/:externalUserId/usage', async (req, res) => {
+    const externalUserId = externalUserIdParam(req.params.externalUserId);
+    const { month } = parseInput(usageQuerySchema, req.query);
+    res.json(await getUserUsage(deps, accountOf(req).id, externalUserId, month));
   });
 
   router.put('/:externalUserId/plan', async (req, res) => {

@@ -146,7 +146,7 @@ For every `(account_id, month)`: `account_usage.units_used = SUM(user_usage.unit
 
 The `X-API-Key` header is required on every endpoint except account creation and health checks.
 
-Users are addressed by `externalUserId` everywhere in the API: URLs, the `/consume` body, and the `/requests` query. Internal user UUIDs never appear in the API.
+Users are addressed by `externalUserId` everywhere in the API: URLs, the `/consume` body, and the `/requests` query. Internal user UUIDs never appear in request or response fields. Pagination cursors are opaque but not encrypted, and they contain internal IDs; that grants no access, because every query is scoped by `account_id`.
 
 | Method | Path | Purpose |
 |---|---|---|
@@ -377,10 +377,10 @@ A consume that read the old plan and commits after the update is logically order
 
 ### Phase 4 — Usage + History (October 18)
 
-- [ ] Usage endpoints: missing month row = 0 consumed; never create rows on read.
-- [ ] History: cursor pagination on `(created_at, id)`.
-- [ ] Month filter uses the Section 3 index `(account_id, month, created_at DESC, id DESC)`.
-- [ ] Tests: page order, month filter, account isolation.
+- [x] Usage endpoints: missing month row = 0 consumed; never create rows on read.
+- [x] History: cursor pagination on `(created_at, id)`.
+- [x] Month filter uses the Section 3 index `(account_id, month, created_at DESC, id DESC)`.
+- [x] Tests: page order, month filter, account isolation.
 
 **Defend it:** Why a cursor instead of offset when rows are inserted concurrently?
 

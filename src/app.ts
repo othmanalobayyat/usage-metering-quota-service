@@ -7,6 +7,7 @@ import { accountRouter, accountsRouter } from './routes/accounts.js';
 import { consumeRouter } from './routes/consume.js';
 import { healthRouter, type DbPing } from './routes/health.js';
 import { plansRouter } from './routes/plans.js';
+import { requestsRouter, usageRouter } from './routes/usage.js';
 import { usersRouter } from './routes/users.js';
 
 export interface AppDeps {
@@ -34,6 +35,8 @@ export function createApp(deps: AppDeps): Express {
   app.use('/plans', auth, plansRouter(services));
   app.use('/users', auth, usersRouter(services));
   app.use('/consume', auth, consumeRouter(services));
+  app.use('/usage', auth, usageRouter(services));
+  app.use('/requests', auth, requestsRouter(services));
 
   app.use(notFoundHandler);
   app.use(errorHandler);

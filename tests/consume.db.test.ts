@@ -370,22 +370,23 @@ describe.skipIf(!(await dbAvailable()))('POST /consume', () => {
   });
 
   describe('months', () => {
-    it('new month starts at zero; old month is untouched and still readable', async () => {
+    it('new month starts at zero; old month is untouched and still queryable', async () => {
       await addUser('alice');
       current = new Date('2026-10-31T23:59:59.999Z');
       await consume('alice', 15);
 
       current = new Date('2026-11-01T00:00:00.000Z');
-      expect((await as().get('/users/alice')).body.usage).toEqual({ month: '2026-11', consumed: 0, remaining: 1_000 });
+      expect((await as().get('/usage')).body).toEqual({ month: '2026-11', consumed: 0, remaining: 10_000 });
+      expect((await as().get('/users/alice/usage')).body).toMatchObject({ month: '2026-11', consumed: 0, remaining: 1_000 });
       const res = await consume('alice', 4);
       expect(res.body.remaining).toEqual({ account: 10_000 - 4, user: 1_000 - 4 });
 
-      expect(await accountUnits('2026-10-01')).toBe(15);
-      expect(await userUnits('alice', '2026-10-01')).toBe(15);
-      expect(await accountUnits('2026-11-01')).toBe(4);
-      expect(await userUnits('alice', '2026-11-01')).toBe(4);
-      const months = await testDb.db.select({ month: requests.month }).from(requests).orderBy(requests.createdAt);
-      expect(months.map((r) => r.month)).toEqual(['2026-10-01', '2026-11-01']);
+      expect((await as().get('/usage?month=2026-10')).body).toEqual({ month: '2026-10', consumed: 15, remaining: 10_000 - 15 });
+      expect((await as().get('/users/alice/usage?month=2026-10')).body).toMatchObject({ month: '2026-10', consumed: 15 });
+      expect((await as().get('/usage?month=2026-11')).body).toEqual({ month: '2026-11', consumed: 4, remaining: 10_000 - 4 });
+      expect((await as().get('/users/alice/usage?month=2026-11')).body).toMatchObject({ month: '2026-11', consumed: 4 });
+      const history = await as().get('/requests');
+      expect(history.body.data.map((r: { month: string }) => r.month)).toEqual(['2026-11', '2026-10']);
       await expectInvariant();
     });
   });
