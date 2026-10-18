@@ -386,17 +386,17 @@ A consume that read the old plan and commits after the update is logically order
 
 ### Phase 5 — Example Client (October 18)
 
-- [ ] Simple web page served by its own small Express container.
-- [ ] Demo: create account, then a custom account plan with 200 units/month · 50/request assigned to it.
-- [ ] Demo: register Alice (Basic) and Bob (Premium).
-- [ ] Demo, in this order:
+- [x] Simple web page served by its own small Express container.
+- [x] Demo: create account, then a custom account plan with 200 units/month · 50/request assigned to it.
+- [x] Demo: register Alice (Basic) and Bob (Premium).
+- [x] Demo, in this order:
   1. Alice 10 → accepted.
   2. Alice 25 → rejected by user per-request.
   3. Switch Alice to Premium.
   4. Alice 25 → accepted, client code unchanged.
   5. Bob consumes in chunks of 50 or fewer until the account cap → rejected by account monthly.
-- [ ] Display decision, reason, `rejectedBy`, both remaining values.
-- [ ] Client in Compose, waits for service healthy.
+- [x] Display decision, reason, `rejectedBy`, both remaining values.
+- [x] Client in Compose, waits for service healthy.
 
 **Defend it:** What exactly changed between Alice's rejected and accepted 25-unit requests?
 

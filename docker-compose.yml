@@ -25,6 +25,25 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # /healthz checks the DB too. start_period covers migrate + seed in the entrypoint.
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/healthz').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+      start_interval: 1s
+
+  client:
+    build: ./client
+    environment:
+      QUOTA_API_URL: http://api:3000
+      PORT: 8080
+    ports:
+      - "${CLIENT_PORT:-8081}:8080"
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   db-data:

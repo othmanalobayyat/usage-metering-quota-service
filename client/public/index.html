@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quota Demo</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 72rem; padding: 0 1rem; color: #1f2328; }
+    h1 { font-size: 1.4rem; }
+    p.lead { color: #57606a; }
+    button { font: inherit; padding: 0.5rem 1.2rem; cursor: pointer; }
+    #status { margin-left: 1rem; }
+    /* Fixed layout + wrapping long words keeps the table inside the page at any width. */
+    table { border-collapse: collapse; width: 100%; table-layout: fixed; margin-top: 1.5rem; font-size: 0.9rem; }
+    th, td { border-bottom: 1px solid #d0d7de; padding: 0.4rem 0.5rem; text-align: left; vertical-align: top; overflow-wrap: break-word; }
+    th { background: #f6f8fa; font-size: 0.8rem; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tr.setup td { background: #f3f4f6; }
+    .ACCEPTED { color: #1a7f37; font-weight: 600; }
+    .REJECTED { color: #cf222e; font-weight: 600; }
+    .note { color: #57606a; font-size: 0.85rem; }
+    .match-ok { color: #1a7f37; }
+    .match-fail { color: #cf222e; font-weight: 600; }
+    .expected { color: #cf222e; font-size: 0.8rem; font-weight: normal; }
+    .error { color: #cf222e; }
+    /* Narrow screens: one block per step, one labeled line per value, empty values hidden. */
+    @media (max-width: 40rem) {
+      body { margin: 1rem auto; }
+      table, tbody, tr, td { display: block; }
+      thead, colgroup { display: none; }
+      tr { border-bottom: 1px solid #d0d7de; padding: 0.3rem 0; }
+      td { border: 0; padding: 0.15rem 0.5rem 0.15rem 9rem; position: relative; }
+      td.num { text-align: left; }
+      td.empty { display: none; }
+      td::before { content: attr(data-label); position: absolute; left: 0.5rem; width: 8rem; color: #57606a; font-size: 0.8rem; font-weight: normal; }
+      tr.setup { background: #f3f4f6; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Quota service: example client</h1>
+  <p class="lead">
+    Each run creates a new account on a custom plan that allows 200 units a month and at most 50 per request,
+    with two users: Alice on Basic (20 units per request) and Bob on Premium (100 per request).
+    Alice uses 10 units, then asks for 25, which is over her per-request limit. She moves to Premium and asks for
+    the same 25 again. Bob then uses up the rest of the account's monthly allowance, and his next request is refused.
+    Every call to the quota service goes through this page's own server.
+  </p>
+  <button id="run">Run demo</button><span id="status"></span>
+  <table hidden id="results">
+    <colgroup>
+      <col style="width: 6%"><col style="width: 21%"><col style="width: 10%"><col style="width: 20%">
+      <col style="width: 10%"><col style="width: 6%"><col style="width: 9%"><col style="width: 8%"><col style="width: 10%">
+    </colgroup>
+    <thead>
+      <tr>
+        <th>Step</th><th>Action</th><th>Decision</th><th>reasonCode</th><th>rejectedBy</th><th>limit</th>
+        <th>Remaining (account)</th><th>Remaining (user)</th><th>Match</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <script>
+    const button = document.getElementById('run');
+    const status = document.getElementById('status');
+    const table = document.getElementById('results');
+    const tbody = table.querySelector('tbody');
+
+    const labels = [...table.querySelectorAll('th')].map((th) => th.textContent);
+
+    // Each cell carries its column name, which the narrow-screen layout shows as a label.
+    function labeledCell(row) {
+      const td = row.insertCell();
+      td.dataset.label = labels[td.cellIndex];
+      return td;
+    }
+
+    function cell(row, text, className) {
+      const td = labeledCell(row);
+      td.textContent = text ?? '—';
+      if (className) td.className = className;
+      if (text == null) td.classList.add('empty');
+      return td;
+    }
+
+    // Codes like PER_REQUEST_LIMIT_EXCEEDED may wrap only after an underscore, never mid-word.
+    function codeCell(row, code) {
+      if (!code) return cell(row, code);
+      const td = labeledCell(row);
+      code.split('_').forEach((part, i, parts) => {
+        td.append(i < parts.length - 1 ? `${part}_` : part);
+        if (i < parts.length - 1) td.append(document.createElement('wbr'));
+      });
+      return td;
+    }
+
+    function render(run) {
+      tbody.replaceChildren();
+      for (const step of run.steps) {
+        const row = tbody.insertRow();
+        if (step.step === 'Setup') row.className = 'setup';
+        const d = step.decision;
+        cell(row, step.step);
+        const action = cell(row, step.action);
+        if (step.note) {
+          const note = document.createElement('div');
+          note.className = 'note';
+          note.textContent = step.note;
+          action.append(note);
+        }
+        cell(row, d?.status, d?.status);
+        codeCell(row, d?.reasonCode);
+        cell(row, d?.rejectedBy);
+        cell(row, d?.limit, 'num');
+        cell(row, d?.remaining.account, 'num');
+        cell(row, d?.remaining.user, 'num');
+        const match = cell(row, step.ok ? '✓' : '✗', step.ok ? 'match-ok' : 'match-fail');
+        if (!step.ok) {
+          const expected = document.createElement('div');
+          expected.className = 'expected';
+          expected.textContent = `Expected: ${step.expected}`;
+          match.append(expected);
+        }
+      }
+      table.hidden = false;
+    }
+
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      status.className = '';
+      status.textContent = 'Running…';
+      try {
+        const res = await fetch('/demo/run', { method: 'POST' });
+        const run = await res.json();
+        render(run);
+        if (run.error) {
+          status.className = 'error';
+          status.textContent = `Stopped: ${run.error}`;
+        } else {
+          status.className = run.ok ? '' : 'error';
+          status.textContent = `${run.account.name}: ${run.ok ? 'every step matched' : 'some steps did not match'}`;
+        }
+      } catch (err) {
+        status.className = 'error';
+        status.textContent = `Request failed: ${err}`;
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
