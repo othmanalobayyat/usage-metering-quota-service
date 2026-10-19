@@ -1,10 +1,28 @@
 import type { ErrorRequestHandler, RequestHandler } from 'express';
-import { AppError } from '../errors/app-error.js';
+import { AppError, notFound } from '../errors/app-error.js';
 import type { ErrorCode } from '../errors/codes.js';
 import { isOverloadError } from '../lib/pg-error.js';
 
 function send(res: Parameters<RequestHandler>[1], status: number, code: ErrorCode, message: string) {
   res.status(status).json({ error: { code, message } });
+}
+
+/**
+ * Express's router throws a URIError with status 400 when a path parameter isn't valid
+ * percent-encoding (e.g. `/users/%E0%A4%A`), before any route handler runs.
+ */
+function isParamDecodeError(err: unknown): boolean {
+  return err instanceof URIError && (err as { status?: unknown }).status === 400;
+}
+
+/**
+ * Mounted last in a router with path parameters. An undecodable parameter can't name an
+ * existing resource, so it's a 404 like any other malformed ID in the URL.
+ */
+export function undecodableParamNotFound(what: string): ErrorRequestHandler {
+  return (err, _req, _res, next) => {
+    next(isParamDecodeError(err) ? notFound(what) : err);
+  };
 }
 
 /** Unknown route or method. Mounted after every router. */
@@ -23,6 +41,11 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
   }
   if (err instanceof AppError) {
     send(res, err.status, err.code, err.message);
+    return;
+  }
+  // Fallback for a router without undecodableParamNotFound, so a bad parameter is never a 500.
+  if (isParamDecodeError(err)) {
+    send(res, 404, 'NOT_FOUND', 'Resource not found');
     return;
   }
   // express.json() failures (malformed JSON, oversized body, bad charset) carry a 4xx status.

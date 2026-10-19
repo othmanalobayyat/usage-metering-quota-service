@@ -1,8 +1,10 @@
+import express from 'express';
 import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
 import { createApp } from '../src/app.js';
 import type { Db } from '../src/db/client.js';
 import { ERROR_STATUS } from '../src/errors/codes.js';
+import { errorHandler } from '../src/middleware/errors.js';
 import { expectError } from './helpers/api.js';
 import { noDb } from './helpers/db.js';
 
@@ -59,6 +61,19 @@ describe('central error handling', () => {
     expect(res.status).toBe(500);
     expect(res.body).toEqual({ error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } });
     expect(JSON.stringify(res.body)).not.toMatch(/noDb|stack/);
+  });
+
+  it('an undecodable path parameter on a router without its own mapping → 404 NOT_FOUND, not 500', async () => {
+    const error = vi.spyOn(console, 'error');
+    const bare = express();
+    bare.get('/things/:id', (_req, res) => {
+      res.json({});
+    });
+    bare.use(errorHandler);
+    const res = await request(bare).get('/things/%E0%A4%A');
+    expectError(res, 404, 'NOT_FOUND');
+    expect(res.body.error.message).toBe('Resource not found');
+    expect(error).not.toHaveBeenCalled();
   });
 });
 

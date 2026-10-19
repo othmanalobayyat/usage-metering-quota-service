@@ -2,16 +2,25 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { notFound } from '../errors/app-error.js';
 import { decodeCursor } from '../lib/cursor.js';
-import { externalUserIdSchema, pageCursorSchema, pageLimitSchema, planIdBodySchema, usageQuerySchema, uuidSchema } from '../lib/schemas.js';
+import {
+  externalUserIdSchema,
+  nameSchema,
+  pageCursorSchema,
+  pageLimitSchema,
+  planIdBodySchema,
+  usageQuerySchema,
+  uuidSchema,
+} from '../lib/schemas.js';
 import { parseInput } from '../lib/validate.js';
 import { accountOf } from '../middleware/auth.js';
+import { undecodableParamNotFound } from '../middleware/errors.js';
 import type { ServiceDeps } from '../services/deps.js';
 import { getUserUsage } from '../services/usage.service.js';
 import { getUser, listUsers, registerUser, setUserPlan } from '../services/users.service.js';
 
 const registerUserSchema = z.strictObject({
   externalUserId: externalUserIdSchema,
-  name: z.string().trim().min(1).max(200).optional(),
+  name: nameSchema.optional(),
   planId: uuidSchema.optional(),
 });
 
@@ -57,6 +66,8 @@ export function usersRouter(deps: ServiceDeps): Router {
     const { planId } = parseInput(planIdBodySchema, req.body);
     res.json(await setUserPlan(deps, accountOf(req).id, externalUserId, planId));
   });
+
+  router.use(undecodableParamNotFound('User'));
 
   return router;
 }

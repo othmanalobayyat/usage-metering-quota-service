@@ -2,14 +2,15 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { planType } from '../db/schema.js';
 import { notFound } from '../errors/app-error.js';
-import { MAX_INT32, uuidSchema } from '../lib/schemas.js';
+import { MAX_INT32, nameSchema, uuidSchema } from '../lib/schemas.js';
 import { parseInput } from '../lib/validate.js';
 import { accountOf } from '../middleware/auth.js';
+import { undecodableParamNotFound } from '../middleware/errors.js';
 import type { ServiceDeps } from '../services/deps.js';
 import { createPlan, getEditablePlan, getPlan, listPlans, updatePlan } from '../services/plans.service.js';
 import { planView } from '../services/views.js';
 
-const name = z.string().trim().min(1).max(200);
+const name = nameSchema;
 const monthlyLimit = z.int().min(0).max(MAX_INT32);
 const perRequestLimit = z.int().min(1).max(MAX_INT32);
 
@@ -60,6 +61,8 @@ export function plansRouter(deps: ServiceDeps): Router {
     const input = parseInput(updatePlanSchema, req.body);
     res.json(planView(await updatePlan(deps, accountId, plan, input)));
   });
+
+  router.use(undecodableParamNotFound('Plan'));
 
   return router;
 }

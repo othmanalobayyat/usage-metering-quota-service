@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { planIdBodySchema } from '../lib/schemas.js';
+import { nameSchema, planIdBodySchema } from '../lib/schemas.js';
 import { parseInput } from '../lib/validate.js';
 import { accountOf } from '../middleware/auth.js';
 import { createAccount, getAccount, setAccountPlan } from '../services/accounts.service.js';
@@ -8,7 +8,7 @@ import type { ServiceDeps } from '../services/deps.js';
 
 // No planId: every account starts on Starter and switches with PUT /account/plan.
 const createAccountSchema = z.strictObject({
-  name: z.string().trim().min(1).max(200),
+  name: nameSchema,
 });
 
 /** POST /accounts. Public: this is how a caller gets its first API key. */
