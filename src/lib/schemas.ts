@@ -7,12 +7,20 @@ export const MAX_INT32 = 2_147_483_647;
 /** Any 8-4-4-4-12 hex UUID, the same set PostgreSQL's uuid type accepts. */
 export const uuidSchema = z.guid();
 
+/** A UTF-16 surrogate not paired with its partner. The `u` flag matches a valid pair as one code point. */
+const LONE_SURROGATE = /\p{Surrogate}/u;
+
 /**
  * Any free-text string a caller supplies. PostgreSQL text can't store NUL (\u0000) and fails
  * the query with 22021, so it's rejected here as a 400 (404 in a URL path) instead of a 500.
+ * A lone surrogate (JSON allows "\ud800") is rejected too: node-postgres encodes it as U+FFFD,
+ * so distinct IDs would collide and a new request could be answered as a replay.
  */
 function textSchema() {
-  return z.string().refine((value) => !value.includes('\u0000'), { message: 'must not contain NUL characters' });
+  return z
+    .string()
+    .refine((value) => !value.includes('\u0000'), { message: 'must not contain NUL characters' })
+    .refine((value) => !LONE_SURROGATE.test(value), { message: 'must not contain unpaired UTF-16 surrogates' });
 }
 
 /**
