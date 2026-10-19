@@ -100,10 +100,18 @@ export class QuotaApi {
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
     const text = await res.text();
-    const json: unknown = text ? JSON.parse(text) : null;
+    let json: unknown = null;
+    if (text) {
+      try {
+        json = JSON.parse(text);
+      } catch (err) {
+        // An error body that isn't JSON (e.g. a proxy's HTML 502) still reports its HTTP status below.
+        if (res.ok) throw err;
+      }
+    }
     if (!res.ok) {
       const error = (json as { error?: { code?: string; message?: string } } | null)?.error;
-      throw new ApiError(res.status, error?.code ?? `HTTP_${res.status}`, error?.message ?? `${method} ${path} failed`);
+      throw new ApiError(res.status, error?.code ?? `HTTP_${res.status}`, error?.message ?? `${method} ${path} failed with HTTP ${res.status}`);
     }
     return json as T;
   }

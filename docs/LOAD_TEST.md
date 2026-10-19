@@ -206,7 +206,7 @@ Idempotency held under this race: zero 409s, and fresh decisions = request rows 
 
 - **Throughput barely moves** (95.1 vs 85.2 at 50 VUs). The lock profile is the same: 8.18 of 9.93 connections waiting on average, and the waiting query is again the `for update` on `account_usage`.
 - **Latency grows with the queue:** by Little's law, 200 / 95.1 = 2.10 s.
-- **The pool timeout is where this starts to fail.** All 8 errors in `-api.log` are pg-pool's `Error: timeout exceeded when trying to connect`: a request waited more than `connectionTimeoutMillis` (2s) for a free connection. Drizzle wrapped 5 of them as `Failed query`, on the auth lookup (`select "id" from "accounts" where "accounts"."api_key_hash" = $1`, 4 times) and on the user lookup (1 time). The client got a 500.
+- **The pool timeout is where this starts to fail.** All 8 errors in `-api.log` are pg-pool's `Error: timeout exceeded when trying to connect`: a request waited more than `connectionTimeoutMillis` (2s) for a free connection. Drizzle wrapped 5 of them as `Failed query`, on the auth lookup (`select "id" from "accounts" where "accounts"."api_key_hash" = $1`, 4 times) and on the user lookup (1 time). The client got a 500. The service now returns 503 `SERVICE_UNAVAILABLE` with `Retry-After: 1` for a pool wait timeout, so a rerun would show 503s here instead.
 - **Nothing was decided twice or lost:** fresh responses = request rows (1,894), and all invariants hold.
 - **The index-scan split isn't valid for this run.** The failed requests stopped before their fast-path scan, so `run.sh` flags it.
 

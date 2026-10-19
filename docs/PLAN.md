@@ -217,6 +217,7 @@ Use one response shape everywhere:
 | `IDEMPOTENCY_CONFLICT` | 409 | Same `requestId` with different input |
 | `ALREADY_EXISTS` | 409 | Duplicate `externalUserId` or plan name |
 | `INTERNAL_ERROR` | 500 | Unexpected failure (details logged, never returned) |
+| `SERVICE_UNAVAILABLE` | 503 | Overload: pool wait, lock or statement timeout (`Retry-After: 1`; retry with the same `requestId`) |
 
 ---
 

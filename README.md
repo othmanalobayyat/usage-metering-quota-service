@@ -108,7 +108,7 @@ Without `DATABASE_URL`, the server exits on startup with `Invalid environment co
 ## Accounts, users and API keys
 
 - An **account** is an application calling the service. It has one account plan, whose limits are shared by all its users, and one API key.
-- A **user** belongs to one account and has one user plan, with the user's individual limits. The calling application chooses the user's ID (`externalUserId`, 1 to 128 characters), and the API addresses users only by it. The same `externalUserId` can exist under different accounts.
+- A **user** belongs to one account and has one user plan, with the user's individual limits. The calling application chooses the user's ID (`externalUserId`, 1 to 128 characters, no leading or trailing whitespace), and the API addresses users only by it. The same `externalUserId` can exist under different accounts.
 - A **plan** is either an `ACCOUNT` plan or a `USER` plan. Predefined plans are visible to every account and are read-only. An account can create, view and update its own custom plans and assign them to itself or its users. Several users can share a plan, and each still has its own usage total.
 - New accounts start on Starter and new users on Basic.
 
@@ -144,7 +144,7 @@ All bodies are JSON. The examples need `curl` and `jq`, and they build on each o
 Conventions:
 
 - Request bodies are strict: an unknown field is a 400.
-- Names (`name` on accounts, plans and users) are trimmed and must be 1 to 200 characters. `externalUserId` and `requestId` are 1 to 128 characters.
+- Names (`name` on accounts, plans and users) are trimmed and must be 1 to 200 characters. `externalUserId` and `requestId` are 1 to 128 characters and can't start or end with whitespace. They are not trimmed: `" alice"` is rejected, not treated as a different user from `"alice"`.
 - Unknown query parameters are ignored.
 - Lists return `{ "data": [...] }`. Paginated lists add `nextCursor`, which is `null` on the last page. Pass it back as `cursor`; anything that isn't a cursor the API issued is a 400. `limit` is 1 to 100, default 20.
 - Usage always has the shape `{ "month": "YYYY-MM", "consumed", "remaining" }`. `GET /account` and `GET /users/:externalUserId` embed it as `usage`. `GET /usage` returns it on its own, and `GET /users/:externalUserId/usage` returns it with `externalUserId` added.
@@ -509,7 +509,7 @@ curl -s -X PUT http://localhost:3000/account/plan -H "X-API-Key: $KEY" \
 
 ### POST /users
 
-Body: `externalUserId` (1 to 128 characters, unique within the account), `name` (optional, 1 to 200 characters), `planId` (optional, default Basic; the same checks as `PUT /account/plan`, with type `USER`).
+Body: `externalUserId` (1 to 128 characters, no leading or trailing whitespace, unique within the account), `name` (optional, 1 to 200 characters), `planId` (optional, default Basic; the same checks as `PUT /account/plan`, with type `USER`).
 
 ```sh
 curl -s -X POST http://localhost:3000/users -H "X-API-Key: $KEY" \
@@ -702,7 +702,7 @@ curl -s http://localhost:3000/users/carol -H "X-API-Key: $KEY"
 }
 ```
 
-The same `404` comes back on every route that names a user: `GET /users/:externalUserId`, `GET /users/:externalUserId/usage`, `PUT /users/:externalUserId/plan`, `POST /consume`, and `GET /requests?externalUserId=`. In a URL path, an `externalUserId` longer than 128 characters is also a 404. In the `/consume` body or the `/requests` query it is a 400.
+The same `404` comes back on every route that names a user: `GET /users/:externalUserId`, `GET /users/:externalUserId/usage`, `PUT /users/:externalUserId/plan`, `POST /consume`, and `GET /requests?externalUserId=`. In a URL path, an `externalUserId` longer than 128 characters or with leading or trailing whitespace is also a 404. In the `/consume` or `/users` body or the `/requests` query it is a 400.
 
 ### PUT /users/:externalUserId/plan
 
@@ -741,7 +741,7 @@ curl -s -X PUT http://localhost:3000/users/bob/plan -H "X-API-Key: $KEY" \
 
 ### POST /consume
 
-Body: `externalUserId`, `units` (integer, 1 to 2147483647), `requestId` (1 to 128 characters, chosen by the caller, unique per account).
+Body: `externalUserId`, `units` (integer, 1 to 2147483647), `requestId` (1 to 128 characters, no leading or trailing whitespace, chosen by the caller, unique per account). An ID with surrounding whitespace is a 400.
 
 The response is `200` for both accepted and rejected decisions. `remaining` is the allowance left after the decision. On an accepted decision, `reasonCode`, `rejectedBy` and `limit` are `null`. On a rejection, `limit` is the limit of the rule that blocked it. How a repeated `requestId` is handled is described in [Retries and replays](#retries-and-replays).
 
@@ -1097,13 +1097,14 @@ The codes are defined in `src/errors/codes.ts`. There is no quota error code: a 
 
 | Code | HTTP | When |
 |---|---:|---|
-| `VALIDATION_ERROR` | 400 | Invalid body or query: a missing or out-of-range field, a name or ID over its length limit, an unknown body field, an invalid `cursor`, `month` or `type`, malformed or oversized JSON, or a plan of the wrong type for the target |
+| `VALIDATION_ERROR` | 400 | Invalid body or query: a missing or out-of-range field, a name or ID over its length limit, an `externalUserId` or `requestId` with leading or trailing whitespace, an unknown body field, an invalid `cursor`, `month` or `type`, malformed or oversized JSON, or a plan of the wrong type for the target |
 | `UNAUTHORIZED` | 401 | Missing or invalid `X-API-Key` |
 | `FORBIDDEN` | 403 | Modifying a predefined plan |
 | `NOT_FOUND` | 404 | Unknown route; a user or plan that doesn't exist or belongs to another account; a malformed plan ID or `externalUserId` in the URL |
 | `IDEMPOTENCY_CONFLICT` | 409 | Same `requestId` with a different `externalUserId` or `units` |
 | `ALREADY_EXISTS` | 409 | Duplicate `externalUserId`, or a plan name this account already uses (on create or rename) |
 | `INTERNAL_ERROR` | 500 | Unexpected failure. Details are logged, never returned. |
+| `SERVICE_UNAVAILABLE` | 503 | Overload: no database connection free within 2s (pg-pool timeout), a row lock not granted within 3s (`lock_timeout`, SQLSTATE `55P03`), or a cancelled statement (`57014`, e.g. `statement_timeout`). Sent with `Retry-After: 1`. Nothing was written; retry, with the same `requestId` for `POST /consume`. |
 
 No key:
 
@@ -1198,7 +1199,7 @@ A consume is evaluated by `evaluate()` in `src/services/rules.ts`, a pure functi
 - **Different input is a conflict.** The same `requestId` with a different `externalUserId` or `units` returns `409 IDEMPOTENCY_CONFLICT`.
 - **A rejected `requestId` is spent.** Rejections are recorded like acceptances, so retrying the same `requestId` after an upgrade replays the original rejection. A retry means "the same request again", and the replay must not depend on current balances. To try again under the new plan, the caller sends a new `requestId`.
 - **Unknown user beats idempotency conflict.** The user is resolved before the `requestId` is looked up (consume step 1), so a reused `requestId` with an unknown `externalUserId` returns 404, not 409. Users are never deleted, so a valid replay always resolves its user.
-- **Retrying after an error is always safe.** A 4xx (validation, unknown user, conflict) writes nothing, and so does almost every 500, because the transaction rolls back. The exception is a `COMMIT` that times out on the client: Postgres may still have committed the decision, so the caller gets a 500 for a request that was in fact decided. Either way, a retry with the same `requestId` is correct: it returns the stored decision if one was committed, and decides the request fresh if not. Callers should retry 500s with the same `requestId`, never a new one.
+- **Retrying after an error is always safe.** A 4xx (validation, unknown user, conflict) writes nothing, and neither does a 503 (`SERVICE_UNAVAILABLE`: the pool, lock or statement timed out before anything committed). Almost every 500 writes nothing too, because the transaction rolls back. The exception is a `COMMIT` that times out on the client: Postgres may still have committed the decision, so the caller gets a 500 for a request that was in fact decided. Either way, a retry with the same `requestId` is correct: it returns the stored decision if one was committed, and decides the request fresh if not. Callers should retry 503s (after `Retry-After`) and 500s with the same `requestId`, never a new one.
 - **Concurrent copies are decided once.** The others replay the result (see [the consume transaction](#the-consume-transaction), step 6).
 
 ### Plan changes under concurrency
@@ -1280,9 +1281,11 @@ Behavior the brief leaves unspecified, with the reason for each choice.
 - **Plan ordering:** `GET /plans` lists predefined plans first in seed order (Starter, Pro, Basic, Premium), then the account's custom plans oldest first. The ordering is stable and puts the well-known plans on top.
 - **`predefined` flag:** every plan includes `predefined: boolean`, derived from `account_id IS NULL`. Callers need to know which plans are read-only, and deriving the flag means it can't drift from the column.
 - **Usage shape:** usage is always `{ month: "YYYY-MM", consumed, remaining }`. `GET /account` and `GET /users/:externalUserId` embed it as `usage` for the current UTC month; `GET /usage` returns it on its own, and `GET /users/:externalUserId/usage` returns it plus `externalUserId`. A missing usage row reads as 0 and `remaining = max(0, monthlyLimit - consumed)`, which matches the "reads never create rows" rule. One shape everywhere means a client parses it once.
-- **Malformed IDs in the URL → 404:** a non-UUID plan ID or an `externalUserId` longer than 128 characters can't name an existing resource, so it returns 404 like any other unknown resource (a malformed `planId` in a body is still 400).
+- **Malformed IDs in the URL → 404:** a non-UUID plan ID, or an `externalUserId` longer than 128 characters or with leading or trailing whitespace, can't name an existing resource, so it returns 404 like any other unknown resource (a malformed `planId` in a body is still 400).
 - **Unknown body fields → 400:** bodies are strict, so typos and read-only fields (such as `type` on PATCH) fail loudly instead of being silently ignored.
 - **Unknown query params are ignored:** clients and proxies often add extra params (such as cache-busters), and ignoring them is harmless for reads.
+- **Overload → 503, not 500:** a wait for a free pooled connection that times out, a `lock_timeout` (`55P03`) or a statement cancel (`57014`) returns 503 `SERVICE_UNAVAILABLE` with `Retry-After: 1`. These mean "busy right now", not "broken", and the request wrote nothing, so the caller should retry with the same `requestId`. Every other unexpected error stays a 500, including a new connection that can't be opened in time, which may mean the database is down. The client-side `query_timeout` is not mapped to 503: it can fire on a `COMMIT` that did commit, so it stays a 500.
+- **No surrounding whitespace in IDs:** `externalUserId` and `requestId` are compared exactly, so `" alice"` and `"alice"` would silently be two users (or two requests). Trimming would instead change the caller's ID without telling it. Rejecting them (400 in a body or query, 404 in a URL path, like any ID that can't exist) makes the mistake visible.
 - **Body-parser errors → 400:** malformed JSON, an oversized body, or a bad charset returns 400 `VALIDATION_ERROR`, because the error table maps invalid bodies to that one code (an oversized body would otherwise be a 413).
 - **Cursors are opaque but not secret:** a pagination cursor is base64url of `[createdAt, id]`, so anyone can decode it and see an internal row ID. That grants nothing: every query is scoped by the caller's `account_id`, so a cursor naming another account's row only sets a position and returns the caller's own rows. Clients should still treat cursors as opaque. An HMAC-signed or encrypted cursor would hide the IDs if that ever matters.
 
@@ -1326,7 +1329,9 @@ Behavior the brief leaves unspecified, with the reason for each choice.
 - **Only the current plan assignment is stored.** There is no plan history, so a past month's `remaining` is computed against the current plan. Each request row keeps the plan IDs it was decided against, but not the limits those plans had at the time: a later `PATCH` of a custom plan changes what that ID means.
 - **`GET /users` doesn't include usage.** List entries have no `usage`, so a caller that wants per-user usage needs one request per user (`GET /users/:externalUserId` or `GET /users/:externalUserId/usage`).
 - **One account's consumes are serialized** on its usage row lock, so a single account's throughput is bounded by the interval between decisions on that row ([bottlenecks](#bottlenecks)).
-- **Under overload, requests fail on the pool wait.** A request that waits more than 2s for a free connection gets a 500 ([pool timeouts](#pool-timeouts-at-200-vus)).
+- **Under overload, requests fail on the pool wait.** A request that waits more than 2s for a free connection gets a 503 `SERVICE_UNAVAILABLE` with `Retry-After: 1` ([pool timeouts](#pool-timeouts-at-200-vus)). The service sheds the load instead of queueing it.
+- **No API key rotation or revocation.** Each account has one key, issued once by `POST /accounts`. A leaked key can't be revoked or replaced, and a lost key can't be recovered, so the account is unusable without it.
+- **Account creation is public and not rate-limited.** `POST /accounts` needs no key, so anyone who can reach the service can create any number of accounts. A deployment would put it behind an admin credential or a rate limit.
 
 ## Load test summary
 
@@ -1384,7 +1389,7 @@ Hot account at 200 VUs for 20s, every probe run so far:
 | comparison session 2 (`a20894b9`) | 1 | 2,052 | 102.6 | 2,080.3 ms | 2,310.6 ms | 2,618.7 ms | 0 |
 | comparison session 2 (`a7959b5d`) | 4 | 1,921 | 96.1 | 2,191.8 ms | 3,005.9 ms | 3,462.9 ms | 171 (8.90%) |
 
-At 200 VUs both configurations fail on the pool wait. Every error is pg-pool's `timeout exceeded when trying to connect`: the request waited more than `connectionTimeoutMillis` (2s) for a free connection and got a 500. `WORKERS=1` had 8, 0, 225 and 0 errors with the same settings, and `WORKERS=4` had 206 and 171, so the comparison is inconclusive. Throughput stays at 90.0–103.3 req/s, because the row lock is still the limit. Nothing was decided twice or lost: fresh responses equal request rows in every run.
+At 200 VUs both configurations fail on the pool wait. Every error is pg-pool's `timeout exceeded when trying to connect`: the request waited more than `connectionTimeoutMillis` (2s) for a free connection and got a 500. (These runs predate `SERVICE_UNAVAILABLE`: the same failure now returns 503 with `Retry-After: 1`.) `WORKERS=1` had 8, 0, 225 and 0 errors with the same settings, and `WORKERS=4` had 206 and 171, so the comparison is inconclusive. Throughput stays at 90.0–103.3 req/s, because the row lock is still the limit. Nothing was decided twice or lost: fresh responses equal request rows in every run.
 
 ### Reproduce
 

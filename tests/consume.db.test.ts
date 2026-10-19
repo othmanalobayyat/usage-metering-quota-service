@@ -3,6 +3,8 @@ import type { Express } from 'express';
 import pg from 'pg';
 import request from 'supertest';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createApp } from '../src/app.js';
+import { createDb } from '../src/db/client.js';
 import { accountUsage, requests, users, userUsage } from '../src/db/schema.js';
 import { PREDEFINED_PLAN_IDS } from '../src/db/seed.js';
 import { MAX_INT32 } from '../src/lib/schemas.js';
@@ -574,7 +576,7 @@ describe.skipIf(!(await dbAvailable()))('POST /consume', () => {
     }
 
     it(
-      'a consume blocked on the account row fails with 500 within ~3s, writes nothing, and can be retried',
+      'a consume blocked on the account row fails with 503 within ~3s, writes nothing, and can be retried',
       async () => {
         const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
         await holdAccountRowLock();
@@ -583,8 +585,10 @@ describe.skipIf(!(await dbAvailable()))('POST /consume', () => {
         const res = await consume('alice', 5, 'blocked');
         const elapsed = Date.now() - started;
 
-        expectError(res, 500, 'INTERNAL_ERROR');
-        expect(res.body.error.message).toBe('Internal server error');
+        // lock_timeout (55P03) is overload, not a bug: 503 with Retry-After, safe to retry.
+        expectError(res, 503, 'SERVICE_UNAVAILABLE');
+        expect(res.headers['retry-after']).toBe('1');
+        expect(res.body.error.message).toMatch(/same requestId/);
         // lock_timeout (3s), not the 5s client-side query_timeout.
         expect(elapsed).toBeGreaterThanOrEqual(2_500);
         expect(elapsed).toBeLessThan(4_500);
@@ -624,6 +628,36 @@ describe.skipIf(!(await dbAvailable()))('POST /consume', () => {
     );
   });
 
+  describe('pool timeout', () => {
+    it('a request that waits too long for a pooled connection gets 503, and the same requestId succeeds later', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      await addUser('alice');
+      // A one-connection pool with a short wait, so holding its only client starves every request.
+      const pool = new pg.Pool({ connectionString: TEST_DATABASE_URL, max: 1, connectionTimeoutMillis: 200 });
+      const starvedApp = createApp({ db: createDb(pool), pingDb: async () => {}, now: () => current });
+      const held = await pool.connect();
+      const body = { externalUserId: 'alice', units: 5, requestId: 'starved' };
+      try {
+        try {
+          const res = await request(starvedApp).post('/consume').set('X-API-Key', account.apiKey).send(body);
+          expectError(res, 503, 'SERVICE_UNAVAILABLE');
+          expect(res.headers['retry-after']).toBe('1');
+          expect(await testDb.db.$count(requests)).toBe(0);
+        } finally {
+          // Released even if an assertion fails, so pool.end() below can't hang on it.
+          held.release();
+        }
+
+        const retry = await request(starvedApp).post('/consume').set('X-API-Key', account.apiKey).send(body);
+        expect(retry.status).toBe(200);
+        expect(retry.body).toMatchObject({ requestId: 'starved', status: 'ACCEPTED', replayed: false });
+        expect(await accountUnits()).toBe(5);
+      } finally {
+        await pool.end();
+      }
+    });
+  });
+
   describe('validation and access', () => {
     beforeEach(async () => {
       await addUser('alice');
@@ -661,6 +695,12 @@ describe.skipIf(!(await dbAvailable()))('POST /consume', () => {
       ['missing requestId', { requestId: undefined }],
       ['missing externalUserId', { externalUserId: undefined }],
       ['unknown field', { extra: true }],
+      ['externalUserId with a leading space', { externalUserId: ' alice' }],
+      ['externalUserId with a trailing space', { externalUserId: 'alice ' }],
+      ['externalUserId with a trailing newline', { externalUserId: 'alice\n' }],
+      ['whitespace-only externalUserId', { externalUserId: '   ' }],
+      ['requestId with a leading space', { requestId: ' r' }],
+      ['requestId with a trailing tab', { requestId: 'r\t' }],
     ])('%s → 400 and nothing written', async (_name, override) => {
       const body = { externalUserId: 'alice', units: 1, requestId: 'r', ...override };
       expectError(await as().post('/consume', body), 400, 'VALIDATION_ERROR');

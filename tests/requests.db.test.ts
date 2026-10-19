@@ -267,6 +267,8 @@ describe.skipIf(!(await dbAvailable()))('GET /requests', () => {
       'month=',
       'externalUserId=',
       `externalUserId=${'x'.repeat(129)}`,
+      'externalUserId=%20alice',
+      'externalUserId=alice%20',
       'month=2026-10&month=2026-11',
     ])('?%s → 400', async (q) => {
       expectError(await as().get(`/requests?${q}`), 400, 'VALIDATION_ERROR');

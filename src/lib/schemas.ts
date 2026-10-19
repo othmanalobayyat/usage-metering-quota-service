@@ -7,7 +7,19 @@ export const MAX_INT32 = 2_147_483_647;
 /** Any 8-4-4-4-12 hex UUID, the same set PostgreSQL's uuid type accepts. */
 export const uuidSchema = z.guid();
 
-export const externalUserIdSchema = z.string().min(1).max(128);
+/**
+ * A caller-chosen ID (externalUserId, requestId): 1-128 characters with no leading or trailing
+ * whitespace, so " alice" is rejected instead of becoming a different user from "alice".
+ */
+function callerIdSchema() {
+  return z
+    .string()
+    .min(1)
+    .max(128)
+    .refine((id) => id.trim() === id, { message: 'must not have leading or trailing whitespace' });
+}
+
+export const externalUserIdSchema = callerIdSchema();
 
 export const planIdBodySchema = z.strictObject({ planId: uuidSchema });
 
@@ -34,4 +46,4 @@ export const monthQuerySchema = z
 export const usageQuerySchema = z.object({ month: monthQuerySchema });
 
 /** Caller-supplied idempotency key, scoped per account. */
-export const requestIdSchema = z.string().min(1).max(128);
+export const requestIdSchema = callerIdSchema();

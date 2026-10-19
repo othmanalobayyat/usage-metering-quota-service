@@ -78,7 +78,7 @@ describe.skipIf(!(await dbAvailable()))('users', () => {
       expectError(await as().post('/users', { externalUserId: 'alice' }), 409, 'ALREADY_EXISTS');
     });
 
-    it.each([{}, { externalUserId: '' }, { externalUserId: 'x'.repeat(129) }, { externalUserId: 7 }, { externalUserId: 'a', planId: 'basic' }, { externalUserId: 'a', id: 'x' }])(
+    it.each([{}, { externalUserId: '' }, { externalUserId: 'x'.repeat(129) }, { externalUserId: 7 }, { externalUserId: 'a', planId: 'basic' }, { externalUserId: 'a', id: 'x' }, { externalUserId: ' alice' }, { externalUserId: 'alice ' }, { externalUserId: '\talice' }])(
       'rejects %j with 400',
       async (body) => {
         expectError(await as().post('/users', body), 400, 'VALIDATION_ERROR');
@@ -112,6 +112,12 @@ describe.skipIf(!(await dbAvailable()))('users', () => {
     it('unknown user → 404', async () => {
       expectError(await as().get('/users/nobody'), 404, 'NOT_FOUND');
       expectError(await as().get(`/users/${'x'.repeat(129)}`), 404, 'NOT_FOUND');
+    });
+
+    it('an externalUserId with surrounding whitespace in the path → 404 (it can never be registered)', async () => {
+      await as().post('/users', { externalUserId: 'alice' });
+      expectError(await as().get(`/users/${encodeURIComponent(' alice')}`), 404, 'NOT_FOUND');
+      expectError(await as().get(`/users/${encodeURIComponent('alice ')}/usage`), 404, 'NOT_FOUND');
     });
   });
 

@@ -139,8 +139,9 @@ awk -v api="$api_ctr" -v db="$db_ctr" '{ name = ($1 == api) ? "api" : ($1 == db)
 
 echo "== API log during the run =="
 docker compose logs --no-log-prefix --since "$start" api >"$out-api.log"
-echo "log lines: $(wc -l <"$out-api.log")  unhandled errors: $(grep -c 'unhandled error' "$out-api.log" || true)"
-grep -A1 'unhandled error' "$out-api.log" | grep -v -e 'unhandled error' -e '^--' | sed 's/^ *//' | cut -c1-120 |
+echo "log lines: $(wc -l <"$out-api.log")  unhandled errors: $(grep -c 'unhandled error' "$out-api.log" || true)  service unavailable (overload): $(grep -c 'service unavailable (overload)' "$out-api.log" || true)"
+grep -A1 -e 'unhandled error' -e 'service unavailable (overload)' "$out-api.log" |
+  grep -v -e 'unhandled error' -e 'service unavailable (overload)' -e '^--' | sed 's/^ *//' | cut -c1-120 |
   sort | uniq -c | sort -rn | head -5 || true
 
 echo "== Fresh decisions (k6) vs request rows (SQL) =="

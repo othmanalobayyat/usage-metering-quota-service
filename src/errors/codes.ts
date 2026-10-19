@@ -10,6 +10,7 @@ export const ERROR_STATUS = {
   IDEMPOTENCY_CONFLICT: 409,
   ALREADY_EXISTS: 409,
   INTERNAL_ERROR: 500,
+  SERVICE_UNAVAILABLE: 503,
 } as const;
 
 export type ErrorCode = keyof typeof ERROR_STATUS;

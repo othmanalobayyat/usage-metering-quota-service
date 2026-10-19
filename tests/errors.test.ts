@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
 import { createApp } from '../src/app.js';
+import type { Db } from '../src/db/client.js';
 import { ERROR_STATUS } from '../src/errors/codes.js';
 import { expectError } from './helpers/api.js';
 import { noDb } from './helpers/db.js';
@@ -18,6 +19,7 @@ describe('error codes', () => {
       IDEMPOTENCY_CONFLICT: 409,
       ALREADY_EXISTS: 409,
       INTERNAL_ERROR: 500,
+      SERVICE_UNAVAILABLE: 503,
     });
   });
 });
@@ -57,6 +59,53 @@ describe('central error handling', () => {
     expect(res.status).toBe(500);
     expect(res.body).toEqual({ error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } });
     expect(JSON.stringify(res.body)).not.toMatch(/noDb|stack/);
+  });
+});
+
+describe('overload → 503 SERVICE_UNAVAILABLE', () => {
+  /** A Db whose first use throws `err`, the way a failed auth lookup would. */
+  const failingDb = (err: Error) =>
+    new Proxy({} as Db, {
+      get() {
+        throw err;
+      },
+    });
+
+  /** Wraps a driver error the way Drizzle does (`Failed query: …` with the pg error as cause). */
+  const drizzleWrapped = (cause: Error) => new Error('Failed query: select 1', { cause });
+
+  const pgError = (code: string, message: string) => Object.assign(new Error(message), { code });
+
+  const call = (err: Error) =>
+    request(createApp({ db: failingDb(err), pingDb: async () => {} }))
+      .get('/account')
+      .set('X-API-Key', 'mk_anything');
+
+  it.each([
+    ['pg-pool checkout timeout', new Error('timeout exceeded when trying to connect')],
+    ['pg-pool checkout timeout, wrapped by Drizzle', drizzleWrapped(new Error('timeout exceeded when trying to connect'))],
+    ['lock_timeout (55P03), wrapped by Drizzle', drizzleWrapped(pgError('55P03', 'canceling statement due to lock timeout'))],
+    ['statement cancel (57014), wrapped by Drizzle', drizzleWrapped(pgError('57014', 'canceling statement due to statement timeout'))],
+  ])('%s → 503 with Retry-After: 1', async (_name, err) => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const res = await call(err);
+    expectError(res, 503, 'SERVICE_UNAVAILABLE');
+    expect(res.headers['retry-after']).toBe('1');
+    expect(res.body.error.message).toMatch(/same requestId/);
+  });
+
+  it.each([
+    ['a unique violation (23505)', drizzleWrapped(pgError('23505', 'duplicate key value'))],
+    ['a deadlock (40P01)', drizzleWrapped(pgError('40P01', 'deadlock detected'))],
+    ['the client-side query_timeout', new Error('Query read timeout')],
+    ['a new connection that could not be opened in time (the DB may be down)', new Error('Connection terminated due to connection timeout')],
+    ['a refused connection', Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:5432'), { code: 'ECONNREFUSED' })],
+  ])('%s stays 500 with no Retry-After', async (_name, err) => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const res = await call(err);
+    expect(res.status).toBe(500);
+    expect(res.body).toEqual({ error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } });
+    expect(res.headers['retry-after']).toBeUndefined();
   });
 });
 
