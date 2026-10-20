@@ -1,6 +1,6 @@
 # Load Test: Phase 6
 
-Sections 1–7 are the baseline, kept as measured: one API process, nothing tuned, exactly as `docker compose up --build` started it before `WORKERS` existed. Section 6 lists the candidate improvements. Section 8 implements one of them, several API processes with `node:cluster` (§6 item 3), and compares it with the baseline in the same session.
+Sections 1–7 are the baseline, kept as measured: one API process, nothing tuned, exactly as `docker compose up --build` started it before `WORKERS` existed. Section 6 lists the candidate improvements. Section 8 implements one of them, several API processes with `node:cluster` (§6 item 3), and compares it with the baseline in the same session. Section 9 records one later check run on the code after the F10 input fix (`docs/TEST_PLAN.md` TP-LOAD-04). Its numbers come from `load/run.sh hot-account` run `hot-account-84e77ce8-*`, and its comparison table also quotes `hot-account-bc7adbf3-*` and the runs listed below. It changes nothing in §1–§8.
 
 **Where the numbers come from.** Every number below comes from one of these saved files in `load/results/`, or is arithmetic on them shown inline:
 
@@ -390,3 +390,66 @@ The cluster code and the `WORKERS` option stay, but `src/config.ts` and `docker-
   - `WORKERS=2` with the port taken: every worker dies before listening, and the primary exits 1 after the 5th.
 - **What it doesn't cover:** SIGINT (Ctrl+C), in either mode. The restart delay itself: the test checks the `restarting in 1000ms` log line, not the timing. The count reset after a worker stays up. Draining in-flight requests on shutdown, because every SIGTERM test runs with idle workers. The 10s forced exit per worker and the primary's 12s backstop. None of it under load.
 - **Manual check in the container, no saved output:** with `WORKERS=4`, before the crash-loop cap existed: `kill -9` on one worker (it was replaced), then `docker compose stop api` (graceful, exit code 0). The result was only read off the terminal and no output was saved, so by this document's rules it isn't evidence. It wasn't repeated with `stop_grace_period: 15s`.
+
+## 9. Post-fix check: TP-LOAD-04 (`hot-account-84e77ce8`)
+
+One run of `load/run.sh hot-account` at the defaults (50 VUs, 30s, `WORKERS=1`), as specified by TP-LOAD-04 in `docs/TEST_PLAN.md` §4.8: a check that the F10 input fix (commit `1468d11`, which adds a UTF-8 check on each request body and a surrogate check on each string) changes neither correctness nor throughput. It is one run, not a new baseline, and §1–§8 are unchanged.
+
+### Code and environment
+
+- **Code:** commit `1468d11` (2026-10-19 22:50:08 UTC). The API image was built at 22:53:56 UTC and the API container created at 22:54:06 UTC, before the run started (`started_utc 2026-10-19T23:02:37Z`), and the same container was still running when this section was written. Its 37 compiled `dist/**/*.js` files are byte-identical (sha256) to the local `dist/`, and they contain the F10 checks. `load/run.sh` doesn't record the commit or the dirty state (QA report F11), so the run files themselves don't show the commit. It comes from the developer's record and the timestamps above.
+- **Environment** (`-env.txt`): the same versions and settings as §1. `api_node v22.23.3`, `api_workers_env 1`, `api_node_processes 1`, `pg_server_version 16.15`, `shared_buffers` 128MB, `synchronous_commit` on, `fsync` on, `host_cpus 12`, `host_swap_used_mib 1654`. Other host load wasn't recorded, as in every earlier run.
+
+### Results
+
+| Consumes | RPS | p50 | p95 | p99 | max | Errors (non-200) | Accepted | Rejected | Fresh / Replayed |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| 2,319 | **77.3** | 607.9 ms | 943.0 ms | 1,013.6 ms | 1,107.2 ms | 0 (0.00%) | 2,319 | 0 | 2,319 / 0 |
+
+**Correctness** (`-sql.txt`, `-run.txt`):
+- Invariant checks 1–4: 0 violations each.
+- Check 5, this run's account: 2,319 request rows, all accepted; accepted units = account usage = user usage = 6,979.
+- `k6 fresh=2319  request rows=2319  OK`.
+- Index scans (`-idx-delta.txt`): 4,638 on `requests_account_id_request_id_unique` = 2 × 2,319, so every consume was a fresh decision (fast path + recheck), with no replays.
+- API log for the run window: `log lines: 0  unhandled errors: 0  service unavailable (overload): 0`. `-pg.err` has only the sampler's `FATAL: terminating connection due to administrator command`, explained at the top of this document.
+
+**Lock and CPU profile** (`-run.txt`): 61 busy samples, all 61 with a lock waiter. Connections 10.00, running 0.44, **waiting on a lock 8.39** (max 9), idle in transaction 0.93, idle 0.23. The waiting query is the step 5 `select "units_used" from "account_usage" … for update` in every sample (57 alone, 3 with the `user_usage` upsert, 1 with the `account_usage` upsert). API CPU average 81%, max 134%; DB CPU average 61%, max 78% (17 samples each).
+
+### Compared with the earlier single-process hot-account runs
+
+Every 50-VU, 30s, single-process hot-account run in `load/results/`:
+
+| Run | When (UTC) | Where cited | RPS | p50 | p95 | p99 | Waiting on a lock | API CPU avg | DB CPU avg |
+|---|---|---|---:|---:|---:|---:|---:|---:|---:|
+| `e4ff949a` | 2026-10-18 15:26 | §3 (before `WORKERS` existed) | 85.2 | 593.2 ms | 686.8 ms | 731.4 ms | 8.25 | 70% | 60% |
+| `8eae1167` | 2026-10-18 16:21 | §8, first session | 87.7 | 546.1 ms | 813.3 ms | 1,086.8 ms | 8.02 | 74% | 59% |
+| `3811ff67` | 2026-10-18 16:25 | §8, first session | 88.7 | 543.0 ms | 788.7 ms | 1,033.5 ms | 8.38 | 75% | 59% |
+| `e9a4f095` | 2026-10-18 16:28 | §8, first session | 95.2 | 523.8 ms | 604.3 ms | 741.5 ms | 8.23 | 77% | 59% |
+| `2ef4271e` | 2026-10-18 18:37 | §8, second session | 95.9 | 518.8 ms | 601.9 ms | 670.5 ms | 8.10 | 77% | 60% |
+| `c23c6f4d` | 2026-10-18 18:40 | §8, second session | 95.6 | 520.8 ms | 602.6 ms | 774.2 ms | 8.18 | 79% | 61% |
+| `c7103a7d` | 2026-10-18 18:44 | §8, second session | 96.2 | 523.3 ms | 599.9 ms | 685.0 ms | 8.21 | 76% | 59% |
+| `bc7adbf3` | 2026-10-19 19:26 | not cited before (QA report F11); code before the F10 fix | 91.3 | 501.1 ms | 787.2 ms | 1,021.6 ms | 8.21 | 77% | 61% |
+| **`84e77ce8`** | 2026-10-19 23:02 | this section; code `1468d11` | **77.3** | **607.9 ms** | **943.0 ms** | 1,013.6 ms | 8.39 | 81% | 61% |
+
+All figures are from each run's `-k6.txt` and `-run.txt`.
+
+- **Throughput is the lowest of the nine runs:** 77.3 req/s against 85.2–96.2 req/s before, 7.9 req/s (9.3%) below the previous lowest. The time between two decisions on the account is 1 / 77.3 = 12.9 ms, against 10.4–11.7 ms before.
+- **p50 and p95 are above every earlier run** (p50 501.1–593.2 ms, p95 599.9–813.3 ms before). p99 is inside the earlier range (670.5–1,086.8 ms). Little's law still holds: 50 / 77.3 = 647 ms against a measured p50 of 607.9 ms.
+- **The bottleneck profile is the same:** the `account_usage` row lock, with 8.39 of 10 connections waiting (8.02–8.38 before). API CPU average is 81% (70–79% before), DB CPU 61% (59–61%).
+
+### TP-LOAD-04 result
+
+| Expected result (TEST_PLAN §4.8) | Measured | Met |
+|---|---|---|
+| Invariants 0 | Checks 1–4: 0; fresh = request rows | Yes |
+| 0 errors | 0 non-200; 0 API log lines | Yes |
+| RPS within the documented spread for one run (85.2–103.3 req/s) | 77.3 req/s | **No** |
+
+**TP-LOAD-04 is not passed.** Correctness and errors met their criteria, the throughput criterion did not. The lower bound of 85.2 req/s is the §3 baseline. The upper bound of 103.3 req/s is the 200-VU probe `76c60ef4` (§8). The 50-VU single-process runs above span 85.2–96.2 req/s. The criterion is kept as written. 77.3 req/s is below both ranges.
+
+### Not verified (§9)
+
+- **Why throughput is lower.** The cause wasn't investigated. One run can't tell a cost of the F10 fix apart from run-to-run or host variation, and no code before the fix was run in the same session to compare.
+- **Run-to-run variation on `1468d11`:** one run only.
+- **The git state at image build time** isn't recorded by `load/run.sh` (F11). It is inferred from the timestamps and the `dist/` comparison above.
+- **These files are untracked** in git when this section was written (`git status`), like `hot-account-bc7adbf3-*` and `many-accounts-06e6a282-*` (QA report F11). Committing them is the developer's decision.

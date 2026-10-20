@@ -6,10 +6,25 @@
 |---|---|---|---|
 | 1 | 2026-10-19 | `docs/QA_REPORT.md` revision 2; commit `47fa0e7` + the uncommitted working tree (F1/F2 fixes in `src/lib/schemas.ts`, `src/middleware/errors.ts`, `src/routes/{accounts,plans,users}.ts`, `tests/errors.test.ts`, untracked `tests/input-encoding.db.test.ts`) | Design only. No test in this plan had been executed at this revision. |
 | 2 | 2026-10-20 | `docs/QA_REPORT.md` revision 3; commit `b56dbc0` + the uncommitted F10 fix and tests (see the QA report's "Commit state") | **Partially executed:** of the 54 planned tests, 21 were run as specified, 2 were run in part, and 31 have not been run. Only the F10 tests (§4.1–§4.5) were in scope. See §8. |
+| 3 | 2026-10-20 | commit `1468d11` (the F10 fix and its tests, committed); Compose API image rebuilt from it | **TP-LOAD-04 executed, not passed:** invariants and errors met, throughput below the expected range. 22 run as specified, 2 in part, 30 not run. See §9. |
+| 4 | 2026-10-20 | commit `1468d11`, clean clone | **TP-REG-01 executed, passed.** 23 run as specified, 2 in part, 29 not run. See §10. |
+| 5 | 2026-10-20 | commit `1468d11` | Documentation corrections only. No test was run and no outcome, priority or expected result changed. See the Revision 5 paragraph. |
+| 6 | 2026-10-20 | `docs/QA_REPORT.md` revision 4; commit `1468d11` + the uncommitted F12 and F13 fixes and their tests | **New tests for F12 and F13 written and executed, passed** (73 tests, outside the 54 planned). The planned-test totals are unchanged: 23 run as specified, 2 in part, 29 not run. See §11. |
 
 This plan adds no findings and changes no finding status. Finding IDs (F1–F11) and requirement IDs (R1–R78) are the ones in `docs/QA_REPORT.md`. No production code, test code or load evidence was changed to write it.
 
 **Revision 2** adds only this header and the execution record in §8. The test IDs, scenarios, priorities and expected results in §4, and the decisions in §5, are unchanged, so the plan still shows what was designed. The "Current evidence" column still shows what was known **at design time**, before any test ran: "Not run" there doesn't mean the test hasn't run since. §8 is the only place that says what was executed. Results and finding status are in `docs/QA_REPORT.md` (revision 3).
+
+**Revision 3** adds this row, this paragraph and §9, the execution record for TP-LOAD-04. §4, §5 and §8 are unchanged, so §8 still shows TP-LOAD-04 as not run at revision 2. From revision 3 on, §8 and §9 together are the execution record.
+
+**Revision 4** adds its row, this paragraph and §10, the execution record for TP-REG-01. §4, §5, §8 and §9 are unchanged, so §9 still lists TP-REG-01 as not run at revision 3. From revision 4 on, §8, §9 and §10 together are the execution record.
+
+**Revision 5** makes documentation corrections only. In the §4 test tables, only README line citations changed, including citations inside the "Expected result" and "Current evidence" cells. No test ID, scenario, priority, expected outcome or performance threshold changed.
+- README line references now point to the README at `1468d11`. The cited text is unchanged; `1468d11` inserted lines above it. The changes: TP-IDEM-07 `:1288` → `:1289`, TP-REG-06 `:1202` → `:1203`, TP-LOAD-01 `:1393` → `:1397`, the §4.8 note `:1409` → `:1413`, §4.9 `:1297` → `:1300`. Line references into other files are unchanged.
+- §4.8 gets a note on where TP-LOAD-04's 85.2–103.3 req/s range comes from. The criterion itself is unchanged.
+- §5 D6 says more precisely what can't be told apart without D6. The recommendation is unchanged.
+
+**Revision 6** adds its row, this paragraph and §11, the execution record for the F12 and F13 tests. Those two findings come from `docs/QA_REPORT.md` revision 4, so this plan now uses finding IDs up to F13. Their tests were written together with the fixes, not designed in §4, so they have no TP IDs and don't count toward the 54 planned tests. §4 changes only in line citations. README citations change for the same reason as revision 5: the F12 README changes inserted two lines, at 1290 and 1334. The changes: TP-LOAD-01 `:1397` → `:1399`, the §4.8 note `:1413` → `:1415`, §4.9 `:1300` → `:1301`. The cited text is unchanged. Citations that this revision didn't change are unaffected: they point at lines before 1290 (TP-IDEM-07 `:1289`, TP-REG-06 `:1203`). The F13 fix also inserted lines in two load scripts, so two citations into them move: `load/lib.js:115-128` → `:118-131` (§4.8, step 2) and `load/run.sh:142` → `:146` (§5, D6). The cited code is unchanged. Otherwise §5 and §8–§10 are unchanged. From revision 6 on, §8–§11 together are the execution record.
 
 ### 1. Starting point
 
@@ -149,7 +164,7 @@ Integration. These can live in `tests/input-encoding.db.test.ts` (same setup) or
 | TP-IDEM-04 | F10, R2, R8, R32 | User collision: register `"�"` (201). Then `POST /users { externalUserId: "\ud800" }`, then `POST /consume { externalUserId: "\udbff", units: 1, requestId: "u1" }` | `"�"`: 201. `"\ud800"`: 400, not 409 `ALREADY_EXISTS`. The consume: 400. The `"�"` user's usage stays 0 | integration | P0 | Red: QA probe (409 for the second user; consumes charged to the first) |
 | TP-IDEM-05 | R67, R78 | Valid pairs that share a high surrogate: `requestId: "😀"` (`😀`) then `"😁"` (`😁`), 1 unit each. Also register users `"😀"` and `"😁"` | Two fresh decisions (`replayed: false`), usage 2, two request rows. Both users 201 | integration | P0 | Not run. Catches a fix that strips or replaces surrogates instead of rejecting only lone ones. |
 | TP-IDEM-06 | R67 | The same key in two encodings: `requestId` sent as raw UTF-8 `"😀"`, then a raw body with the escape `"😀"` | 2nd: 200 `replayed: true`. They are the same string, so this is a true retry | integration | P1 | Not run |
-| TP-IDEM-07 | R67, R78 | No normalization: `requestId` `"é"` (U+00E9) then `"é"`; register users `"é"` and `"é"` | Two fresh decisions; two users (201, 201). README says IDs are compared exactly (`README.md:1288`) | integration | P1 | Not run |
+| TP-IDEM-07 | R67, R78 | No normalization: `requestId` `"é"` (U+00E9) then `"é"`; register users `"é"` and `"é"` | Two fresh decisions; two users (201, 201). README says IDs are compared exactly (`README.md:1289`) | integration | P1 | Not run |
 | TP-IDEM-08 | R36, R67 | 20 parallel copies of `requestId: "🧾-1"`, 3 units each (mirrors `tests/consume.db.test.ts:268` with a non-ASCII key) | One `replayed: false`, 19 `replayed: true`, one request row, usage 3 | integration | P2 | Not run |
 | TP-IDEM-09 | F10 | Root-cause canary, direct `pg`: `SELECT $1::text = $2::text` with `"\ud800"`, `"\udfff"` | `true` (the driver replaces both with U+FFFD). Documents why the guard has to be in the app; it changes only if node-postgres changes | integration | P3 | Observed by QA rev 2 (direct query); never a test |
 
@@ -176,7 +191,7 @@ Already covered, in the working tree only: `tests/input-encoding.db.test.ts:61-1
 | TP-REG-03 | F1, F10, R68 | Extend the `malformed` list at `tests/input-encoding.db.test.ts:62` with `%ED%A0%80` (encoded high surrogate), `%ED%B0%80` (encoded low surrogate), `%C0%AF` (overlong), `%F4%90%80%80` (above U+10FFFF), `%E0%80` (truncated) | Every one: 404 `User not found` / `Plan not found` on all 5 routes; the plan is unchanged; no `console.error` | integration | P1 | Not run (P2: `decodeURIComponent` throws on the first) |
 | TP-REG-04 | F1, R68 | A no-500 sweep: a fixed table of {each authenticated route} × {path, query, body where applicable} × {NUL, `%ZZ`, `%ED%A0%80`, a lone surrogate in a body} | Every status is 400, 401 or 404. No 500. No `console.error` | integration | P1 | Not run |
 | TP-REG-05 | F2, R19 | NUL gaps: `PUT /account/plan { planId: "<uuid>\u0000" }`; a body key containing NUL (`{"a\u0000": 1}` on `/consume`); `GET /users?limit=1%00` | 400 `VALIDATION_ERROR` each, nothing written | integration | P2 | Not run |
-| TP-REG-06 | F2, R67 | A rejected NUL key isn't spent: `requestId: "r\u0000"` → 400, then `requestId: "r"` | 2nd: 200, `replayed: false`, usage 1. A 400 writes nothing (`README.md:1202`) | integration | P2 | Not run |
+| TP-REG-06 | F2, R67 | A rejected NUL key isn't spent: `requestId: "r\u0000"` → 400, then `requestId: "r"` | 2nd: 200, `replayed: false`, usage 1. A 400 writes nothing (`README.md:1203`) | integration | P2 | Not run |
 | TP-REG-07 | F1 | Unknown routes with bad encoding: `GET /nope/%ZZ`, `GET /account/%ZZ` | 404 `NOT_FOUND` in the standard shape | integration | P3 | Not run |
 
 #### 4.7 Restart persistence
@@ -198,19 +213,21 @@ This closes F6: the 503 + `Retry-After` path (R69) has only been tested in integ
 **Preconditions (for every TP-LOAD test)**
 
 1. The code under test is committed and the API image is rebuilt from it (`docker compose up -d --build --wait db api`, `WORKERS=1`). Record `git rev-parse HEAD` and `git status --porcelain` with each run, since `load/run.sh` doesn't record them (F11).
-2. Load tooling change, D6. Today `record()` in `load/lib.js:115-128` counts every non-200 as one error. It can't tell a 503 from a 500 and never looks at `Retry-After`. Proposed: count by status (`consume_status_503`, `consume_status_500`, `consume_status_other`), count 503s that break the contract (`consume_503_bad_contract`: `Retry-After` missing or not `1`, or `error.code` not `SERVICE_UNAVAILABLE`), and add all of them to `SUMMARY_JSON`. Optional: `RETRY_503=n`, which retries a 503 with the same `requestId` after `Retry-After`, counting `consume_retried`, `consume_retry_replayed` and `consume_retry_exhausted`.
+2. Load tooling change, D6. Today `record()` in `load/lib.js:118-131` counts every non-200 as one error. It can't tell a 503 from a 500 and never looks at `Retry-After`. Proposed: count by status (`consume_status_503`, `consume_status_500`, `consume_status_other`), count 503s that break the contract (`consume_503_bad_contract`: `Retry-After` missing or not `1`, or `error.code` not `SERVICE_UNAVAILABLE`), and add all of them to `SUMMARY_JSON`. Optional: `RETRY_503=n`, which retries a 503 with the same `requestId` after `Retry-After`, counting `consume_retried`, `consume_retry_replayed` and `consume_retry_exhausted`.
 3. The checks `load/run.sh` already makes are reused: `load/check-invariants.sql` checks 1–4, `k6 fresh = request rows`, and the API log counts of `unhandled error` and `service unavailable (overload)`.
 
 **Why 200 VUs may produce no 503s.** Earlier `WORKERS=1` probes with the same settings had 8, 0, 225 and 0 errors (`docs/LOAD_TEST.md:363`). By Little's law, about 190 requests queue for 10 connections that drain at ~95 req/s, so the expected pool wait is about 190 / 95 ≈ 2.0 s, the same as `connectionTimeoutMillis` (2 s, `src/db/client.ts:9`). That would explain why identical runs swing from 0 to 225. This is an estimate, not a measurement, and it's why TP-LOAD-02 exists.
 
 | Test ID | Req / finding | Scenario and setup | Expected result | Type | Priority | Current evidence |
 |---|---|---|---|---|---|---|
-| TP-LOAD-01 | F6, R69, R32, R36, R62 | `VUS=200 DURATION=20s load/run.sh hot-account`, 3 runs, `WORKERS=1`, with the D6 counters | Per run: (a) `consume_status_500 = 0` and `consume_status_other = 0`; (b) `consume_503_bad_contract = 0`; (c) API log `unhandled error` = 0, and `service unavailable (overload)` lines = k6's 503 count; (d) invariant checks 1–4 = 0; (e) `k6 fresh = request rows … OK`. R69 counts as verified under load only if at least one run has 503 > 0. If all three have 0, the result is inconclusive (not a failure), and TP-LOAD-02 decides | load | P1 | Not run on the current code. Pre-`e1ab78e` runs returned 500s for the same condition (`README.md:1393`) |
+| TP-LOAD-01 | F6, R69, R32, R36, R62 | `VUS=200 DURATION=20s load/run.sh hot-account`, 3 runs, `WORKERS=1`, with the D6 counters | Per run: (a) `consume_status_500 = 0` and `consume_status_other = 0`; (b) `consume_503_bad_contract = 0`; (c) API log `unhandled error` = 0, and `service unavailable (overload)` lines = k6's 503 count; (d) invariant checks 1–4 = 0; (e) `k6 fresh = request rows … OK`. R69 counts as verified under load only if at least one run has 503 > 0. If all three have 0, the result is inconclusive (not a failure), and TP-LOAD-02 decides | load | P1 | Not run on the current code. Pre-`e1ab78e` runs returned 500s for the same condition (`README.md:1399`) |
 | TP-LOAD-02 | F6, R69 | Forced overload: `VUS=300 DURATION=20s load/run.sh hot-account`, 1 run. Estimated wait ≈ 290 / 95 ≈ 3.1 s, above the 2 s pool timeout | (a)–(e) as TP-LOAD-01, and `consume_status_503 > 0` | load | P1 | Not run |
 | TP-LOAD-03 | R67, R69 | TP-LOAD-02 with `RETRY_503=3` | `consume_retry_replayed = 0`: a retry after a 503 must be a fresh decision, because a 503 wrote nothing (a replay would mean the 503 attempt committed). Request rows = distinct `requestId`s that got a 200. Invariants 0. `consume_retry_exhausted` is reported, not a failure | load | P2 | Not run |
 | TP-LOAD-04 | R36, R62, F10 | After the F10 fix: `load/run.sh hot-account` at the default 50 VUs, 1 run | Invariants 0, 0 errors, RPS within the documented spread for one run (85.2–103.3 req/s). The fix adds a check on ≤ 128-character strings, so no change is expected | load | P3 | Not run |
 
-The load tests leave their accounts in the dev database (`README.md:1409`). Results go to `load/results/` and should be cited in `docs/LOAD_TEST.md`, which also resolves the citation part of F11 for the new runs.
+**Note on TP-LOAD-04's range (rev 5, criterion unchanged):** §9 explains where the 85.2–103.3 req/s bounds come from.
+
+The load tests leave their accounts in the dev database (`README.md:1415`). Results go to `load/results/` and should be cited in `docs/LOAD_TEST.md`, which also resolves the citation part of F11 for the new runs.
 
 #### 4.9 F8 — `perRequestLimit > monthlyLimit`
 
@@ -220,7 +237,7 @@ F8 is a product decision (D3). The tests depend on which option is chosen.
 
 - Decisions are correct either way: a request above the monthly allowance is rejected by the monthly rule (`MONTHLY_LIMIT_EXCEEDED`, with the monthly limit as `limit`).
 - Option A conflicts with the brief's "allowance reduced below usage" case. Lowering a custom plan from 10,000/100 to 50/month would become a 400 unless the caller also lowers `perRequestLimit` in the same PATCH.
-- `monthlyLimit: 0` already means "suspended" (`README.md:1297`), and with it every plan has `perRequestLimit > monthlyLimit`. Option A needs an exception for it.
+- `monthlyLimit: 0` already means "suspended" (`README.md:1301`), and with it every plan has `perRequestLimit > monthlyLimit`. Option A needs an exception for it.
 - `CLAUDE.md` says unspecified behavior gets a sensible choice plus a README assumption. Option B is that.
 
 **Option B tests (recommended)**
@@ -251,7 +268,7 @@ F8 is a product decision (D3). The tests depend on which option is chosen.
 | D3 | F8: allow and document (B), or reject (A) | B (§4.9) | §4.9, README |
 | D4 | Lenient decoding in query values and cursors (P3, P5): `%FF` and `%FE` both read as U+FFFD; a valid cursor with junk appended is accepted. Read-only, nothing written | Keep it, add one line to README Assumptions, and pin it with TP-ENC-06 and TP-ENC-07 | TP-ENC-06, TP-ENC-07 |
 | D5 | Test-code structure: move `startServer()` from `tests/server.db.test.ts` to `tests/helpers/server.ts` for TP-PERS-01; add `scripts/e2e-restart.sh` for TP-PERS-02 | Yes to the helper (P1); the script only if time allows (P2) | §4.7 |
-| D6 | Load tooling: change `record()` in `load/lib.js` (status counters, `Retry-After` check, optional `RETRY_503`), and have `load/run.sh` record the commit and dirty state. These are test scripts, but they produce the evidence that `docs/LOAD_TEST.md` cites | Yes. Without it TP-LOAD-01 can't tell a 503 from a 500 | §4.8 |
+| D6 | Load tooling: change `record()` in `load/lib.js` (status counters, `Retry-After` check, optional `RETRY_503`), and have `load/run.sh` record the commit and dirty state. These are test scripts, but they produce the evidence that `docs/LOAD_TEST.md` cites | Yes. Without it TP-LOAD-01 can't tell a 503 from a 500 *on the client side*. Rev 5 clarification: `load/run.sh:146` already counts `unhandled error` and `service unavailable (overload)` lines in the API log, which tells them apart on the server side (criterion (c)). Criteria (a) and (b), the k6 status counts and the `Retry-After` / `error.code` check, still need D6 | §4.8 |
 | D7 | Length unit: Zod counts code points (P6), so 128 emoji are accepted. The README says "128 characters" | Keep it, and say "code points" in the README | TP-UNIT-05, TP-UTF-04 |
 
 ### 6. Phase 3 — execution order
@@ -318,3 +335,88 @@ Totals: before the fix, 63 failed and 23 passed (86); after it, 86 passed. The f
 - Step 1 is done: the F1/F2 fix is commit `b56dbc0`.
 - Step 2's "keep the failing F10 tests on a branch" no longer applies, because the tests and the fix are meant to be committed together.
 - Steps 3–6 remain open, except the parts listed above.
+
+### 9. Execution record (revision 3)
+
+Executed on 2026-10-19 at 23:02 UTC (2026-10-20 02:02 +0300) against the Compose stack. Full figures and comparisons are in `docs/LOAD_TEST.md` §9. Evidence: `load/results/hot-account-84e77ce8-*` (untracked when this was written).
+
+**TP-LOAD-04: not passed.** Correctness and errors met their criteria; throughput didn't.
+
+| Item | Specified (§4.8) | Actual | Met |
+|---|---|---|---|
+| Precondition 1: committed code, image rebuilt | Commit, rebuild, record `git rev-parse HEAD` and `git status --porcelain` | HEAD `1468d11` (developer's record). Image built 22:53:56 UTC, after the commit (22:50:08 UTC). The container's compiled `dist/` is byte-identical to the local build. `load/run.sh` recorded neither the commit nor the porcelain output (F11) | In part: rebuild verified, git state not recorded with the run |
+| Run shape | `load/run.sh hot-account`, default 50 VUs, 1 run | 50 VUs (default), 30s, `WORKERS=1`, `api_node_processes 1`, 1 run (`84e77ce8`) | Yes |
+| Expected: invariants 0 | Checks 1–4 = 0 | 0, 0, 0, 0; `k6 fresh=2319 request rows=2319 OK` | **Yes** |
+| Expected: 0 errors | 0 | 0 non-200 of 2,319; API log 0 lines (0 unhandled, 0 overload) | **Yes** |
+| Expected: RPS 85.2–103.3 req/s | Within the range | **77.3 req/s** (p50 607.9 ms, p95 943.0 ms, p99 1,013.6 ms) | **No**, 7.9 req/s below the lower bound |
+
+The expected results in §4.8 are unchanged. Note on the range: 85.2 is the 50-VU baseline (`e4ff949a`) and 103.3 is a 200-VU probe (`76c60ef4`). Every earlier 50-VU single-process run is in 85.2–96.2 req/s (`docs/LOAD_TEST.md` §9). 77.3 is below both. §4.8's note that "no change is expected" isn't confirmed by this run. The cause wasn't investigated, so this record doesn't attribute the gap to the F10 fix or to anything else.
+
+**Totals at revision 3:** of the 54 planned tests, 22 run as specified (the 21 in §8 plus TP-LOAD-04, which didn't pass), 2 run in part (TP-ENC-07, TP-REG-03, unchanged), and 30 not run.
+
+**Not run (30), by §4 priority:**
+
+| Priority | Test IDs | Blocked by |
+|---|---|---|
+| P0 | TP-REG-01 (the full suite has passed on the working tree, never on a clean checkout of a commit) | — |
+| P1 | TP-REG-02, TP-REG-04, TP-UTF-03 | — |
+| P1 | TP-PERS-01 | D5 (test helper refactor) |
+| P1 | TP-LOAD-01, TP-LOAD-02 | D6 (load tooling counters) |
+| P1 | TP-F8-01…05, or TP-F8-A1…A4 | D3 (only one set applies) |
+| P2 | TP-UNIT-05, TP-ENC-05, TP-ERR-01, TP-IDEM-08, TP-UTF-04, TP-UTF-05, TP-REG-05, TP-REG-06, TP-PERS-02 | TP-PERS-02: D5 |
+| P2 | TP-LOAD-03 | D6 |
+| P3 | TP-ERR-02, TP-ERR-04, TP-REG-07, TP-PERS-03 | — |
+
+Run in part, remainder still open: TP-REG-03 (P1: `%C0%AF`, `%F4%90%80%80`, `%E0%80`, the plan routes) and TP-ENC-07's third case (P3, depends on D4).
+
+**Decisions:** unchanged from §8. D1 and D2 applied; D4 not formally decided; D3, D5, D6, D7 open.
+
+### 10. Execution record (revision 4)
+
+**TP-REG-01: passed**, on a clean clone of commit `1468d11f70d0d85011a0e9f7a66712e3540903f2`, on 2026-10-19 between 23:16 and 23:18 UTC (2026-10-20 02:16 +0300).
+
+| Item | Specified (§4.6) | Actual | Met |
+|---|---|---|---|
+| Gate: the F1/F2 fix and `tests/input-encoding.db.test.ts` committed together | One commit | Both are in `b56dbc0` (`git show --stat b56dbc0`: `src/lib/schemas.ts`, `src/middleware/errors.ts`, `src/routes/{accounts,plans,users}.ts`, `tests/errors.test.ts`, `tests/input-encoding.db.test.ts`). `1468d11` is a descendant of it | Yes |
+| Clean checkout | A clean checkout of that commit | A separate `git clone --no-hardlinks` of the repository, then `git checkout --detach 1468d11`, outside the working tree. `git status --porcelain --ignored` was empty before `npm ci`, and `git status --porcelain` was empty after the runs. No uncommitted file, untracked file or `load/results/` file from the working tree was present | Yes |
+| Step 1 | `REQUIRE_DB=1 npx vitest run tests/input-encoding.db.test.ts tests/errors.test.ts`: both files pass, 0 skipped | `Test Files 2 passed (2)`, `Tests 56 passed (56)`, exit 0, no skipped or todo tests | Yes |
+| Step 2 | Full suite: 22 files, ≥ 400 tests, 0 failed | `REQUIRE_DB=1 npx vitest run`: `Test Files 24 passed (24)`, `Tests 486 passed (486)`, exit 0, no skipped or todo tests, duration 78.00 s | Yes (see the file-count note) |
+
+**Commands**, run in the clone:
+```sh
+git clone --no-hardlinks --no-checkout <repo> tp-reg-01
+git -C tp-reg-01 checkout --detach 1468d11f70d0d85011a0e9f7a66712e3540903f2
+npm ci                                    # 260 packages, from package-lock.json
+env -u DATABASE_URL -u TEST_DATABASE_URL REQUIRE_DB=1 npx vitest run tests/input-encoding.db.test.ts tests/errors.test.ts
+env -u DATABASE_URL -u TEST_DATABASE_URL REQUIRE_DB=1 npx vitest run
+```
+
+**Environment:** Node v22.15.0, npm 10.9.2, Vitest 5.0.5, Linux 6.8.0-146-generic (x64). The database was the default `TEST_DATABASE_URL`, `postgres://quota:quota@localhost:5433/quota_test`, on the Compose `postgres:16` container (server 16.15). `DATABASE_URL` and `TEST_DATABASE_URL` were unset. The test setup migrates and seeds `quota_test` and truncates only that database.
+
+**File count:** §4.6 expects 22 files, QA revision 2's count. `1468d11` has 24 test files, the 22 plus `tests/unicode-schemas.test.ts` and `tests/unicode-input.db.test.ts` from the F10 fix (`git diff --name-status 47fa0e7 1468d11 -- tests`). All 24 ran and passed.
+
+**Not covered by this run:** `b56dbc0` on its own (QA report §7, revision 3). This run used `1468d11`, which contains `b56dbc0`. Node versions other than 22.15.0 weren't run.
+
+**Totals at revision 4:** of the 54 planned tests, 23 run as specified (§9's 22 plus TP-REG-01), 2 run in part (TP-ENC-07, TP-REG-03), and 29 not run: §9's list without TP-REG-01. No P0 test is left unrun.
+
+### 11. Execution record (revision 6)
+
+Executed on 2026-10-20 with `REQUIRE_DB=1` against `quota_test`, on commit `1468d11` plus the uncommitted F12 and F13 fixes. Findings, resolutions and evidence are in `docs/QA_REPORT.md` revision 4 (§1, F12, F13). These tests were written with the fixes. They aren't part of the 54 planned tests and have no TP IDs.
+
+| File | Covers | Red run (fix disabled) | Green run |
+|---|---|---|---|
+| `tests/dot-segment-ids.test.ts` | F12: `externalUserIdSchema` rejects exactly `.` and `..`, accepts look-alikes, leaves `requestId` alone; `QuotaApi.setUserPlan` request lines (stub server) and refusal of `.`/`..` without sending; `new URL()` control | Schema refinement and client guard disabled, run together with the next file: **17 failed, 17 passed** (34). The 17 passes are controls and look-alikes | 34 passed (both files) |
+| `tests/dot-segment-ids.db.test.ts` | F12: `POST /users` and `POST /consume` → 400 with row counts unchanged; `GET /requests` → 400 with the expected message (a read, so row counts aren't checked); `.`, `..`, `%2E`, `%2e`, `%2E%2E`, `%2e%2e` on the three user routes → 404 `User not found` with a stored user of that ID; look-alike IDs work end to end; a pre-existing `..` row is listed but not addressable or chargeable | (included above) | (included above) |
+| `tests/load-duration.test.ts` | F13: `durationSeconds` accepts 5 whole-second values and refuses 14 others; `load/run.sh` with a `PATH` holding only `dirname` (no Docker, jq or k6 reachable) passes unset, empty and valid values to the jq check and stops 13 invalid values with exit 2 | `load/run.sh` check removed: **13 failed, 26 passed** (39) | 39 passed |
+
+The first version of the F12 path tests passed in the red run, because no `.` user existed and the 404 didn't depend on the rule. They were changed to store a user with that ID first, and the red counts above are from the changed tests.
+
+**Smoke checks, no load** (k6 1.3.0, `docker compose --profile load run --rm --no-deps k6 inspect …`, which runs the init code only): `/scripts/hot-account.js` with the default and with `-e DURATION=20s` exit 0, with scenario durations `30s` and `20s`. With `-e DURATION=1m` it exits 107 with `DURATION must be whole seconds such as 30s or 90s, got "1m"`, thrown from `/scripts/lib.js:16`. A container-level `-e DURATION=1m` (before `k6`) never reaches k6's `__ENV`: it exited 0 with `30s` and tested nothing.
+
+**Full suite and checks:** `REQUIRE_DB=1 npx vitest run`: 27 files, 559 passed, 0 failed, 0 skipped. `npm run typecheck`, `npm run lint`, `npm run build` and `npx tsc --noEmit -p .` in `client/`: exit 0 each.
+
+**Environment:** Node v22.15.0, Vitest 5.0.5, Linux 6.8.0-146-generic (x64); `quota_test` on the Compose `postgres:16` container.
+
+**Not covered by this run:** a real load run with the F13 check, F12 inside the rebuilt Compose stack (the images weren't rebuilt), and Node versions other than 22.15.0.
+
+**Totals at revision 6:** unchanged from revision 4 for the 54 planned tests: 23 run as specified, 2 in part, 29 not run.
