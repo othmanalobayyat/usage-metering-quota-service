@@ -34,7 +34,14 @@ function callerIdSchema() {
     .refine((id) => id.trim() === id, { message: 'must not have leading or trailing whitespace' });
 }
 
-export const externalUserIdSchema = callerIdSchema();
+/**
+ * `.` and `..` are rejected: they are URL dot segments, so `/users/../plan` is resolved to `/plan`
+ * by fetch, `new URL()` and most HTTP clients (even written as `%2E%2E`), and such a user could
+ * never be addressed in a URL path.
+ */
+export const externalUserIdSchema = callerIdSchema().refine((id) => id !== '.' && id !== '..', {
+  message: 'must not be "." or ".."',
+});
 
 /** `name` on accounts, plans and users: trimmed, 1-200 characters. */
 export const nameSchema = textSchema().trim().min(1).max(200);

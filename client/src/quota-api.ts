@@ -49,6 +49,18 @@ export class ApiError extends Error {
 
 const TIMEOUT_MS = 10_000;
 
+/**
+ * `/users/<externalUserId>`. encodeURIComponent leaves `.` as is, and `new URL()` resolves the dot
+ * segments `.` and `..` (also as `%2E`), so `/users/../plan` would be sent as `/plan`. The API
+ * rejects those two IDs, so they're refused here instead of being sent to the wrong path.
+ */
+function userPath(externalUserId: string): string {
+  if (externalUserId === '.' || externalUserId === '..') {
+    throw new Error(`externalUserId "${externalUserId}" can't be used in a URL path`);
+  }
+  return `/users/${encodeURIComponent(externalUserId)}`;
+}
+
 export class QuotaApi {
   constructor(
     private readonly baseUrl: string,
@@ -81,8 +93,8 @@ export class QuotaApi {
     return this.call('POST', '/users', input);
   }
 
-  setUserPlan(externalUserId: string, planId: string): Promise<User> {
-    return this.call('PUT', `/users/${encodeURIComponent(externalUserId)}/plan`, { planId });
+  async setUserPlan(externalUserId: string, planId: string): Promise<User> {
+    return this.call('PUT', `${userPath(externalUserId)}/plan`, { planId });
   }
 
   consume(input: { externalUserId: string; units: number; requestId: string }): Promise<Decision> {

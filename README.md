@@ -108,7 +108,7 @@ Without `DATABASE_URL`, the server exits on startup with `Invalid environment co
 ## Accounts, users and API keys
 
 - An **account** is an application calling the service. It has one account plan, whose limits are shared by all its users, and one API key.
-- A **user** belongs to one account and has one user plan, with the user's individual limits. The calling application chooses the user's ID (`externalUserId`, 1 to 128 characters, no leading or trailing whitespace), and the API addresses users only by it. The same `externalUserId` can exist under different accounts.
+- A **user** belongs to one account and has one user plan, with the user's individual limits. The calling application chooses the user's ID (`externalUserId`, 1 to 128 characters, no leading or trailing whitespace, not `.` or `..`), and the API addresses users only by it. The same `externalUserId` can exist under different accounts.
 - A **plan** is either an `ACCOUNT` plan or a `USER` plan. Predefined plans are visible to every account and are read-only. An account can create, view and update its own custom plans and assign them to itself or its users. Several users can share a plan, and each still has its own usage total.
 - New accounts start on Starter and new users on Basic.
 
@@ -144,7 +144,7 @@ All bodies are JSON. The examples need `curl` and `jq`, and they build on each o
 Conventions:
 
 - Request bodies are strict: an unknown field is a 400.
-- Names (`name` on accounts, plans and users) are trimmed and must be 1 to 200 characters. `externalUserId` and `requestId` are 1 to 128 characters and can't start or end with whitespace. They are not trimmed: `" alice"` is rejected, not treated as a different user from `"alice"`.
+- Names (`name` on accounts, plans and users) are trimmed and must be 1 to 200 characters. `externalUserId` and `requestId` are 1 to 128 characters and can't start or end with whitespace. They are not trimmed: `" alice"` is rejected, not treated as a different user from `"alice"`. An `externalUserId` also can't be exactly `.` or `..` (see Assumptions).
 - Request bodies are JSON in UTF-8. A body with bytes that aren't valid UTF-8, or that declares another charset, is a 400. No string may contain a NUL (`\u0000`) or an unpaired UTF-16 surrogate (such as the JSON escape `"\ud800"` on its own); any other Unicode, including emoji and U+FFFD itself, is stored and compared exactly as sent.
 - Unknown query parameters are ignored.
 - Lists return `{ "data": [...] }`. Paginated lists add `nextCursor`, which is `null` on the last page. Pass it back as `cursor`; anything that isn't a cursor the API issued is a 400. `limit` is 1 to 100, default 20.
@@ -510,7 +510,7 @@ curl -s -X PUT http://localhost:3000/account/plan -H "X-API-Key: $KEY" \
 
 ### POST /users
 
-Body: `externalUserId` (1 to 128 characters, no leading or trailing whitespace, unique within the account), `name` (optional, 1 to 200 characters), `planId` (optional, default Basic; the same checks as `PUT /account/plan`, with type `USER`).
+Body: `externalUserId` (1 to 128 characters, no leading or trailing whitespace, not `.` or `..`, unique within the account), `name` (optional, 1 to 200 characters), `planId` (optional, default Basic; the same checks as `PUT /account/plan`, with type `USER`).
 
 ```sh
 curl -s -X POST http://localhost:3000/users -H "X-API-Key: $KEY" \
@@ -703,7 +703,7 @@ curl -s http://localhost:3000/users/carol -H "X-API-Key: $KEY"
 }
 ```
 
-The same `404` comes back on every route that names a user: `GET /users/:externalUserId`, `GET /users/:externalUserId/usage`, `PUT /users/:externalUserId/plan`, `POST /consume`, and `GET /requests?externalUserId=`. In a URL path, an `externalUserId` longer than 128 characters or with leading or trailing whitespace is also a 404. In the `/consume` or `/users` body or the `/requests` query it is a 400.
+The same `404` comes back on every route that names a user: `GET /users/:externalUserId`, `GET /users/:externalUserId/usage`, `PUT /users/:externalUserId/plan`, `POST /consume`, and `GET /requests?externalUserId=`. In a URL path, an `externalUserId` longer than 128 characters, with leading or trailing whitespace, or exactly `.` or `..` (also written `%2E`) is also a 404. In the `/consume` or `/users` body or the `/requests` query it is a 400.
 
 ### PUT /users/:externalUserId/plan
 
@@ -1098,7 +1098,7 @@ The codes are defined in `src/errors/codes.ts`. There is no quota error code: a 
 
 | Code | HTTP | When |
 |---|---:|---|
-| `VALIDATION_ERROR` | 400 | Invalid body or query: a missing or out-of-range field, a name or ID over its length limit, an `externalUserId` or `requestId` with leading or trailing whitespace, a NUL character (`\u0000`) or an unpaired UTF-16 surrogate in any string, a body that isn't valid UTF-8 or declares a charset other than UTF-8, an unknown body field, an invalid `cursor`, `month` or `type`, malformed or oversized JSON, or a plan of the wrong type for the target |
+| `VALIDATION_ERROR` | 400 | Invalid body or query: a missing or out-of-range field, a name or ID over its length limit, an `externalUserId` or `requestId` with leading or trailing whitespace, an `externalUserId` of `.` or `..`, a NUL character (`\u0000`) or an unpaired UTF-16 surrogate in any string, a body that isn't valid UTF-8 or declares a charset other than UTF-8, an unknown body field, an invalid `cursor`, `month` or `type`, malformed or oversized JSON, or a plan of the wrong type for the target |
 | `UNAUTHORIZED` | 401 | Missing or invalid `X-API-Key` |
 | `FORBIDDEN` | 403 | Modifying a predefined plan |
 | `NOT_FOUND` | 404 | Unknown route; a user or plan that doesn't exist or belongs to another account; a malformed plan ID or `externalUserId` in the URL, including invalid percent-encoding |
@@ -1282,11 +1282,12 @@ Behavior the brief leaves unspecified, with the reason for each choice.
 - **Plan ordering:** `GET /plans` lists predefined plans first in seed order (Starter, Pro, Basic, Premium), then the account's custom plans oldest first. The ordering is stable and puts the well-known plans on top.
 - **`predefined` flag:** every plan includes `predefined: boolean`, derived from `account_id IS NULL`. Callers need to know which plans are read-only, and deriving the flag means it can't drift from the column.
 - **Usage shape:** usage is always `{ month: "YYYY-MM", consumed, remaining }`. `GET /account` and `GET /users/:externalUserId` embed it as `usage` for the current UTC month; `GET /usage` returns it on its own, and `GET /users/:externalUserId/usage` returns it plus `externalUserId`. A missing usage row reads as 0 and `remaining = max(0, monthlyLimit - consumed)`, which matches the "reads never create rows" rule. One shape everywhere means a client parses it once.
-- **Malformed IDs in the URL → 404:** a non-UUID plan ID, an `externalUserId` longer than 128 characters or with leading or trailing whitespace, or a path segment that isn't valid percent-encoding (such as `/users/%E0%A4%A`), can't name an existing resource, so it returns 404 like any other unknown resource (a malformed `planId` in a body is still 400).
+- **Malformed IDs in the URL → 404:** a non-UUID plan ID, an `externalUserId` longer than 128 characters, with leading or trailing whitespace, or exactly `.` or `..`, or a path segment that isn't valid percent-encoding (such as `/users/%E0%A4%A`), can't name an existing resource, so it returns 404 like any other unknown resource (a malformed `planId` in a body is still 400).
 - **Unknown body fields → 400:** bodies are strict, so typos and read-only fields (such as `type` on PATCH) fail loudly instead of being silently ignored.
 - **Unknown query params are ignored:** clients and proxies often add extra params (such as cache-busters), and ignoring them is harmless for reads.
 - **Overload → 503, not 500:** a wait for a free pooled connection that times out, a `lock_timeout` (`55P03`) or a statement cancel (`57014`) returns 503 `SERVICE_UNAVAILABLE` with `Retry-After: 1`. These mean "busy right now", not "broken", and the request wrote nothing, so the caller should retry with the same `requestId`. Every other unexpected error stays a 500, including a new connection that can't be opened in time, which may mean the database is down. The client-side `query_timeout` is not mapped to 503: it can fire on a `COMMIT` that did commit, so it stays a 500.
 - **No surrounding whitespace in IDs:** `externalUserId` and `requestId` are compared exactly, so `" alice"` and `"alice"` would silently be two users (or two requests). Trimming would instead change the caller's ID without telling it. Rejecting them (400 in a body or query, 404 in a URL path, like any ID that can't exist) makes the mistake visible.
+- **`externalUserId` can't be `.` or `..`:** those are URL dot segments. `fetch`, `new URL()` and most HTTP clients resolve them before sending, even when written `%2E%2E`, so `PUT /users/../plan` goes out as `PUT /plan`. With those clients such a user can't be read or changed by path; only a client that sends the path unresolved (such as `curl --path-as-is`) would reach it. Both IDs are rejected wherever an `externalUserId` is accepted: 400 in the `/users` or `/consume` body and the `/requests` query, 404 in a URL path. IDs that only contain dots, such as `...`, `.alice` or `a.b`, are not dot segments and stay valid. `requestId` never appears in a path, so it has no such rule. The example client's `QuotaApi` refuses these two IDs before sending.
 - **No NUL characters in strings:** PostgreSQL `text` can't store `\u0000`, so every caller-supplied string (names, `externalUserId`, `requestId`, `cursor`) rejects it: 400 in a body or query, 404 in a URL path. Other control characters are stored as given, since they are valid text and rejecting them would change what is already accepted.
 - **No unpaired UTF-16 surrogates in strings:** JSON lets a client send a lone surrogate (`"\ud800"`), which isn't valid Unicode. node-postgres would send each one as U+FFFD, so `"\ud800"` and `"\udfff"` would become the same `requestId` (the second consume answered as a replay and never counted) or the same `externalUserId`. Every caller-supplied string (names, `externalUserId`, `requestId`, `cursor`) rejects them like NUL: 400 in a body or query, 404 in a URL path. Valid surrogate pairs (emoji) and a real U+FFFD are accepted. A URL can't carry a lone surrogate: an encoded one in a path (`%ED%A0%80`) is invalid percent-encoding (404), and in a query value it is decoded leniently to U+FFFD, which only affects reads.
 - **Request bodies must be valid UTF-8:** the bytes are checked before they are decoded, because decoding turns every invalid sequence into U+FFFD, so `"r"` + byte `FF` and `"r"` + byte `FE` would again be the same `requestId`. For the same reason only the UTF-8 charset is accepted: the other `utf-*` charsets the JSON parser would otherwise allow (UTF-16, UTF-32, UTF-7) can produce U+FFFD or lone surrogates on bad input, and JSON exchanged between systems must be UTF-8 anyway (RFC 8259 §8.1). `application/json` with no charset, `charset=utf-8` and a UTF-8 BOM all work.
@@ -1330,6 +1331,7 @@ Behavior the brief leaves unspecified, with the reason for each choice.
 ### Known limitations
 
 - **History filtered by both `externalUserId` and `month` has no exact index:** that query uses `(account_id, user_id, created_at DESC, id DESC)` and checks `month` row by row, so an old month of a busy user scans that user's newer rows first. It's still in index order, with no Sort. An index on `(account_id, user_id, month, created_at DESC, id DESC)` would fix it at scale.
+- **Users named `.` or `..` from before that rule are not migrated.** The rule is only in input validation, so a user registered with one of those IDs before it existed is kept: it still appears in `GET /users`, and its past usage still counts toward the account's total, but it can't be addressed by path or charged any more (404 by path, 400 in `/consume`).
 - **Only the current plan assignment is stored.** There is no plan history, so a past month's `remaining` is computed against the current plan. Each request row keeps the plan IDs it was decided against, but not the limits those plans had at the time: a later `PATCH` of a custom plan changes what that ID means.
 - **`GET /users` doesn't include usage.** List entries have no `usage`, so a caller that wants per-user usage needs one request per user (`GET /users/:externalUserId` or `GET /users/:externalUserId/usage`).
 - **One account's consumes are serialized** on its usage row lock, so a single account's throughput is bounded by the interval between decisions on that row ([bottlenecks](#bottlenecks)).
