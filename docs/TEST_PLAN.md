@@ -9,7 +9,7 @@
 | 3 | 2026-10-20 | commit `1468d11` (the F10 fix and its tests, committed); Compose API image rebuilt from it | **TP-LOAD-04 executed, not passed:** invariants and errors met, throughput below the expected range. 22 run as specified, 2 in part, 30 not run. See §9. |
 | 4 | 2026-10-20 | commit `1468d11`, clean clone | **TP-REG-01 executed, passed.** 23 run as specified, 2 in part, 29 not run. See §10. |
 | 5 | 2026-10-20 | commit `1468d11` | Documentation corrections only. No test was run and no outcome, priority or expected result changed. See the Revision 5 paragraph. |
-| 6 | 2026-10-20 | `docs/QA_REPORT.md` revision 4; commit `1468d11` + the uncommitted F12 and F13 fixes and their tests | **New tests for F12 and F13 written and executed, passed** (73 tests, outside the 54 planned). The planned-test totals are unchanged: 23 run as specified, 2 in part, 29 not run. See §11. |
+| 6 | 2026-10-20 | `docs/QA_REPORT.md` revision 4; commit `1468d11` + the F12 and F13 fixes and their tests, uncommitted when this was written (since committed as `3c39c71` and `b5a3486`) | **New tests for F12 and F13 written and executed, passed** (73 tests, outside the 54 planned). The planned-test totals are unchanged: 23 run as specified, 2 in part, 29 not run. See §11. |
 
 This plan adds no findings and changes no finding status. Finding IDs (F1–F11) and requirement IDs (R1–R78) are the ones in `docs/QA_REPORT.md`. No production code, test code or load evidence was changed to write it.
 
@@ -182,7 +182,7 @@ Integration, `tests/input-encoding.db.test.ts` or `tests/users.db.test.ts`. Ever
 
 #### 4.6 F1 and F2 regression tests
 
-Already covered, in the working tree only: `tests/input-encoding.db.test.ts:61-101` (F1: 4 encodings × 5 routes, auth first, well-formed encodings still resolve), `:104-152` (F2: 8 body inputs, 7 query inputs, path inputs, nothing written), `tests/errors.test.ts:66-77` (F1 fallback for a router without its own mapping). The tests below add the process gate and the gaps.
+Already covered, in the working tree only when this plan was written (the tests have since been committed in `b56dbc0`): `tests/input-encoding.db.test.ts:61-101` (F1: 4 encodings × 5 routes, auth first, well-formed encodings still resolve), `:104-152` (F2: 8 body inputs, 7 query inputs, path inputs, nothing written), `tests/errors.test.ts:66-77` (F1 fallback for a router without its own mapping). The tests below add the process gate and the gaps.
 
 | Test ID | Req / finding | Scenario and setup | Expected result | Type | Priority | Current evidence |
 |---|---|---|---|---|---|---|
@@ -225,7 +225,7 @@ This closes F6: the 503 + `Retry-After` path (R69) has only been tested in integ
 | TP-LOAD-03 | R67, R69 | TP-LOAD-02 with `RETRY_503=3` | `consume_retry_replayed = 0`: a retry after a 503 must be a fresh decision, because a 503 wrote nothing (a replay would mean the 503 attempt committed). Request rows = distinct `requestId`s that got a 200. Invariants 0. `consume_retry_exhausted` is reported, not a failure | load | P2 | Not run |
 | TP-LOAD-04 | R36, R62, F10 | After the F10 fix: `load/run.sh hot-account` at the default 50 VUs, 1 run | Invariants 0, 0 errors, RPS within the documented spread for one run (85.2–103.3 req/s). The fix adds a check on ≤ 128-character strings, so no change is expected | load | P3 | Not run |
 
-**Note on TP-LOAD-04's range (rev 5, criterion unchanged):** §9 explains where the 85.2–103.3 req/s bounds come from.
+**Note on TP-LOAD-04's range (rev 5, criterion unchanged):** §9 explains where the 85.2–103.3 req/s bounds come from. The range is this plan's internal regression check. `docs/REQUIREMENTS.md` sets no numeric throughput minimum.
 
 The load tests leave their accounts in the dev database (`README.md:1415`). Results go to `load/results/` and should be cited in `docs/LOAD_TEST.md`, which also resolves the citation part of F11 for the new runs.
 
@@ -338,7 +338,7 @@ Totals: before the fix, 63 failed and 23 passed (86); after it, 86 passed. The f
 
 ### 9. Execution record (revision 3)
 
-Executed on 2026-10-19 at 23:02 UTC (2026-10-20 02:02 +0300) against the Compose stack. Full figures and comparisons are in `docs/LOAD_TEST.md` §9. Evidence: `load/results/hot-account-84e77ce8-*` (untracked when this was written).
+Executed on 2026-10-19 at 23:02 UTC (2026-10-20 02:02 +0300) against the Compose stack. Full figures and comparisons are in `docs/LOAD_TEST.md` §9. Evidence: `load/results/hot-account-84e77ce8-*` (untracked when this was written, and still untracked at `9880430`, so a clone of the repository doesn't contain it).
 
 **TP-LOAD-04: not passed.** Correctness and errors met their criteria; throughput didn't.
 
@@ -401,7 +401,7 @@ env -u DATABASE_URL -u TEST_DATABASE_URL REQUIRE_DB=1 npx vitest run
 
 ### 11. Execution record (revision 6)
 
-Executed on 2026-10-20 with `REQUIRE_DB=1` against `quota_test`, on commit `1468d11` plus the uncommitted F12 and F13 fixes. Findings, resolutions and evidence are in `docs/QA_REPORT.md` revision 4 (§1, F12, F13). These tests were written with the fixes. They aren't part of the 54 planned tests and have no TP IDs.
+Executed on 2026-10-20 with `REQUIRE_DB=1` against `quota_test`, on commit `1468d11` plus the F12 and F13 fixes, uncommitted at the time (since committed as `3c39c71` and `b5a3486`). Findings, resolutions and evidence are in `docs/QA_REPORT.md` revision 4 (§1, F12, F13). These tests were written with the fixes. They aren't part of the 54 planned tests and have no TP IDs.
 
 | File | Covers | Red run (fix disabled) | Green run |
 |---|---|---|---|

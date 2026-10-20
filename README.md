@@ -23,7 +23,7 @@ Stack: TypeScript, Express 5, Drizzle ORM, PostgreSQL 16, Zod, Vitest + Supertes
 
 ## Quick start
 
-Requires Docker with Compose v2.
+Requires Docker Engine 25.0 or later with Compose 2.20.2 or later. The API healthcheck uses `start_interval` (`docker-compose.yml:41`): Docker's reference lists it as requiring Engine 25.0 and introduced in Compose 2.20.2. The stack has only been run on Docker 29.9.0 with Compose 5.6.0.
 
 ```sh
 docker compose up --build
@@ -39,7 +39,7 @@ This starts three services:
 
 No manual steps are needed on a fresh clone. The seed is idempotent, so restarting the API is safe. `docker compose down -v` stops everything and drops the database volume.
 
-All data (accounts, plans, usage, request history) is in PostgreSQL, on the named Compose volume `db-data`. It survives `docker compose restart` and `docker compose down` followed by `up`. Only `docker compose down -v` deletes it.
+All data (accounts, plans, usage, request history) is in PostgreSQL, on the named Compose volume `db-data`. It survives `docker compose down` followed by `up`, which was checked by hand on an earlier commit. `docker compose restart` keeps the same containers and volume, so the data should survive it too, but that hasn't been tested. Only `docker compose down -v` deletes it.
 
 ### Demo client
 
@@ -120,7 +120,7 @@ Both plans apply to every consume. A larger user plan doesn't increase the accou
 
 ## API reference
 
-All bodies are JSON. The examples need `curl` and `jq`, and they build on each other: run them in order and they work on a fresh stack. Each response below is the real output of that command, run in this order against the Compose stack on a new account. IDs, timestamps, cursors and the key differ on every run. The JSON below is pretty-printed for reading. `curl -s` prints each body on one line; append `| jq .` to get the same layout. Long responses are shortened where marked with `...`. Every error code is listed in the [error table](#errors).
+All bodies are JSON. The examples need `curl` and `jq`, and they build on each other: run them in order and they work on a fresh stack. Each response below is the real output of that command, run in this order against the Compose stack on a new account. They were captured on 2026-10-18 from the working tree that was then committed as `fc4f729`, so they illustrate the API and weren't regenerated from later commits. IDs, timestamps, cursors and the key differ on every run. The JSON below is pretty-printed for reading. `curl -s` prints each body on one line; append `| jq .` to get the same layout. Long responses are shortened where marked with `...`. Every error code is listed in the [error table](#errors).
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
@@ -144,7 +144,7 @@ All bodies are JSON. The examples need `curl` and `jq`, and they build on each o
 Conventions:
 
 - Request bodies are strict: an unknown field is a 400.
-- Names (`name` on accounts, plans and users) are trimmed and must be 1 to 200 characters. `externalUserId` and `requestId` are 1 to 128 characters and can't start or end with whitespace. They are not trimmed: `" alice"` is rejected, not treated as a different user from `"alice"`. An `externalUserId` also can't be exactly `.` or `..` (see Assumptions).
+- Names (`name` on accounts, plans and users) are trimmed and must be 1 to 200 characters. `externalUserId` and `requestId` are 1 to 128 characters and can't start or end with whitespace. Every length counts Unicode code points, not bytes or UTF-16 units: an emoji such as `👍` counts as 1, and `e` followed by a combining accent (`"e\u0301"`) counts as 2. They are not trimmed: `" alice"` is rejected, not treated as a different user from `"alice"`. An `externalUserId` also can't be exactly `.` or `..` (see Assumptions).
 - Request bodies are JSON in UTF-8. A body with bytes that aren't valid UTF-8, or that declares another charset, is a 400. No string may contain a NUL (`\u0000`) or an unpaired UTF-16 surrogate (such as the JSON escape `"\ud800"` on its own); any other Unicode, including emoji and U+FFFD itself, is stored and compared exactly as sent.
 - Unknown query parameters are ignored.
 - Lists return `{ "data": [...] }`. Paginated lists add `nextCursor`, which is `null` on the last page. Pass it back as `cursor`; anything that isn't a cursor the API issued is a 400. `limit` is 1 to 100, default 20.
@@ -1299,18 +1299,21 @@ Behavior the brief leaves unspecified, with the reason for each choice.
 - **User `remaining` uses the user's plan only:** the user view reports the user's own allowance, while the account view reports the shared allowance. Mixing the two would hide which limit applies.
 - **Custom plans may reuse predefined names:** uniqueness is per owner (`UNIQUE NULLS NOT DISTINCT (account_id, name)`), so an account may create its own "Starter". Plans are always referenced by ID, so a name collision is never ambiguous.
 - **A monthly limit of 0 blocks all requests (it does not mean unlimited):** the schema allows `monthly_limit >= 0`, and the monthly rule accepts only when `used + units <= monthlyLimit`, so a limit of 0 rejects every request (units are always at least 1). Reading 0 as "unlimited" would need a special case in every rule and in every `remaining` calculation, and it would turn a typo or an unset value into unlimited usage. A 0 limit is also useful on purpose, for example to suspend a user or account without deleting anything.
+- **`perRequestLimit` may be larger than `monthlyLimit`:** `POST /plans` and `PATCH /plans/:id` check each limit on its own (`monthlyLimit` 0 to 2147483647, `perRequestLimit` 1 to 2147483647), so a plan with 5 units/month and 1,000/request is accepted. Every consume still applies both rules, so the largest request that can succeed is the smaller of the per-request limit and what is left of the month. A request within the per-request limit but above what is left of the month is rejected with `MONTHLY_LIMIT_EXCEEDED` and the monthly limit as `limit`, unless an earlier rule in the [check order](#check-order) fails first. Rejecting such plans would turn lowering an allowance below the per-request limit (the brief's "allowance reduced below usage" case) into a 400 unless both fields change in the same `PATCH`, and a `monthlyLimit` of 0 (above) already gives every plan this shape.
 - **Plan changes during an in-flight consume** are ordered as described in [Plan changes under concurrency](#plan-changes-under-concurrency).
 
 ### Consume and retries
 
 - **Retry behavior:** a rejected `requestId` is spent, retrying after an error is always safe, replays are 200, and an unknown user beats an idempotency conflict. Each is described with its reasoning in [Retries and replays](#retries-and-replays).
 - **The month is read once per request:** consume reads the clock once, before its transaction. That instant picks the usage month and is written as the request's `created_at`, so a request that waits on the lock across midnight UTC of the 1st still counts against the month it arrived in, and its history row agrees with its usage row.
+- **Concurrent consumes are decided in lock order, but history is in arrival order:** consumes for one account wait on its account usage row lock (consume step 5) and are decided in the order they get it. That isn't guaranteed to be arrival order. After reading the clock, a request still waits for a pooled connection and runs the usage upserts (steps 3–4), and the service doesn't control which waiting transaction PostgreSQL gives the lock to next. History is sorted by `createdAt`, the clock read above, then by row ID. So under concurrency an entry can be listed before one that was decided first, and the `remaining` values of adjacent entries need not be monotonic. Each entry's `remaining` is still exact for its own decision.
 - **A rejected consume may create zero usage rows:** the month's usage rows are upserted before the lock (consume step 4), so the first request of a month creates them with `units_used = 0` even if it is rejected. They read the same as a missing row, and creating them is what lets every consume lock the same rows in the same order.
 
 ### Usage and history
 
 - **`month` is strict `YYYY-MM`:** the usage endpoints and `GET /requests` accept exactly four digits, a dash and `01`-`12`, so years run 0001-9999: four digits can't express more, and 0000 is rejected because `toUtcMonth()` only accepts years from 1. Anything else, including `2026-1`, a full date, an empty value or a repeated param, is 400. A loose parser would turn typos into a silently different month.
 - **Any month can be queried, past or future:** a month with no usage row (before the account existed, or not reached yet) reads as `consumed: 0`, and reading creates nothing. Rejecting such months would need a rule for "too early" or "too late" with no benefit to the caller.
+- **Unused allowance doesn't roll over:** each UTC calendar month gets the plan's full `monthlyLimit`, however much of the previous month's allowance was left. The brief defines the allowance as the units available during one calendar month, and carrying units over would let an account build up more than its plan allows in a single month.
 - **`remaining` for any month uses the current plan:** only the current plan assignment is stored, so `remaining` for a past month is `max(0, current monthlyLimit - consumed)`. The plan that actually applied to each decision is in that request's history entry (`accountPlanId`, `userPlanId`).
 - **History without `month` covers all months:** `GET /requests` defaults to every month, unlike the usage endpoints, which default to the current one. A usage total only makes sense for one month, but a history list is already bounded by its page size, and "everything, newest first" is what a caller browsing history expects.
 - **History entries are the stored snapshot:** each entry returns the decision as it was made (`status`, `reasonCode`, `rejectedBy`, `limit`, `remaining` after the decision, the two plan IDs, `units`, `month`, `createdAt`), plus the user's `externalUserId`. No request or response field carries an internal UUID (the row ID, the user ID). Replays add no entry, since they decide nothing new.
@@ -1332,7 +1335,7 @@ Behavior the brief leaves unspecified, with the reason for each choice.
 
 - **History filtered by both `externalUserId` and `month` has no exact index:** that query uses `(account_id, user_id, created_at DESC, id DESC)` and checks `month` row by row, so an old month of a busy user scans that user's newer rows first. It's still in index order, with no Sort. An index on `(account_id, user_id, month, created_at DESC, id DESC)` would fix it at scale.
 - **Users named `.` or `..` from before that rule are not migrated.** The rule is only in input validation, so a user registered with one of those IDs before it existed is kept: it still appears in `GET /users`, and its past usage still counts toward the account's total, but it can't be addressed by path or charged any more (404 by path, 400 in `/consume`).
-- **Only the current plan assignment is stored.** There is no plan history, so a past month's `remaining` is computed against the current plan. Each request row keeps the plan IDs it was decided against, but not the limits those plans had at the time: a later `PATCH` of a custom plan changes what that ID means.
+- **Only the current plan assignment is stored.** There is no plan history, so a past month's `remaining` is computed against the current plan. Each request row keeps the plan IDs it was decided against, and a rejected request also keeps the `limit` of the rule that blocked it. The row doesn't keep a full snapshot of both plans' limits at the time, so a later `PATCH` of a custom plan changes what that ID means.
 - **`GET /users` doesn't include usage.** List entries have no `usage`, so a caller that wants per-user usage needs one request per user (`GET /users/:externalUserId` or `GET /users/:externalUserId/usage`).
 - **One account's consumes are serialized** on its usage row lock, so a single account's throughput is bounded by the interval between decisions on that row ([bottlenecks](#bottlenecks)).
 - **Under overload, requests fail on the pool wait.** A request that waits more than 2s for a free connection gets a 503 `SERVICE_UNAVAILABLE` with `Retry-After: 1` ([pool timeouts](#pool-timeouts-at-200-vus)). The service sheds the load instead of queueing it.
@@ -1342,7 +1345,7 @@ Behavior the brief leaves unspecified, with the reason for each choice.
 
 ## Load test summary
 
-Full method, raw evidence and analysis: [docs/LOAD_TEST.md](docs/LOAD_TEST.md). Every run's files are in `load/results/`.
+Full method, raw evidence and analysis: [docs/LOAD_TEST.md](docs/LOAD_TEST.md). This summary cites only runs from §1–§8 there, and their files are committed in `load/results/`. §9 of that document (one post-fix check and two other runs from 2026-10-19) is based on 33 files that are untracked at commit `9880430`, so its raw evidence isn't in a clone of the repository.
 
 Setup: k6 (`grafana/k6:1.3.0`) under the Compose profile `load`, on one Linux machine (`host_cpus 12`) shared by k6, the API and PostgreSQL 16 with image defaults. Each run is 50 VUs for 30s, no think time, and only `POST /consume` is measured. The custom plans allow 2,000,000,000 units/month and 1,000/request, so every request is accepted and takes the full write path.
 
@@ -1400,7 +1403,7 @@ At 200 VUs both configurations fail on the pool wait. Every error is pg-pool's `
 
 ### Reproduce
 
-From the repo root. `load/run.sh` needs bash, Docker with Compose v2, `jq` and `od`.
+From the repo root. `load/run.sh` needs bash, Docker with Compose v2, `jq` and `od`, on a Linux host: it records host CPU and memory with `nproc` and `free`, and `load/uncontended.sh` uses `nproc`.
 
 ```sh
 docker compose up -d --build --wait db api       # build and start the API + DB

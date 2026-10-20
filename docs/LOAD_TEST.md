@@ -2,7 +2,7 @@
 
 Sections 1–7 are the baseline, kept as measured: one API process, nothing tuned, exactly as `docker compose up --build` started it before `WORKERS` existed. Section 6 lists the candidate improvements. Section 8 implements one of them, several API processes with `node:cluster` (§6 item 3), and compares it with the baseline in the same session. Section 9 records one later check run on the code after the F10 input fix (`docs/TEST_PLAN.md` TP-LOAD-04). Its numbers come from `load/run.sh hot-account` run `hot-account-84e77ce8-*`, and its comparison table also quotes `hot-account-bc7adbf3-*` and the runs listed below. It changes nothing in §1–§8.
 
-**Where the numbers come from.** Every number below comes from one of these saved files in `load/results/`, or is arithmetic on them shown inline:
+**Where the numbers come from.** Every number below comes from one of these saved files in `load/results/`, or is arithmetic on them shown inline. The files of every run in §1–§8 are committed. The three §9 runs are not: at commit `9880430` their 33 files are untracked, so they exist only in the developer's working copy and a clone of the repository doesn't have them.
 
 | Run | Produced by | Files |
 |---|---|---|
@@ -14,6 +14,8 @@ Sections 1–7 are the baseline, kept as measured: one API process, nothing tune
 | §8 comparison: WORKERS=1 vs 4, 14 runs | `load/compare.sh` | `compare-b94e9fcc.txt` (index, medians), the 14 run IDs it lists, `compare-b94e9fcc-host.txt` |
 | §8 replication: the same 14 runs, second session | `load/compare.sh` | `compare-66ef619b.txt` (index, medians) and the 14 run IDs it lists |
 | §8 extra stress probe, WORKERS=1 | `VUS=200 DURATION=20s load/run.sh hot-account` | `hot-account-fc0db82b-*` |
+| §9 post-fix check, hot account, 50 VUs | `load/run.sh hot-account` | `hot-account-84e77ce8-*` (untracked) |
+| §9 comparison rows, 2026-10-19 | `load/run.sh hot-account`, `load/run.sh many-accounts` | `hot-account-bc7adbf3-*`, `many-accounts-06e6a282-*` (untracked) |
 
 Each `run.sh` run saves `-env.txt` (host, versions, settings), `-k6.txt`, `-pg.txt` (pg_stat_activity samples), `-cpu.txt`, `-idx.txt`/`-idx-delta.txt` (index scan counters), `-sql.txt` (invariants), `-api.log`, and `-run.txt` (the full console output, including the summaries quoted below).
 
@@ -52,7 +54,7 @@ Only `POST /consume` is measured (tag `name:consume`); setup requests are exclud
 
 ## 2. Reproduce
 
-From the repo root. `run.sh` needs bash, Docker with Compose v2, `jq` and `od`.
+From the repo root. `run.sh` needs bash, Docker with Compose v2, `jq` and `od`, on a Linux host: it records host CPU and memory with `nproc` and `free`, and `uncontended.sh` uses `nproc`.
 
 ```sh
 docker compose up -d --build --wait db api       # build and start the API + DB
@@ -447,9 +449,24 @@ All figures are from each run's `-k6.txt` and `-run.txt`.
 
 **TP-LOAD-04 is not passed.** Correctness and errors met their criteria, the throughput criterion did not. The lower bound of 85.2 req/s is the §3 baseline. The upper bound of 103.3 req/s is the 200-VU probe `76c60ef4` (§8). The 50-VU single-process runs above span 85.2–96.2 req/s. The criterion is kept as written. 77.3 req/s is below both ranges.
 
+The 85.2 req/s lower bound is this project's own regression threshold, set in `docs/TEST_PLAN.md`. It is not a requirement of the brief: `docs/REQUIREMENTS.md` asks for load testing, evidence of the results, and an explanation of the method and lessons, and it sets no minimum throughput. "Not passed" means the run fell outside the project's internal expected range.
+
+### Uncited many-accounts run: `many-accounts-06e6a282`
+
+One more run from 2026-10-19 (19:30 UTC, in the same session as `bc7adbf3` and before the F10 fix) isn't used by any conclusion above. It is recorded here so it isn't hidden. Like the other two §9 runs, its files are untracked.
+
+| Run | WORKERS (`-env.txt`) | `api_node_processes` | RPS | p50 | p95 | p99 | Errors | Invariants |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| `06e6a282` | 1 | **2** | **339.6** | 136.9 ms | 211.5 ms | 247.9 ms | 0 | checks 1–4: 0; `k6 fresh=10187 request rows=10187 OK` |
+
+- **It is anomalous.** Every other many-accounts run with one API process is 167.7–209.8 req/s (§3 and both §8 sessions), and every `WORKERS=4` run is 261.7–268.4 req/s (§8). This single `WORKERS=1` run is 62% above the highest of the other single-process runs and beats every `WORKERS=4` run.
+- **Its `-env.txt` reports 2 `node` processes** although `WORKERS` is 1. Every other `WORKERS=1` run that records the count reports 1. `run.sh` counts `node` processes with `ps` at one instant, and the API healthcheck also starts a `node` process every 5s (`docker-compose.yml:36`). That is a possible explanation of the count, not a verified one.
+- **The cause of the throughput isn't known.** It wasn't investigated or repeated, and `run.sh` doesn't record the git commit (QA report F11). Until a rerun explains it, the §8 conclusion (`WORKERS=4` about 31–35% faster for many accounts) rests on the 12 many-accounts runs of the two §8 sessions, and this run neither confirms nor refutes it.
+
 ### Not verified (§9)
 
 - **Why throughput is lower.** The cause wasn't investigated. One run can't tell a cost of the F10 fix apart from run-to-run or host variation, and no code before the fix was run in the same session to compare.
 - **Run-to-run variation on `1468d11`:** one run only.
 - **The git state at image build time** isn't recorded by `load/run.sh` (F11). It is inferred from the timestamps and the `dist/` comparison above.
-- **These files are untracked** in git when this section was written (`git status`), like `hot-account-bc7adbf3-*` and `many-accounts-06e6a282-*` (QA report F11). Committing them is the developer's decision.
+- **These files are untracked** in git when this section was written (`git status`), like `hot-account-bc7adbf3-*` and `many-accounts-06e6a282-*` (QA report F11), and they are still untracked at `9880430`. Every number in §9 comes from files a clone of the repository doesn't contain. Committing them is the developer's decision.
+- **Why `many-accounts-06e6a282` is faster**, and why it reports 2 API processes (see above).
