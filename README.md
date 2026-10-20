@@ -1412,4 +1412,4 @@ load/uncontended.sh                              # single-request timings
 load/compare.sh                                  # WORKERS=1 vs WORKERS=4, alternating
 ```
 
-Each `run.sh` run samples `pg_stat_activity` and container CPU during the k6 run, runs `load/check-invariants.sql` afterwards, and saves everything to `load/results/<scenario>-<run_id>-*`. `WORKERS=n load/run.sh <scenario>` runs it against n API processes. Load runs leave their accounts in the database; `docker compose down -v` removes them. The absolute numbers are specific to the test host.
+Each `run.sh` run samples `pg_stat_activity` and container CPU during the k6 run, runs `load/check-invariants.sql` afterwards, and saves everything to `load/results/<scenario>-<run_id>-*`. `WORKERS=n load/run.sh <scenario>` runs it against n API processes. `DURATION` (default `30s`) must be whole seconds such as `20s` or `90s`: the summary divides by it for req/s, so `1m` or `500ms` is refused before the run starts. Load runs leave their accounts in the database; `docker compose down -v` removes them. The absolute numbers are specific to the test host.

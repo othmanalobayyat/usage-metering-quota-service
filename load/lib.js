@@ -2,6 +2,7 @@
 // POST /accounts → POST /plans (ACCOUNT + USER) → PUT /account/plan → POST /users.
 import http from 'k6/http';
 import { Counter, Rate } from 'k6/metrics';
+import { durationSeconds } from './duration.js';
 
 export const BASE_URL = __ENV.BASE_URL || 'http://api:3000';
 // Random hex, unique per run. Accounts are named load-<scenario>-<RUN_ID>-<n>, and load/check-invariants.sql
@@ -11,6 +12,8 @@ if (!/^[0-9a-z]+$/.test(RUN_ID)) throw new Error(`RUN_ID must be [0-9a-z]+, got 
 
 // Run length for every scenario. Setup and teardown come on top of it, and the whole run stays under 60s.
 export const DURATION = __ENV.DURATION || '30s';
+// Whole seconds only (load/duration.js). Checked at init, so a bad value fails before setup runs.
+const DURATION_SECONDS = durationSeconds(DURATION);
 export const VUS = Number(__ENV.VUS || 50);
 
 // Allowances far above anything a 30s run can consume, so the accepted path is what gets measured.
@@ -135,7 +138,7 @@ function metric(data, name, stat) {
 /** Prints one result line plus a machine-readable JSON line that load/run.sh picks up. */
 export function summary(scenario) {
   return (data) => {
-    const seconds = parseFloat(DURATION);
+    const seconds = DURATION_SECONDS;
     const total = metric(data, 'http_reqs{name:consume}', 'count');
     const result = {
       scenario,

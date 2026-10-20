@@ -11,15 +11,19 @@
 #   run.txt     everything this script printed, including the summaries below
 #
 # Usage:    [WORKERS=1] [VUS=50] [DURATION=30s] load/run.sh hot-account|many-accounts|retry-storm
+#           DURATION is whole seconds: 20s, 30s, 90s. Not 1m, 1m30s or 500ms (see load/duration.js).
 # Requires: bash, Docker with Compose v2, jq (parses k6's SUMMARY_JSON line), od.
 # Assumes nothing else uses the API or DB during the run: the index scan deltas count all traffic.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-usage="usage: [WORKERS=n] [VUS=n] [DURATION=30s] load/run.sh hot-account|many-accounts|retry-storm"
+usage="usage: [WORKERS=n] [VUS=n] [DURATION=<n>s, whole seconds, default 30s] load/run.sh hot-account|many-accounts|retry-storm"
 scenario="${1:?$usage}"
 [[ -f "load/$scenario.js" ]] || { echo "unknown scenario: $scenario ($usage)" >&2; exit 2; }
+# Same pattern as load/duration.js, checked here so a bad value stops before anything starts or is saved.
+[[ -z "${DURATION:-}" || "$DURATION" =~ ^[1-9][0-9]*s$ ]] ||
+  { echo "DURATION must be whole seconds such as 30s or 90s, got \"$DURATION\" ($usage)" >&2; exit 2; }
 command -v jq >/dev/null || { echo "load/run.sh needs jq to parse k6's summary line" >&2; exit 2; }
 
 # Random hex, no '-': accounts are named load-<scenario>-<run_id>-<n> and matched on that exact field.
