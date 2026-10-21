@@ -13,5 +13,5 @@
     "rootDir": ".",
     "types": ["node"]
   },
-  "include": ["src", "tests", "vitest.config.ts", "drizzle.config.ts"]
+  "include": ["src", "tests", "client/src", "vitest.config.ts", "drizzle.config.ts"]
 }

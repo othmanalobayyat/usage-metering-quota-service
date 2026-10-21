@@ -77,7 +77,7 @@ Other commands:
 |---|---|
 | `npx vitest run tests/consume.db.test.ts` | One test file |
 | `npx vitest run -t "returns 503"` | Tests whose name matches |
-| `npm run typecheck` | `tsc --noEmit` over `src/` and `tests/` |
+| `npm run typecheck` | `tsc --noEmit` over `src/`, `tests/` and the example client's `client/src/` |
 | `npm run lint` | ESLint |
 | `npm run build` / `npm start` | Compile to `dist/` and run it. Needs the environment from `.env.example` ([running without Docker](#running-the-api-without-docker)). |
 | `npm run dev` | `src/server.ts` under tsx in watch mode. Same environment as `npm start`. |
@@ -1250,9 +1250,10 @@ The cost of this design is that one account's consumes are serialized on its usa
 - **SHA-256 for API keys, not bcrypt.** A key has 256 bits of entropy, so there is nothing to brute-force, and bcrypt on every request would dominate the request cost.
 - **404, not 403, for another account's resources.** A 403 would confirm that the resource exists.
 - **Fixed UUIDs for predefined plans, seeded with `ON CONFLICT (id) DO NOTHING`.** Every environment agrees on their IDs, and seeding on every start is idempotent.
-- **Cursor pagination on `(created_at, id)`, not offset.** Requests are inserted while a caller pages through history. With an offset, a new row shifts every later page and causes duplicates. A cursor keeps its position.
+- **Cursor pagination on `(created_at, id)`, not offset.** Requests are inserted while a caller pages through history. With an offset, a new row shifts every later page and causes duplicates. A cursor keeps its position: it never repeats an entry, and never skips one that had committed before the traversal reached it. Entries that commit late are the exception; see "History isn't a change feed" under [Known limitations](#known-limitations).
 - **A database CHECK ties `status` to `reason_code`, `rejected_by` and `limit_value`.** An accepted row has all three null, a rejected row has all three set.
 - **Composite foreign keys `(account_id, user_id)`** on `user_usage` and `requests`, so a usage or request row can't point at another account's user.
+- **Migrate and seed use their own pool, not the request pool** (`createMaintenancePool()` in `src/db/client.ts`). Requests are capped at 4s per statement and 3s per lock wait. A migration that indexes or rewrites a populated table can take longer, and under those caps it would be cancelled and the API would never start. The maintenance limits are 15 minutes per statement and 60s per lock wait: finite, so a migration stuck behind another session's lock fails instead of hanging startup. Under Compose, a second limit applies. The API healthcheck (`docker-compose.yml`: `start_period` 20s, then 10 failed checks 5s apart) reports the container unhealthy about 70s into startup, and `docker compose up` would then fail the client's `service_healthy` dependency while the migration keeps running. A migration expected to take longer needs a larger `start_period`. That follows from Docker's healthcheck rules and hasn't been run here.
 
 ### WORKERS
 
@@ -1336,6 +1337,13 @@ Behavior the brief leaves unspecified, with the reason for each choice.
 - **History filtered by both `externalUserId` and `month` has no exact index:** that query uses `(account_id, user_id, created_at DESC, id DESC)` and checks `month` row by row, so an old month of a busy user scans that user's newer rows first. It's still in index order, with no Sort. An index on `(account_id, user_id, month, created_at DESC, id DESC)` would fix it at scale.
 - **Users named `.` or `..` from before that rule are not migrated.** The rule is only in input validation, so a user registered with one of those IDs before it existed is kept: it still appears in `GET /users`, and its past usage still counts toward the account's total, but it can't be addressed by path or charged any more (404 by path, 400 in `/consume`).
 - **Only the current plan assignment is stored.** There is no plan history, so a past month's `remaining` is computed against the current plan. Each request row keeps the plan IDs it was decided against, and a rejected request also keeps the `limit` of the rule that blocked it. The row doesn't keep a full snapshot of both plans' limits at the time, so a later `PATCH` of a custom plan changes what that ID means.
+- **History isn't a change feed.**
+  - **Why:** consume reads the clock once (`src/services/consume.service.ts:76`), after the API key, user and `requestId` lookups and before its transaction, and that instant is the entry's `createdAt`. The request can then still wait up to 2s for a pooled connection, and up to 3s at each of three row locks: the two usage upserts and the account usage row. So in the worst case it commits about 11s after its `createdAt`, plus execution time. That figure is derived from the configured timeouts (`src/db/client.ts:9-15`), not measured.
+  - **Effect:** a decision that commits late is listed behind newer entries, which may already have been returned.
+  - **Who misses it:** a reader that polls the newest page and stops at the first entry it has already seen. Also a cursor traversal running at that moment, if its cursor has already passed the entry's position.
+  - **What a cursor still guarantees:** it never repeats an entry, and never skips one that had committed before the traversal reached it.
+  - **What to do:** a reader that needs every entry should re-read a window behind the newest entry it has seen. 15s is a suggested margin above the derived 11s, not a measured bound.
+  - `tests/requests.db.test.ts` ("a decision that commits late") reproduces it.
 - **`GET /users` doesn't include usage.** List entries have no `usage`, so a caller that wants per-user usage needs one request per user (`GET /users/:externalUserId` or `GET /users/:externalUserId/usage`).
 - **One account's consumes are serialized** on its usage row lock, so a single account's throughput is bounded by the interval between decisions on that row ([bottlenecks](#bottlenecks)).
 - **Under overload, requests fail on the pool wait.** A request that waits more than 2s for a free connection gets a 503 `SERVICE_UNAVAILABLE` with `Retry-After: 1` ([pool timeouts](#pool-timeouts-at-200-vus)). The service sheds the load instead of queueing it.
@@ -1415,4 +1423,4 @@ load/uncontended.sh                              # single-request timings
 load/compare.sh                                  # WORKERS=1 vs WORKERS=4, alternating
 ```
 
-Each `run.sh` run samples `pg_stat_activity` and container CPU during the k6 run, runs `load/check-invariants.sql` afterwards, and saves everything to `load/results/<scenario>-<run_id>-*`. `WORKERS=n load/run.sh <scenario>` runs it against n API processes. `DURATION` (default `30s`) must be whole seconds such as `20s` or `90s`: the summary divides by it for req/s, so `1m` or `500ms` is refused before the run starts. Load runs leave their accounts in the database; `docker compose down -v` removes them. The absolute numbers are specific to the test host.
+Each `run.sh` run samples `pg_stat_activity` and container CPU during the k6 run, runs `load/check-invariants.sql` afterwards, and saves everything to `load/results/<scenario>-<run_id>-*`. Its `-env.txt` also records the git commit and checkout state and the API image ID. That ties a run to an image, but not to the commit the image was built from ([docs/LOAD_TEST.md](docs/LOAD_TEST.md) §2). Runs already in `load/results/` predate this and don't have these fields. `WORKERS=n load/run.sh <scenario>` runs it against n API processes. `DURATION` (default `30s`) must be whole seconds such as `20s` or `90s`: the summary divides by it for req/s, so `1m` or `500ms` is refused before the run starts. Load runs leave their accounts in the database; `docker compose down -v` removes them. The absolute numbers are specific to the test host.

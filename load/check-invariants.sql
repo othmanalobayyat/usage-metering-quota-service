@@ -3,6 +3,10 @@
 --   Checks 1 and 4 cover every account and month in the database.
 --   Checks 2 and 3 cover the current UTC month only: a limit applies to the month being consumed, and
 --   only the current plan assignment is stored, so a past month can't be checked against its plan.
+--   For the same reason they are valid only if no plan in force this month was lowered or switched to
+--   a smaller one during the month. Usage legitimately consumed under a higher limit stays counted
+--   after a reduction (the service then rejects further use), and these checks would report it as a
+--   violation. The scenarios in load/ never change a plan during a run, so their results are unaffected.
 --   Section 5 covers this run only: accounts named load-<scenario>-<run_id>-<n>, matched exactly on the run ID.
 \pset footer off
 

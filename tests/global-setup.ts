@@ -1,5 +1,5 @@
 import pg from 'pg';
-import { createDb, createPool } from '../src/db/client.js';
+import { createDb, createMaintenancePool } from '../src/db/client.js';
 import { runMigrations } from '../src/db/migrate.js';
 import { seedPlans } from '../src/db/seed.js';
 import { systemClock } from '../src/lib/clock.js';
@@ -25,7 +25,8 @@ export default async function setup(): Promise<void> {
 
   await createDatabaseIfMissing(url, dbName);
 
-  const pool = createPool(TEST_DATABASE_URL);
+  // The same pool the container entrypoint migrates and seeds with (src/scripts/run-with-db.ts).
+  const pool = createMaintenancePool(TEST_DATABASE_URL);
   try {
     const db = createDb(pool);
     await runMigrations(db);

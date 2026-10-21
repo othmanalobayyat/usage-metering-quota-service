@@ -18,6 +18,27 @@ export function createPool(databaseUrl: string): pg.Pool {
   });
 }
 
+/**
+ * Limits for one-off maintenance (migrate, seed), not for requests. A migration that indexes or
+ * rewrites a populated table can legitimately run longer than createPool()'s 4s statement limit,
+ * and under it Postgres would cancel the migration and the container would never start. These
+ * limits are still finite, so a migration stuck behind another session's lock fails instead of
+ * hanging startup forever.
+ */
+export const MAINTENANCE_TIMEOUTS = {
+  connectionTimeoutMillis: 10_000,
+  lock_timeout: 60_000,
+  statement_timeout: 15 * 60_000,
+  // Client-side backstop past statement_timeout, in case the server never answers at all.
+  query_timeout: 16 * 60_000,
+  idle_in_transaction_session_timeout: 60_000,
+} as const;
+
+/** One connection with MAINTENANCE_TIMEOUTS: migrations and the seed run one statement at a time. */
+export function createMaintenancePool(databaseUrl: string): pg.Pool {
+  return new pg.Pool({ connectionString: databaseUrl, max: 1, ...MAINTENANCE_TIMEOUTS });
+}
+
 export function createDb(pool: pg.Pool) {
   return drizzle(pool);
 }

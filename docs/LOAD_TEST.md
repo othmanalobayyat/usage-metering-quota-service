@@ -17,7 +17,7 @@ Sections 1–7 are the baseline, kept as measured: one API process, nothing tune
 | §9 post-fix check, hot account, 50 VUs | `load/run.sh hot-account` | `hot-account-84e77ce8-*` (untracked) |
 | §9 comparison rows, 2026-10-19 | `load/run.sh hot-account`, `load/run.sh many-accounts` | `hot-account-bc7adbf3-*`, `many-accounts-06e6a282-*` (untracked) |
 
-Each `run.sh` run saves `-env.txt` (host, versions, settings), `-k6.txt`, `-pg.txt` (pg_stat_activity samples), `-cpu.txt`, `-idx.txt`/`-idx-delta.txt` (index scan counters), `-sql.txt` (invariants), `-api.log`, and `-run.txt` (the full console output, including the summaries quoted below).
+Each `run.sh` run saves `-env.txt` (host, versions, settings; from the provenance change in §2 also the git checkout state and API image), `-k6.txt`, `-pg.txt` (pg_stat_activity samples), `-cpu.txt`, `-idx.txt`/`-idx-delta.txt` (index scan counters), `-sql.txt` (invariants), `-api.log`, and `-run.txt` (the full console output, including the summaries quoted below).
 
 Two things in these files look like failures but aren't. The `FATAL: terminating connection due to administrator command` line in `-pg.err` is the sampler being stopped at the end of the run (`pg_terminate_backend`). The stack traces in the 200-VU runs' `-api.log` files are the expected pool timeouts (§4 and §8 stress probes).
 
@@ -69,6 +69,15 @@ load/compare.sh                                  # WORKERS=1 vs WORKERS=4, alter
 `load/run.sh <scenario>` does the following, and prints and saves everything to `load/results/<scenario>-<run_id>-*`:
 
 1. Records the environment.
+   - **Provenance fields** (`load/provenance.sh`): recorded by runs made after this change; **no run in `load/results/` has them**.
+     - `git_commit`: HEAD of the checkout the script runs from.
+     - `git_tracked_changes`: tracked files modified or staged; 0 means the tracked tree is clean.
+     - `git_untracked_files`: untracked files outside `load/results/`, so the run's own output isn't counted.
+     - `api_image`: the API container's image ID.
+     - `api_image_created`: when that image was built.
+   - **`unknown` values:** a value the script can't determine (git missing, not a checkout, a failed `docker` call) reads `unknown`, never empty or a misleading 0. The failing command's error goes to `-run.txt`.
+   - **What the image ID doesn't prove:** it identifies the image, not the source it was built from, because the build records no commit. Tie a run to its code by comparing `api_image_created` with the `git_*` fields and with when the source last changed.
+   - **Older runs:** they have none of these fields, and their provenance is only what §8 and §9 infer from timestamps.
 2. Snapshots index scan counters (`load/index-scans.sql`).
 3. Samples `pg_stat_activity` every 0.5s (`load/sample-activity.sql` under `\watch`) and container CPU (`docker stats`) in the background.
 4. Runs `docker compose --profile load run --rm k6 run -q -e RUN_ID=<run_id> /scripts/<scenario>.js`.
@@ -399,7 +408,7 @@ One run of `load/run.sh hot-account` at the defaults (50 VUs, 30s, `WORKERS=1`),
 
 ### Code and environment
 
-- **Code:** commit `1468d11` (2026-10-19 22:50:08 UTC). The API image was built at 22:53:56 UTC and the API container created at 22:54:06 UTC, before the run started (`started_utc 2026-10-19T23:02:37Z`), and the same container was still running when this section was written. Its 37 compiled `dist/**/*.js` files are byte-identical (sha256) to the local `dist/`, and they contain the F10 checks. `load/run.sh` doesn't record the commit or the dirty state (QA report F11), so the run files themselves don't show the commit. It comes from the developer's record and the timestamps above.
+- **Code:** commit `1468d11` (2026-10-19 22:50:08 UTC). The API image was built at 22:53:56 UTC and the API container created at 22:54:06 UTC, before the run started (`started_utc 2026-10-19T23:02:37Z`), and the same container was still running when this section was written. Its 37 compiled `dist/**/*.js` files are byte-identical (sha256) to the local `dist/`, and they contain the F10 checks. `load/run.sh` didn't record the commit or the dirty state at the time (QA report F11; the §2 provenance fields came later), so the run files themselves don't show the commit. It comes from the developer's record and the timestamps above.
 - **Environment** (`-env.txt`): the same versions and settings as §1. `api_node v22.23.3`, `api_workers_env 1`, `api_node_processes 1`, `pg_server_version 16.15`, `shared_buffers` 128MB, `synchronous_commit` on, `fsync` on, `host_cpus 12`, `host_swap_used_mib 1654`. Other host load wasn't recorded, as in every earlier run.
 
 ### Results
@@ -461,12 +470,12 @@ One more run from 2026-10-19 (19:30 UTC, in the same session as `bc7adbf3` and b
 
 - **It is anomalous.** Every other many-accounts run with one API process is 167.7–209.8 req/s (§3 and both §8 sessions), and every `WORKERS=4` run is 261.7–268.4 req/s (§8). This single `WORKERS=1` run is 62% above the highest of the other single-process runs and beats every `WORKERS=4` run.
 - **Its `-env.txt` reports 2 `node` processes** although `WORKERS` is 1. Every other `WORKERS=1` run that records the count reports 1. `run.sh` counts `node` processes with `ps` at one instant, and the API healthcheck also starts a `node` process every 5s (`docker-compose.yml:36`). That is a possible explanation of the count, not a verified one.
-- **The cause of the throughput isn't known.** It wasn't investigated or repeated, and `run.sh` doesn't record the git commit (QA report F11). Until a rerun explains it, the §8 conclusion (`WORKERS=4` about 31–35% faster for many accounts) rests on the 12 many-accounts runs of the two §8 sessions, and this run neither confirms nor refutes it.
+- **The cause of the throughput isn't known.** It wasn't investigated or repeated, and `run.sh` didn't record the git commit at the time (QA report F11). Until a rerun explains it, the §8 conclusion (`WORKERS=4` about 31–35% faster for many accounts) rests on the 12 many-accounts runs of the two §8 sessions, and this run neither confirms nor refutes it.
 
 ### Not verified (§9)
 
 - **Why throughput is lower.** The cause wasn't investigated. One run can't tell a cost of the F10 fix apart from run-to-run or host variation, and no code before the fix was run in the same session to compare.
 - **Run-to-run variation on `1468d11`:** one run only.
-- **The git state at image build time** isn't recorded by `load/run.sh` (F11). It is inferred from the timestamps and the `dist/` comparison above.
+- **The git state at image build time** wasn't recorded by `load/run.sh` (F11). It still can't be: the §2 provenance fields record the checkout at run time and the image ID, not the image's source commit. It is inferred from the timestamps and the `dist/` comparison above.
 - **These files are untracked** in git when this section was written (`git status`), like `hot-account-bc7adbf3-*` and `many-accounts-06e6a282-*` (QA report F11), and they are still untracked at `9880430`. Every number in §9 comes from files a clone of the repository doesn't contain. Committing them is the developer's decision.
 - **Why `many-accounts-06e6a282` is faster**, and why it reports 2 API processes (see above).

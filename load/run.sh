@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Runs one k6 scenario against the Compose stack and saves the evidence for docs/LOAD_TEST.md in
 # load/results/<scenario>-<run_id>-*:
-#   env.txt     host, versions, Postgres settings, k6 parameters
+#   env.txt     host, versions, Postgres settings, k6 parameters, git checkout state, API image
+#               (load/provenance.sh; a value it can't determine reads "unknown")
 #   k6.txt      k6 result (the SUMMARY_JSON line is machine-readable)
 #   pg.txt      pg_stat_activity samples every 0.5s (load/sample-activity.sql), '|'-separated
 #   cpu.txt     container CPU from docker stats (~2s per sample)
@@ -17,6 +18,8 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
+# meta, git_provenance, image_provenance, compose_image, host_memory.
+source load/provenance.sh
 
 usage="usage: [WORKERS=n] [VUS=n] [DURATION=<n>s, whole seconds, default 30s] load/run.sh hot-account|many-accounts|retry-storm"
 scenario="${1:?$usage}"
@@ -62,16 +65,20 @@ db_ctr="$(docker compose ps --format '{{.Name}}' db)"
   echo "vus ${VUS:-50 (default)}"
   echo "duration ${DURATION:-30s (default)}"
   echo "started_utc $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  echo "host_cpus $(nproc)"
-  free -m | awk '/^Mem:/ { print "host_mem_total_mib " $2 } /^Swap:/ { print "host_swap_used_mib " $3 }'
-  echo "docker $(docker version --format '{{.Server.Version}}')"
-  echo "compose $(docker compose version --short)"
-  echo "k6_image $(docker compose --profile load config --format json | jq -r '.services.k6.image')"
-  echo "db_image $(docker compose config --format json | jq -r '.services.db.image')"
-  echo "api_node $(docker compose exec -T api node --version)"
-  echo "api_workers_env $(docker compose exec -T api printenv WORKERS)"
+  echo "host_cpus $(meta nproc)"
+  host_memory
+  echo "docker $(meta docker version --format '{{.Server.Version}}')"
+  echo "compose $(meta docker compose version --short)"
+  echo "k6_image $(meta compose_image k6)"
+  echo "db_image $(meta compose_image db)"
+  echo "api_node $(meta docker compose exec -T api node --version)"
+  echo "api_workers_env $(meta docker compose exec -T api printenv WORKERS)"
   # Primary + workers in cluster mode, one process with WORKERS=1.
-  echo "api_node_processes $(docker compose exec -T api sh -c 'ps -o comm= | grep -c "^node$"')"
+  echo "api_node_processes $(meta docker compose exec -T api sh -c 'ps -o comm= | grep -c "^node$"')"
+  # The checkout this script runs from, at the start of the run. The image's own source commit isn't
+  # recorded by the build, so api_image identifies the image but doesn't prove which commit it holds.
+  git_provenance
+  image_provenance "$api_ctr"
   "${psql_db[@]}" -At -F ' ' -c "SELECT 'pg_' || name, current_setting(name) FROM pg_settings
     WHERE name IN ('server_version', 'max_connections', 'shared_buffers', 'synchronous_commit', 'fsync', 'wal_sync_method')
     ORDER BY name"

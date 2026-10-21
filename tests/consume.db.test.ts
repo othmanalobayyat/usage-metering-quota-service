@@ -546,6 +546,193 @@ describe.skipIf(!(await dbAvailable()))('POST /consume', () => {
       expect(accepted).toBeGreaterThanOrEqual(8); // (100 - 60) / 5
       await expectInvariant();
     });
+
+    it('60 parallel consumes race at the user monthly limit: exactly 50 accepted, 10 rejected by USER', async () => {
+      // Basic: 1,000/mo · 20/req. The account (Starter, 10,000/mo · 100/req) never binds here.
+      await addUser('alice');
+      const ids = Array.from({ length: 60 }, (_, i) => `user-race-${i}`);
+      const responses = await Promise.all(ids.map((id) => consume('alice', 20, id)));
+
+      for (const res of responses) expect(res.status).toBe(200);
+      const accepted = responses.filter((r) => r.body.status === 'ACCEPTED');
+      const rejected = responses.filter((r) => r.body.status === 'REJECTED');
+      expect(accepted).toHaveLength(50);
+      expect(rejected).toHaveLength(10);
+      // Each acceptance saw the previous one's write: remaining 980, 960, …, 0, once each.
+      const remainingUser = accepted.map((r) => r.body.remaining.user as number).sort((a, b) => a - b);
+      expect(remainingUser).toEqual(Array.from({ length: 50 }, (_, i) => i * 20));
+      // 20 more only fails once the user is at exactly 1,000, so every rejection's snapshot is the same.
+      for (const res of rejected) {
+        expect(res.body).toEqual({
+          requestId: expect.any(String),
+          status: 'REJECTED',
+          reasonCode: 'MONTHLY_LIMIT_EXCEEDED',
+          rejectedBy: 'USER',
+          limit: 1_000,
+          remaining: { account: 9_000, user: 0 },
+          replayed: false,
+        });
+      }
+      expect(await userUnits('alice')).toBe(1_000);
+      expect(await accountUnits()).toBe(1_000);
+
+      // The stored history agrees with every response.
+      const rows = await testDb.db.select().from(requests).where(eq(requests.accountId, account.id));
+      expect(rows).toHaveLength(60);
+      const byRequestId = new Map(rows.map((row) => [row.requestId, row]));
+      for (const res of responses) {
+        const row = byRequestId.get(res.body.requestId)!;
+        expect({
+          status: row.status,
+          reasonCode: row.reasonCode,
+          rejectedBy: row.rejectedBy,
+          limit: row.limitValue,
+          remaining: { account: row.remainingAccount, user: row.remainingUser },
+        }).toEqual({
+          status: res.body.status,
+          reasonCode: res.body.reasonCode,
+          rejectedBy: res.body.rejectedBy,
+          limit: res.body.limit,
+          remaining: res.body.remaining,
+        });
+      }
+      expect(rows.filter((row) => row.status === 'ACCEPTED').reduce((sum, row) => sum + row.units, 0)).toBe(1_000);
+      await expectInvariant();
+    });
+
+    it('a user plan switch racing parallel consumes: each decision follows the plan it recorded, in lock order', async () => {
+      // 30 units fit Premium's 100 per request but not Basic's 20, so each decision shows which plan it read.
+      await addUser('alice', PREDEFINED_PLAN_IDS.PREMIUM);
+      const [responses, switched] = await Promise.all([
+        Promise.all(Array.from({ length: 30 }, (_, i) => consume('alice', 30, `switch-race-${i}`))),
+        as().put('/users/alice/plan', { planId: PREDEFINED_PLAN_IDS.BASIC }),
+      ]);
+      expect(switched.status).toBe(200);
+
+      const rows = await testDb.db.select().from(requests).where(eq(requests.accountId, account.id));
+      const byRequestId = new Map(rows.map((row) => [row.requestId, row]));
+      const accepted = responses.filter((r) => r.body.status === 'ACCEPTED').length;
+      for (const res of responses) {
+        expect(res.status).toBe(200);
+        const row = byRequestId.get(res.body.requestId)!;
+        if (row.userPlanId === PREDEFINED_PLAN_IDS.PREMIUM) {
+          expect(res.body.status).toBe('ACCEPTED');
+        } else {
+          expect(row.userPlanId).toBe(PREDEFINED_PLAN_IDS.BASIC);
+          // Plans are read after the lock, so every decision on Basic comes after every decision on
+          // Premium and sees all of their units. Whichever way the race goes, this holds.
+          expect(res.body).toMatchObject({
+            status: 'REJECTED',
+            reasonCode: 'PER_REQUEST_LIMIT_EXCEEDED',
+            rejectedBy: 'USER',
+            limit: 20,
+            remaining: { account: 10_000 - 30 * accepted, user: Math.max(0, 1_000 - 30 * accepted) },
+          });
+        }
+      }
+      expect(await userUnits('alice')).toBe(30 * accepted);
+      expect(await accountUnits()).toBe(30 * accepted);
+      // Once the switch has committed, the same request is rejected.
+      expect((await consume('alice', 30)).body).toMatchObject({ status: 'REJECTED', rejectedBy: 'USER', limit: 20 });
+      await expectInvariant();
+    });
+
+    describe('a plan change that commits while consumes wait on the account row', () => {
+      // A test session holds the account usage row, so the consumes queue at step 5; the plan change
+      // commits while they wait. Plans are read after the lock (step 7), so every queued consume must
+      // be decided by the new plan, although it arrived before the change. 8 queued consumes stay
+      // under the pool's 10 connections, and the lock is released well within lock_timeout (3s).
+      const QUEUED = 8;
+      let blocker: pg.Client;
+
+      beforeEach(async () => {
+        blocker = new pg.Client({ connectionString: TEST_DATABASE_URL });
+        await blocker.connect();
+      });
+
+      afterEach(async () => {
+        await blocker.query('rollback').catch(() => {});
+        await blocker.end();
+      });
+
+      /** Sends `send()` QUEUED times while the account row is held, runs `change`, then releases the row. */
+      async function queueBehindAccountLock(send: (i: number) => Promise<request.Response>, change: () => Promise<request.Response>) {
+        await blocker.query('begin');
+        const { rowCount } = await blocker.query(
+          `select 1 from account_usage where account_id = $1 and month = '2026-10-01' for update`,
+          [account.id],
+        );
+        expect(rowCount).toBe(1);
+        // .then() sends each request now instead of when awaited.
+        const pending = Array.from({ length: QUEUED }, (_, i) => send(i).then((res) => res));
+        for (let tries = 0; ; tries++) {
+          const { rows } = await testDb.pool.query<{ n: number }>(
+            `select count(*)::int as n from pg_stat_activity
+             where datname = current_database() and wait_event_type = 'Lock' and query ilike '%from "account_usage"%for update'`,
+          );
+          if (rows[0]!.n === QUEUED) break;
+          if (tries > 200) throw new Error(`only ${rows[0]!.n} of ${QUEUED} consumes queued on the account row`);
+          await new Promise((r) => setTimeout(r, 10));
+        }
+        const changed = await change();
+        expect(changed.status).toBe(200);
+        await blocker.query('commit');
+        return Promise.all(pending);
+      }
+
+      it('an account plan switch: every queued consume is decided by the new account plan', async () => {
+        // 20 units fit Pro's 1,000 per request but not Tight's 10.
+        const tight = await createCustomPlan(app, account.apiKey, { name: 'tight', type: 'ACCOUNT', monthlyLimit: 100_000, perRequestLimit: 10 });
+        expect((await as().put('/account/plan', { planId: PREDEFINED_PLAN_IDS.PRO })).status).toBe(200);
+        await addUser('alice', PREDEFINED_PLAN_IDS.PREMIUM); // 5,000/mo · 100/req
+        for (let i = 0; i < 3; i++) expect((await consume('alice', 20, `before-${i}`)).body.status).toBe('ACCEPTED');
+
+        const responses = await queueBehindAccountLock(
+          (i) => consume('alice', 20, `queued-${i}`),
+          () => as().put('/account/plan', { planId: tight }),
+        );
+
+        for (const res of responses) {
+          expect(res.status).toBe(200);
+          expect(res.body).toMatchObject({
+            status: 'REJECTED',
+            reasonCode: 'PER_REQUEST_LIMIT_EXCEEDED',
+            rejectedBy: 'ACCOUNT',
+            limit: 10,
+            remaining: { account: 100_000 - 60, user: 5_000 - 60 },
+          });
+        }
+        const rows = await testDb.db.select().from(requests).where(eq(requests.accountId, account.id));
+        expect(rows.filter((row) => row.requestId.startsWith('queued-')).map((row) => row.accountPlanId)).toEqual(Array(QUEUED).fill(tight));
+        expect(rows.filter((row) => row.requestId.startsWith('before-')).map((row) => row.accountPlanId)).toEqual(Array(3).fill(PREDEFINED_PLAN_IDS.PRO));
+        expect(await accountUnits()).toBe(60);
+        await expectInvariant();
+      });
+
+      it('a custom user plan PATCH: every queued consume is decided by the patched limits', async () => {
+        const member = await createCustomPlan(app, account.apiKey, { name: 'member', type: 'USER', monthlyLimit: 5_000, perRequestLimit: 50 });
+        await addUser('alice', member);
+        for (let i = 0; i < 3; i++) expect((await consume('alice', 30, `before-${i}`)).body.status).toBe('ACCEPTED');
+
+        const responses = await queueBehindAccountLock(
+          (i) => consume('alice', 30, `queued-${i}`),
+          () => as().patch(`/plans/${member}`, { perRequestLimit: 20 }),
+        );
+
+        for (const res of responses) {
+          expect(res.status).toBe(200);
+          expect(res.body).toMatchObject({
+            status: 'REJECTED',
+            reasonCode: 'PER_REQUEST_LIMIT_EXCEEDED',
+            rejectedBy: 'USER',
+            limit: 20,
+            remaining: { account: 10_000 - 90, user: 5_000 - 90 },
+          });
+        }
+        expect(await userUnits('alice')).toBe(90);
+        await expectInvariant();
+      });
+    });
   });
 
   describe('lock timeout', () => {

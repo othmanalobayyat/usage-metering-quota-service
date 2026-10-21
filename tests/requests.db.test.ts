@@ -1,14 +1,15 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import type { Express } from 'express';
+import pg from 'pg';
 import request from 'supertest';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { requests } from '../src/db/schema.js';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { requests, users } from '../src/db/schema.js';
 import { PREDEFINED_PLAN_IDS } from '../src/db/seed.js';
 import { encodeCursor } from '../src/lib/cursor.js';
 import { listRequests } from '../src/services/requests.service.js';
 import { createTestApp, expectError, signUp } from './helpers/api.js';
-import { createTestDb, dbAvailable, resetDatabase, type TestDb } from './helpers/db.js';
+import { createTestDb, dbAvailable, resetDatabase, TEST_DATABASE_URL, type TestDb } from './helpers/db.js';
 
 interface Entry {
   requestId: string;
@@ -182,6 +183,82 @@ describe.skipIf(!(await dbAvailable()))('GET /requests', () => {
       expect(res.body.data).toHaveLength(20);
       expect(res.body.nextCursor).toEqual(expect.any(String));
     });
+  });
+
+  // Characterization of a documented limitation (README "Known limitations"): created_at is read
+  // once, before the request waits for a connection or a lock, so a decision that commits late is
+  // listed behind newer ones that were already returned. Paging is unaffected; a reader that polls
+  // the newest page and stops at the first entry it has seen misses it.
+  describe('a decision that commits late', () => {
+    let blocker: pg.Client;
+
+    beforeEach(async () => {
+      blocker = new pg.Client({ connectionString: TEST_DATABASE_URL });
+      await blocker.connect();
+    });
+
+    afterEach(async () => {
+      await blocker.end();
+    });
+
+    it('is listed behind entries already returned: a poller stopping at a seen entry, and a cursor past it, both miss it', async () => {
+      current = new Date('2026-10-15T11:59:59Z');
+      await consume('bob', 1, 'd'); // creates this month's account usage row
+      current = new Date('2026-10-15T12:00:00Z');
+      await consume('bob', 1, 'c');
+
+      // Hold alice's (not yet existing) user usage row in an open transaction, so A waits at
+      // consume step 4 after it has read the clock.
+      const [alice] = await testDb.db
+        .select({ id: users.id })
+        .from(users)
+        .where(and(eq(users.accountId, account.id), eq(users.externalUserId, 'alice')));
+      await blocker.query('begin');
+      await blocker.query(
+        `insert into user_usage (user_id, account_id, month, units_used, updated_at) values ($1, $2, '2026-10-01', 0, $3)`,
+        [alice!.id, account.id, current],
+      );
+
+      current = new Date('2026-10-15T12:00:01Z');
+      // .then() sends the request now instead of when awaited.
+      const late = as().post('/consume', { externalUserId: 'alice', units: 1, requestId: 'late' }).then((res) => res);
+      await waitForLockWait(`insert into "user_usage"`);
+
+      current = new Date('2026-10-15T12:00:02Z');
+      await consume('bob', 1, 'b');
+      const seen = (await as().get('/requests')).body.data.map((e: Entry) => e.requestId);
+      expect(seen).toEqual(['b', 'c', 'd']);
+      // A cursor traversal that has read its first page, positioned after 'c'.
+      const page1 = (await as().get('/requests?limit=2')).body;
+      expect(page1.data.map((e: Entry) => e.requestId)).toEqual(['b', 'c']);
+
+      await blocker.query('rollback');
+      expect((await late).body).toMatchObject({ status: 'ACCEPTED', replayed: false });
+
+      const after = (await as().get('/requests')).body.data as (Entry & { remaining: { account: number } })[];
+      expect(after.map((e) => e.requestId)).toEqual(['b', 'late', 'c', 'd']);
+      // 'late' was decided after 'b' (it saw b's unit), yet it is listed after it.
+      expect(after[1]!.remaining.account).toBeLessThan(after[0]!.remaining.account);
+      // A poller that reads the newest page and stops at the first entry it has already seen ('b').
+      const firstSeen = after.findIndex((e) => seen.includes(e.requestId));
+      expect(after.slice(0, firstSeen).map((e) => e.requestId)).toEqual([]);
+      // The traversal continues from its cursor: 'late' sits before it, so the traversal never sees it.
+      const page2 = (await as().get(`/requests?limit=2&cursor=${page1.nextCursor}`)).body;
+      expect(page2).toEqual({ data: [expect.objectContaining({ requestId: 'd' })], nextCursor: null });
+    }, 15_000);
+
+    async function waitForLockWait(queryPrefix: string) {
+      for (let i = 0; i < 200; i++) {
+        const { rowCount } = await testDb.pool.query(
+          `select 1 from pg_stat_activity
+           where datname = current_database() and wait_event_type = 'Lock' and query ilike $1`,
+          [`${queryPrefix}%`],
+        );
+        if (rowCount) return;
+        await new Promise((r) => setTimeout(r, 10));
+      }
+      throw new Error(`no session waited on a lock running ${queryPrefix}`);
+    }
   });
 
   describe('filters', () => {

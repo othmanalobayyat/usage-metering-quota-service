@@ -14,7 +14,7 @@ Planned stack: TypeScript, Express, Drizzle ORM, PostgreSQL, Zod, Vitest + Super
 - `npm run build`: compile `src/` to `dist/` (`tsconfig.build.json`).
 - `npm run dev`: run `src/server.ts` with tsx in watch mode (needs `DATABASE_URL`; see `.env.example`).
 - `npm start`: run the compiled server (`node dist/server.js`).
-- `npm run typecheck`: `tsc --noEmit` over `src/` and `tests/`.
+- `npm run typecheck`: `tsc --noEmit` over `src/`, `tests/` and `client/src/`.
 - `npm run lint`: ESLint (flat config, typescript-eslint).
 - `npm test`: run all Vitest tests once. `npm run test:watch` for watch mode.
 - Single test file: `npx vitest run tests/healthz.test.ts`. Single test by name: `npx vitest run -t "returns 503"`.
