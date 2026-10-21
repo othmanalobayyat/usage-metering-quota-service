@@ -10,6 +10,7 @@
 | 4 | 2026-10-20 | commit `1468d11`, clean clone | **TP-REG-01 executed, passed.** 23 run as specified, 2 in part, 29 not run. See §10. |
 | 5 | 2026-10-20 | commit `1468d11` | Documentation corrections only. No test was run and no outcome, priority or expected result changed. See the Revision 5 paragraph. |
 | 6 | 2026-10-20 | `docs/QA_REPORT.md` revision 4; commit `1468d11` + the F12 and F13 fixes and their tests, uncommitted when this was written (since committed as `3c39c71` and `b5a3486`) | **New tests for F12 and F13 written and executed, passed** (73 tests, outside the 54 planned). The planned-test totals are unchanged: 23 run as specified, 2 in part, 29 not run. See §11. |
+| 7 | 2026-10-21 | commit `c5857ed`; supplemental load reruns `e934ee8b` and `b310d670` | Correctness and error checks passed in both runs; hot-account throughput is above the documented upper bound. Strict TP-LOAD-04 status remains unresolved/not passed. See §12. |
 
 This plan adds no findings and changes no finding status. Finding IDs (F1–F11) and requirement IDs (R1–R78) are the ones in `docs/QA_REPORT.md`. No production code, test code or load evidence was changed to write it.
 
@@ -420,3 +421,19 @@ The first version of the F12 path tests passed in the red run, because no `.` us
 **Not covered by this run:** a real load run with the F13 check, F12 inside the rebuilt Compose stack (the images weren't rebuilt), and Node versions other than 22.15.0.
 
 **Totals at revision 6:** unchanged from revision 4 for the 54 planned tests: 23 run as specified, 2 in part, 29 not run.
+
+
+## 12. Supplemental load reruns (2026-10-21)
+
+Two additional load runs were executed against commit `c5857ed5a748b53a4fe1617ae16b57f57d33e304`, using the same recorded API image. Their local evidence is in `load/results/` and is not committed.
+
+| Run | Scenario | RPS | HTTP errors | Invariants | TP-LOAD-04 interpretation |
+|---|---|---:|---:|---|---|
+| `hot-account-e934ee8b` | 1 account | 108.2 | 0 | All checks passed | Outside the stated 85.2–103.3 req/s range on the high side |
+| `many-accounts-b310d670` | Many accounts | 311.2 | 0 | All checks passed | Supplemental scenario; not a TP-LOAD-04 pass/fail measurement |
+
+The hot-account run had p50 462.7 ms, p95 528.8 ms and p99 549.4 ms. It had 0 HTTP errors and all SQL invariants were zero, but 108.2 req/s exceeds the stated upper bound of 103.3 req/s. Since TP-LOAD-04 explicitly says “within range,” do not mark it passed based on this run. Clarify whether the upper bound is intended to be a hard limit or whether the criterion should be a minimum-throughput threshold before changing the test definition.
+
+The many-accounts run had p50 144.7 ms, p95 249.9 ms and p99 300.2 ms. It had 0 HTTP errors, all SQL invariants were zero, `WORKERS=1`, and `api_node_processes=1`. This rerun does not establish the cause of the earlier anomalous `many-accounts-06e6a282` result.
+
+Both runs recorded commit `c5857ed5a748b53a4fe1617ae16b57f57d33e304`, zero tracked changes and zero untracked files at run time according to the test provenance. The generated result files themselves remain untracked, so the raw evidence will not be available in a clean clone unless it is intentionally committed. Host swap usage was about 1,952 MiB during these runs; this is an environment observation, not a proven cause of the measurements.

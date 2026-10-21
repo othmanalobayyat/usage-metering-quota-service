@@ -1,0 +1,5 @@
+
+hot_account: 3245 consumes in 30s with 50 VUs → 108.2 req/s
+  latency p50 462.7ms  p95 528.8ms  p99 549.4ms  max 739.5ms
+  errors (non-200) 0 (0.00%)  accepted 3245  rejected 0  fresh 3245  replayed 0
+SUMMARY_JSON {"scenario":"hot_account","runId":"e934ee8b","vus":50,"durationSeconds":30,"requests":3245,"rps":108.2,"p50":462.655245,"p95":528.8070985999999,"p99":549.41140368,"max":739.523511,"errors":0,"errorRate":0,"accepted":3245,"rejected":0,"replayed":0,"fresh":3245}

@@ -1353,7 +1353,7 @@ Behavior the brief leaves unspecified, with the reason for each choice.
 
 ## Load test summary
 
-Full method, raw evidence and analysis: [docs/LOAD_TEST.md](docs/LOAD_TEST.md). This summary cites only runs from §1–§8 there, and their files are committed in `load/results/`. §9 of that document (one post-fix check and two other runs from 2026-10-19) is based on 33 files that are untracked at commit `9880430`, so its raw evidence isn't in a clone of the repository.
+Full method, raw evidence and analysis: [docs/LOAD_TEST.md](docs/LOAD_TEST.md). The committed baseline evidence is documented in §1–§8. Historical results in §9 and the supplemental reruns in §10 use local, untracked files under `load/results/`; those raw results are not included in a clean clone unless intentionally committed. The 2026-10-21 hot-account rerun recorded 108.2 req/s with no errors or invariant violations, but it is above the internal TP-LOAD-04 upper bound, so it is not a strict pass under the criterion as currently written.
 
 Setup: k6 (`grafana/k6:1.3.0`) under the Compose profile `load`, on one Linux machine (`host_cpus 12`) shared by k6, the API and PostgreSQL 16 with image defaults. Each run is 50 VUs for 30s, no think time, and only `POST /consume` is measured. The custom plans allow 2,000,000,000 units/month and 1,000/request, so every request is accepted and takes the full write path.
 

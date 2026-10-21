@@ -479,3 +479,22 @@ One more run from 2026-10-19 (19:30 UTC, in the same session as `bc7adbf3` and b
 - **The git state at image build time** wasn't recorded by `load/run.sh` (F11). It still can't be: the §2 provenance fields record the checkout at run time and the image ID, not the image's source commit. It is inferred from the timestamps and the `dist/` comparison above.
 - **These files are untracked** in git when this section was written (`git status`), like `hot-account-bc7adbf3-*` and `many-accounts-06e6a282-*` (QA report F11), and they are still untracked at `9880430`. Every number in §9 comes from files a clone of the repository doesn't contain. Committing them is the developer's decision.
 - **Why `many-accounts-06e6a282` is faster**, and why it reports 2 API processes (see above).
+
+
+## 10. Supplemental reruns (2026-10-21)
+
+These runs were performed on commit `c5857ed5a748b53a4fe1617ae16b57f57d33e304` using the recorded API image. Both had zero HTTP errors and zero SQL invariant violations.
+
+| Run | Scenario | RPS | p50 | p95 | p99 | API processes | Errors | Invariants |
+|---|---|---:|---:|---:|---:|---:|---:|---|
+| `hot-account-e934ee8b` | 1 account | **108.2** | 462.7 ms | 528.8 ms | 549.4 ms | 1 | 0 | All checks passed |
+| `many-accounts-b310d670` | Many accounts | **311.2** | 144.7 ms | 249.9 ms | 300.2 ms | 1 | 0 | All checks passed |
+
+### Interpretation
+
+- **Hot account:** all correctness checks passed and no HTTP errors were observed. Throughput was 108.2 req/s, above the documented TP-LOAD-04 range of 85.2–103.3 req/s. Because the current criterion says “within range,” this does not strictly pass TP-LOAD-04. Decide whether the upper bound is a hard limit or whether the intended criterion is minimum throughput before changing its status or definition.
+- **Many accounts:** all correctness checks passed, with no HTTP errors. The run recorded `WORKERS=1` and `api_node_processes=1`. This provides a clean additional measurement but does not explain the earlier anomalous `many-accounts-06e6a282` result.
+- **Provenance:** both runs record commit `c5857ed5a748b53a4fe1617ae16b57f57d33e304`, zero tracked changes, and zero untracked files at run time. The generated result files remain untracked in the current working tree, so these raw results are not included in a clean clone unless intentionally committed.
+- **Environment caveat:** host swap usage was about 1,952 MiB during these runs. This was observed during testing; it has not been established as the cause of any measured throughput.
+
+The earlier §9 observations remain historical records and have not been replaced by these reruns.
