@@ -1,0 +1,33 @@
+== hot-account (prototype / baseline)
+round  A run        B run        A rps   B rps  ratio  p95 A->B          p99 A->B          rejected% A/B  status
+    1   3 86425d58   4 1abfdfc6   126.3   181.3  1.435    489.1->373.1       514.9->411.7     0.0/ 0.0     ok
+    2  12 6c3efe5d  11 8739ca76   159.4   247.4  1.552    387.3->265.6       408.5->286.1     0.0/ 0.0     ok
+    3  19 0d84a140  20 d7296585   160.6   230.9  1.438    377.7->275.5       403.1->297.6     0.0/ 0.0     ok
+valid pairs 3: ratio min 1.435  median 1.438  max 1.552  geometric mean 1.474; prototype faster in 3/3; exact two-sided permutation p = 2/8 = 0.2500
+median p95 ratio 0.729, median p99 ratio 0.738
+
+== many-accounts (prototype / baseline)
+round  A run        B run        A rps   B rps  ratio  p95 A->B          p99 A->B          rejected% A/B  status
+    1   5 44775b74   6 d6612c4b   624.7   679.9  1.088    105.2->100.5       128.4->116.8     0.0/ 0.0     ok
+    2  14 da6c2d03  13 c9ab7706   578.1   753.8  1.304    110.0->82.8        125.1->103.5     0.0/ 0.0     ok
+    3  21 8d4f6263  22 5456844e   600.8   710.8  1.183    106.7->93.0        125.2->108.4     0.0/ 0.0     ok
+valid pairs 3: ratio min 1.088  median 1.183  max 1.304  geometric mean 1.189; prototype faster in 3/3; exact two-sided permutation p = 2/8 = 0.2500
+median p95 ratio 0.872, median p99 ratio 0.866
+
+== retry-storm (prototype / baseline)
+round  A run        B run        A rps   B rps  ratio  p95 A->B          p99 A->B          rejected% A/B  status
+    1   7 a237678c   8 2a946592   429.7   479.0  1.115    641.9->512.7       699.8->611.4     0.0/ 0.0     ok
+    2  16 dc1d8888  15 b1bd60a0   500.7   568.0  1.134    543.8->463.4       612.2->505.1     0.0/ 0.0     ok
+    3  23 bffd3cbb  24 f3e1af6b   474.9   506.8  1.067    541.3->481.0       612.9->529.1     0.0/ 0.0     ok
+valid pairs 3: ratio min 1.067  median 1.115  max 1.134  geometric mean 1.105; prototype faster in 3/3; exact two-sided permutation p = 2/8 = 0.2500
+median p95 ratio 0.852, median p99 ratio 0.863
+
+== mixed (prototype / baseline)
+round  A run        B run        A rps   B rps  ratio  p95 A->B          p99 A->B          rejected% A/B  status
+    1   9 7a7c8c51  10 be2d1381   163.9   275.9  1.683    378.4->232.3       397.8->251.7    37.7/54.7     ok
+    2  18 61a00143  17 16772e15   179.4   279.0  1.555    344.2->230.0       366.5->247.5    39.1/54.8     ok
+    3  25 85d9c5e9  26 70a132d6   176.9   281.2  1.590    355.0->230.7       374.0->250.8    38.5/54.9     ok
+valid pairs 3: ratio min 1.555  median 1.590  max 1.683  geometric mean 1.608; prototype faster in 3/3; exact two-sided permutation p = 2/8 = 0.2500
+median p95 ratio 0.650, median p99 ratio 0.671
+
+errors by run: none | invariant violations, all runs: 0

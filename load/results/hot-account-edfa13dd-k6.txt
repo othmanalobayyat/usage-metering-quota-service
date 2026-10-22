@@ -1,0 +1,5 @@
+
+hot_account: 2255 consumes in 10s with 50 VUs → 225.5 req/s
+  latency p50 228.3ms  p95 301.1ms  p99 328.1ms  max 340.6ms
+  errors (non-200) 0 (0.00%)  accepted 2255  rejected 0  fresh 2255  replayed 0
+SUMMARY_JSON {"scenario":"hot_account","runId":"edfa13dd","vus":50,"durationSeconds":10,"requests":2255,"rps":225.5,"p50":228.344967,"p95":301.0808316,"p99":328.12208094000005,"max":340.604334,"errors":0,"errorRate":0,"accepted":2255,"rejected":0,"replayed":0,"fresh":2255}

@@ -1,0 +1,5 @@
+
+hot_account: 4590 consumes in 30s with 50 VUs → 153 req/s
+  latency p50 323.3ms  p95 437.4ms  p99 562.1ms  max 685.7ms
+  errors (non-200) 0 (0.00%)  accepted 4590  rejected 0  fresh 4590  replayed 0
+SUMMARY_JSON {"scenario":"hot_account","runId":"399fadaf","vus":50,"durationSeconds":30,"requests":4590,"rps":153,"p50":323.2772295,"p95":437.44923740000013,"p99":562.0804874999994,"max":685.685074,"errors":0,"errorRate":0,"accepted":4590,"rejected":0,"replayed":0,"fresh":4590}

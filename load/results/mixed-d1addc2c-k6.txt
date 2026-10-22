@@ -1,0 +1,5 @@
+
+mixed: 7022 consumes in 30s with 50 VUs → 234.1 req/s
+  latency p50 193.5ms  p95 371.9ms  p99 414.0ms  max 444.2ms
+  errors (non-200) 0 (0.00%)  accepted 3806  rejected 3216  fresh 7022  replayed 0
+SUMMARY_JSON {"scenario":"mixed","runId":"d1addc2c","vus":50,"durationSeconds":30,"requests":7022,"rps":234.1,"p50":193.54593899999998,"p95":371.8630284999999,"p99":414.01993345999995,"max":444.166221,"errors":0,"errorRate":0,"accepted":3806,"rejected":3216,"replayed":0,"fresh":7022}

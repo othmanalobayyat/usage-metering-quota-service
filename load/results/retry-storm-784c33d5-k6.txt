@@ -1,0 +1,5 @@
+
+retry_storm: 6489 consumes in 30s with 50 VUs → 216.3 req/s
+  latency p50 681.2ms  p95 952.5ms  p99 1032.0ms  max 1187.3ms
+  errors (non-200) 0 (0.00%)  accepted 6489  rejected 0  fresh 1760  replayed 4729
+SUMMARY_JSON {"scenario":"retry_storm","runId":"784c33d5","vus":50,"durationSeconds":30,"requests":6489,"rps":216.3,"p50":681.246566,"p95":952.4858725999998,"p99":1031.9950296,"max":1187.297003,"errors":0,"errorRate":0,"accepted":6489,"rejected":0,"replayed":4729,"fresh":1760}

@@ -1,0 +1,352 @@
+unhandled error DrizzleQueryError: Failed query: insert into "account_usage" ("account_id", "month", "units_used", "updated_at") values ($1, $2, $3, $4) on conflict do nothing
+params: 7c183a24-b328-41da-9fc8-8019ede531c1,2026-10-01,0,2026-10-22T14:46:58.308Z
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async file:///app/dist/services/consume.service.js:63:13
+    ... 2 lines matching cause stack trace ...
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'insert into "account_usage" ("account_id", "month", "units_used", "updated_at") values ($1, $2, $3, $4) on conflict do nothing',
+  params: [
+    '7c183a24-b328-41da-9fc8-8019ede531c1',
+    '2026-10-01',
+    0,
+    '2026-10-22T14:46:58.308Z'
+  ],
+  cause: Error: Client has encountered a connection error and is not queryable
+      at /app/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:113:20
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/dist/services/consume.service.js:63:13
+      at async inTransaction (file:///app/dist/db/client.js:59:24)
+      at async consume (file:///app/dist/services/consume.service.js:61:16)
+      at async file:///app/dist/routes/consume.js:17:18
+}
+unhandled error DrizzleQueryError: Failed query: select "units_used" from "user_usage" where ("user_usage"."account_id" = $1 and "user_usage"."user_id" = $2 and "user_usage"."month" = $3) for update
+params: 7c183a24-b328-41da-9fc8-8019ede531c1,f3e51c8f-d5f6-4541-a1e3-105c4cbf9151,2026-10-01
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    ... 3 lines matching cause stack trace ...
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "units_used" from "user_usage" where ("user_usage"."account_id" = $1 and "user_usage"."user_id" = $2 and "user_usage"."month" = $3) for update',
+  params: [
+    '7c183a24-b328-41da-9fc8-8019ede531c1',
+    'f3e51c8f-d5f6-4541-a1e3-105c4cbf9151',
+    '2026-10-01'
+  ],
+  cause: Error: Client has encountered a connection error and is not queryable
+      at /app/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/services/consume.service.js:75:31
+      at async inTransaction (file:///app/dist/db/client.js:59:24)
+      at async consume (file:///app/dist/services/consume.service.js:61:16)
+      at async file:///app/dist/routes/consume.js:17:18
+}
+service unavailable (overload) DrizzleQueryError: Failed query: select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+params: 7c183a24-b328-41da-9fc8-8019ede531c1,2026-10-01
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    ... 3 lines matching cause stack trace ...
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update',
+  params: [ '7c183a24-b328-41da-9fc8-8019ede531c1', '2026-10-01' ],
+  cause: error: canceling statement due to lock timeout
+      at /app/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/services/consume.service.js:70:34
+      at async inTransaction (file:///app/dist/db/client.js:59:24)
+      at async consume (file:///app/dist/services/consume.service.js:61:16)
+      at async file:///app/dist/routes/consume.js:17:18 {
+    length: 104,
+    severity: 'ERROR',
+    code: '55P03',
+    detail: undefined,
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'postgres.c',
+    line: '3387',
+    routine: 'ProcessInterrupts'
+  }
+}
+service unavailable (overload) DrizzleQueryError: Failed query: select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+params: 7c183a24-b328-41da-9fc8-8019ede531c1,2026-10-01
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    ... 3 lines matching cause stack trace ...
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update',
+  params: [ '7c183a24-b328-41da-9fc8-8019ede531c1', '2026-10-01' ],
+  cause: error: canceling statement due to lock timeout
+      at /app/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/services/consume.service.js:70:34
+      at async inTransaction (file:///app/dist/db/client.js:59:24)
+      at async consume (file:///app/dist/services/consume.service.js:61:16)
+      at async file:///app/dist/routes/consume.js:17:18 {
+    length: 104,
+    severity: 'ERROR',
+    code: '55P03',
+    detail: undefined,
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'postgres.c',
+    line: '3387',
+    routine: 'ProcessInterrupts'
+  }
+}
+service unavailable (overload) DrizzleQueryError: Failed query: select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+params: 7c183a24-b328-41da-9fc8-8019ede531c1,2026-10-01
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    ... 3 lines matching cause stack trace ...
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update',
+  params: [ '7c183a24-b328-41da-9fc8-8019ede531c1', '2026-10-01' ],
+  cause: error: canceling statement due to lock timeout
+      at /app/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/services/consume.service.js:70:34
+      at async inTransaction (file:///app/dist/db/client.js:59:24)
+      at async consume (file:///app/dist/services/consume.service.js:61:16)
+      at async file:///app/dist/routes/consume.js:17:18 {
+    length: 104,
+    severity: 'ERROR',
+    code: '55P03',
+    detail: undefined,
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'postgres.c',
+    line: '3387',
+    routine: 'ProcessInterrupts'
+  }
+}
+service unavailable (overload) DrizzleQueryError: Failed query: select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+params: 7c183a24-b328-41da-9fc8-8019ede531c1,2026-10-01
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    ... 3 lines matching cause stack trace ...
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update',
+  params: [ '7c183a24-b328-41da-9fc8-8019ede531c1', '2026-10-01' ],
+  cause: error: canceling statement due to lock timeout
+      at /app/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/services/consume.service.js:70:34
+      at async inTransaction (file:///app/dist/db/client.js:59:24)
+      at async consume (file:///app/dist/services/consume.service.js:61:16)
+      at async file:///app/dist/routes/consume.js:17:18 {
+    length: 161,
+    severity: 'ERROR',
+    code: '55P03',
+    detail: undefined,
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: 'while locking tuple (15,82) in relation "account_usage"',
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'postgres.c',
+    line: '3387',
+    routine: 'ProcessInterrupts'
+  }
+}
+service unavailable (overload) DrizzleQueryError: Failed query: select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+params: 7c183a24-b328-41da-9fc8-8019ede531c1,2026-10-01
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    ... 3 lines matching cause stack trace ...
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update',
+  params: [ '7c183a24-b328-41da-9fc8-8019ede531c1', '2026-10-01' ],
+  cause: error: canceling statement due to lock timeout
+      at /app/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/services/consume.service.js:70:34
+      at async inTransaction (file:///app/dist/db/client.js:59:24)
+      at async consume (file:///app/dist/services/consume.service.js:61:16)
+      at async file:///app/dist/routes/consume.js:17:18 {
+    length: 104,
+    severity: 'ERROR',
+    code: '55P03',
+    detail: undefined,
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'postgres.c',
+    line: '3387',
+    routine: 'ProcessInterrupts'
+  }
+}
+service unavailable (overload) DrizzleQueryError: Failed query: select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+params: 7c183a24-b328-41da-9fc8-8019ede531c1,2026-10-01
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    ... 3 lines matching cause stack trace ...
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update',
+  params: [ '7c183a24-b328-41da-9fc8-8019ede531c1', '2026-10-01' ],
+  cause: error: canceling statement due to lock timeout
+      at /app/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/services/consume.service.js:70:34
+      at async inTransaction (file:///app/dist/db/client.js:59:24)
+      at async consume (file:///app/dist/services/consume.service.js:61:16)
+      at async file:///app/dist/routes/consume.js:17:18 {
+    length: 104,
+    severity: 'ERROR',
+    code: '55P03',
+    detail: undefined,
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'postgres.c',
+    line: '3387',
+    routine: 'ProcessInterrupts'
+  }
+}
+service unavailable (overload) DrizzleQueryError: Failed query: select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+params: 7c183a24-b328-41da-9fc8-8019ede531c1,2026-10-01
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    ... 3 lines matching cause stack trace ...
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update',
+  params: [ '7c183a24-b328-41da-9fc8-8019ede531c1', '2026-10-01' ],
+  cause: error: canceling statement due to lock timeout
+      at /app/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/services/consume.service.js:70:34
+      at async inTransaction (file:///app/dist/db/client.js:59:24)
+      at async consume (file:///app/dist/services/consume.service.js:61:16)
+      at async file:///app/dist/routes/consume.js:17:18 {
+    length: 104,
+    severity: 'ERROR',
+    code: '55P03',
+    detail: undefined,
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'postgres.c',
+    line: '3387',
+    routine: 'ProcessInterrupts'
+  }
+}
+service unavailable (overload) DrizzleQueryError: Failed query: select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+params: 7c183a24-b328-41da-9fc8-8019ede531c1,2026-10-01
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+    ... 3 lines matching cause stack trace ...
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update',
+  params: [ '7c183a24-b328-41da-9fc8-8019ede531c1', '2026-10-01' ],
+  cause: error: canceling statement due to lock timeout
+      at /app/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:124:18
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:117:22
+      at async file:///app/dist/services/consume.service.js:70:34
+      at async inTransaction (file:///app/dist/db/client.js:59:24)
+      at async consume (file:///app/dist/services/consume.service.js:61:16)
+      at async file:///app/dist/routes/consume.js:17:18 {
+    length: 104,
+    severity: 'ERROR',
+    code: '55P03',
+    detail: undefined,
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'postgres.c',
+    line: '3387',
+    routine: 'ProcessInterrupts'
+  }
+}

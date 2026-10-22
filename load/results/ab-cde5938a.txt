@@ -1,0 +1,42 @@
+session cde5938a  started_utc 2026-10-22T13:39:19Z  rounds 3  scenarios hot-account many-accounts retry-storm mixed
+A baseline quota-ab:baseline sha256:a9d491eb8c5014d2d58363e76e41b38f730742f07b7c50cd4d2f06b80e8a8557 created 2026-10-22T16:38:13.96405648+03:00
+B prototype quota-ab:prototype sha256:ac0d0c5901171b0af10bea98a33404400ceff6107017297020903711b3df6f39 created 2026-10-22T16:38:20.336341265+03:00
+order phase label scenario vus run_id requests rps p50 p95 p99 errors accepted rejected fresh sql_rows violations
+1 warmup baseline hot-account 50 0517a479 1439 143.9 355.4 420.8 435.8 0 1439 0 1439 1439 0
+2 warmup prototype hot-account 50 edfa13dd 2255 225.5 228.3 301.1 328.1 0 2255 0 2255 2255 0
+3 measure baseline hot-account 50 86425d58 3788 126.3 405.2 489.1 514.9 0 3788 0 3788 3788 0
+4 measure prototype hot-account 50 1abfdfc6 5438 181.3 278.3 373.1 411.7 0 5438 0 5438 5438 0
+5 measure baseline many-accounts 50 44775b74 18742 624.7 76.3 105.2 128.4 0 18742 0 18742 18742 0
+6 measure prototype many-accounts 50 d6612c4b 20397 679.9 71.2 100.5 116.8 0 20397 0 20397 20397 0
+7 measure baseline retry-storm 50 a237678c 12891 429.7 316.2 641.9 699.8 0 12891 0 2849 2849 0
+8 measure prototype retry-storm 50 2a946592 14370 479 302 512.7 611.4 0 14370 0 3090 3090 0
+9 measure baseline mixed 50 7a7c8c51 4916 163.9 310.3 378.4 397.8 0 3062 1854 4916 4916 0
+10 measure prototype mixed 50 be2d1381 8277 275.9 184.1 232.3 251.7 0 3748 4529 8277 8277 0
+11 measure prototype hot-account 50 8739ca76 7421 247.4 203.5 265.6 286.1 0 7421 0 7421 7421 0
+12 measure baseline hot-account 50 6c3efe5d 4783 159.4 316.5 387.3 408.5 0 4783 0 4783 4783 0
+13 measure prototype many-accounts 50 c9ab7706 22614 753.8 66.1 82.8 103.5 0 22614 0 22614 22614 0
+14 measure baseline many-accounts 50 da6c2d03 17344 578.1 84.8 110 125.1 0 17344 0 17344 17344 0
+15 measure prototype retry-storm 50 b1bd60a0 17040 568 241.3 463.4 505.1 0 17040 0 3421 3421 0
+16 measure baseline retry-storm 50 dc1d8888 15021 500.7 271.6 543.8 612.2 0 15021 0 3146 3146 0
+17 measure prototype mixed 50 16772e15 8370 279 181.2 230 247.5 0 3782 4588 8370 8370 0
+18 measure baseline mixed 50 61a00143 5382 179.4 284.4 344.2 366.5 0 3280 2102 5382 5382 0
+19 measure baseline hot-account 50 0d84a140 4817 160.6 315.2 377.7 403.1 0 4817 0 4817 4817 0
+20 measure prototype hot-account 50 d7296585 6926 230.9 217.9 275.5 297.6 0 6926 0 6926 6926 0
+21 measure baseline many-accounts 50 8d4f6263 18023 600.8 81.7 106.7 125.2 0 18023 0 18023 18023 0
+22 measure prototype many-accounts 50 5456844e 21324 710.8 68.3 93 108.4 0 21324 0 21324 21324 0
+23 measure baseline retry-storm 50 bffd3cbb 14247 474.9 296.1 541.3 612.9 0 14247 0 3101 3101 0
+24 measure prototype retry-storm 50 f3e1af6b 15204 506.8 277.7 481 529.1 0 15204 0 3206 3206 0
+25 measure baseline mixed 50 85d9c5e9 5306 176.9 288.1 355 374 0 3262 2044 5306 5306 0
+26 measure prototype mixed 50 70a132d6 8435 281.2 178.9 230.7 250.8 0 3806 4629 8435 8435 0
+
+medians of the measured runs per scenario and label (errors and violations: totals):
+scenario label runs rps p50 p95 p99 errors violations
+hot-account baseline 3 159.4 316.5 387.3 408.5 0 0
+hot-account prototype 3 230.9 217.9 275.5 297.6 0 0
+many-accounts baseline 3 600.8 81.7 106.7 125.2 0 0
+many-accounts prototype 3 710.8 68.3 93 108.4 0 0
+mixed baseline 3 176.9 288.1 355 374 0 0
+mixed prototype 3 279 181.2 230.7 250.8 0 0
+retry-storm baseline 3 474.9 296.1 543.8 612.9 0 0
+retry-storm prototype 3 506.8 277.7 481 529.1 0 0
+finished_utc 2026-10-22T13:59:38Z

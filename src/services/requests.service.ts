@@ -7,6 +7,36 @@ import type { ServiceDeps } from './deps.js';
 
 type RequestRow = typeof requests.$inferSelect;
 
+/**
+ * The inputs evaluate() decided with: each level's limits and its usage before this request.
+ * null for a decision recorded before migration 0001, which stored only the plan IDs; those
+ * plans may have been edited since, so their limits can't be recovered.
+ */
+function snapshotView(row: RequestRow) {
+  if (
+    row.accountMonthlyLimit === null ||
+    row.accountPerRequestLimit === null ||
+    row.accountUsedBefore === null ||
+    row.userMonthlyLimit === null ||
+    row.userPerRequestLimit === null ||
+    row.userUsedBefore === null
+  ) {
+    return null;
+  }
+  return {
+    account: {
+      monthlyLimit: row.accountMonthlyLimit,
+      perRequestLimit: row.accountPerRequestLimit,
+      unitsUsedBefore: row.accountUsedBefore,
+    },
+    user: {
+      monthlyLimit: row.userMonthlyLimit,
+      perRequestLimit: row.userPerRequestLimit,
+      unitsUsedBefore: row.userUsedBefore,
+    },
+  };
+}
+
 /** One history entry: the stored decision and its snapshot, as it was when decided. */
 function historyView(row: RequestRow, externalUserId: string) {
   return {
@@ -21,6 +51,7 @@ function historyView(row: RequestRow, externalUserId: string) {
     remaining: { account: row.remainingAccount, user: row.remainingUser },
     accountPlanId: row.accountPlanId,
     userPlanId: row.userPlanId,
+    snapshot: snapshotView(row),
     createdAt: row.createdAt,
   };
 }

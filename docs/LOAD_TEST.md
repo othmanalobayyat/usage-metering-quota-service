@@ -1,8 +1,8 @@
 # Load Test: Phase 6
 
-Sections 1–7 are the baseline, kept as measured: one API process, nothing tuned, exactly as `docker compose up --build` started it before `WORKERS` existed. Section 6 lists the candidate improvements. Section 8 implements one of them, several API processes with `node:cluster` (§6 item 3), and compares it with the baseline in the same session. Section 9 records one later check run on the code after the F10 input fix (`docs/TEST_PLAN.md` TP-LOAD-04). Its numbers come from `load/run.sh hot-account` run `hot-account-84e77ce8-*`, and its comparison table also quotes `hot-account-bc7adbf3-*` and the runs listed below. It changes nothing in §1–§8.
+Sections 1–7 are the baseline, kept as measured: one API process, nothing tuned, exactly as `docker compose up --build` started it before `WORKERS` existed. Section 6 lists the candidate improvements. Section 8 implements one of them, several API processes with `node:cluster` (§6 item 3), and compares it with the baseline in the same session. Section 9 records one later check run on the code after the F10 input fix (`docs/TEST_PLAN.md` TP-LOAD-04). Its numbers come from `load/run.sh hot-account` run `hot-account-84e77ce8-*`, and its comparison table also quotes `hot-account-bc7adbf3-*` and the runs listed below. It changes nothing in §1–§8. Section 11 compares the current consume transaction with a prototype that holds the account lock for fewer statements, image against image in one session ([CONSUME_ROUND_TRIPS.md](CONSUME_ROUND_TRIPS.md)); the prototype is not in production code.
 
-**Where the numbers come from.** Every number below comes from one of these saved files in `load/results/`, or is arithmetic on them shown inline. The files of every run in §1–§8 are committed. The three §9 runs are not: at commit `9880430` their 33 files are untracked, so they exist only in the developer's working copy and a clone of the repository doesn't have them.
+**Where the numbers come from.** Every number below comes from one of these saved files in `load/results/`, or is arithmetic on them shown inline. The files of every run in §1–§8 are committed. The raw files of §9–§12 were untracked when those sections were written and were committed on 2026-10-22, so a clone now has every file cited below.
 
 | Run | Produced by | Files |
 |---|---|---|
@@ -14,8 +14,9 @@ Sections 1–7 are the baseline, kept as measured: one API process, nothing tune
 | §8 comparison: WORKERS=1 vs 4, 14 runs | `load/compare.sh` | `compare-b94e9fcc.txt` (index, medians), the 14 run IDs it lists, `compare-b94e9fcc-host.txt` |
 | §8 replication: the same 14 runs, second session | `load/compare.sh` | `compare-66ef619b.txt` (index, medians) and the 14 run IDs it lists |
 | §8 extra stress probe, WORKERS=1 | `VUS=200 DURATION=20s load/run.sh hot-account` | `hot-account-fc0db82b-*` |
-| §9 post-fix check, hot account, 50 VUs | `load/run.sh hot-account` | `hot-account-84e77ce8-*` (untracked) |
-| §9 comparison rows, 2026-10-19 | `load/run.sh hot-account`, `load/run.sh many-accounts` | `hot-account-bc7adbf3-*`, `many-accounts-06e6a282-*` (untracked) |
+| §9 post-fix check, hot account, 50 VUs | `load/run.sh hot-account` | `hot-account-84e77ce8-*` |
+| §9 comparison rows, 2026-10-19 | `load/run.sh hot-account`, `load/run.sh many-accounts` | `hot-account-bc7adbf3-*`, `many-accounts-06e6a282-*` |
+| §11 A/B: current transaction vs the round-trip prototype, 2026-10-22 | `load/ab.sh` | `ab-cde5938a.txt` (index, medians) and the 26 run IDs it lists |
 
 Each `run.sh` run saves `-env.txt` (host, versions, settings; from the provenance change in §2 also the git checkout state and API image), `-k6.txt`, `-pg.txt` (pg_stat_activity samples), `-cpu.txt`, `-idx.txt`/`-idx-delta.txt` (index scan counters), `-sql.txt` (invariants), `-api.log`, and `-run.txt` (the full console output, including the summaries quoted below).
 
@@ -477,7 +478,7 @@ One more run from 2026-10-19 (19:30 UTC, in the same session as `bc7adbf3` and b
 - **Why throughput is lower.** The cause wasn't investigated. One run can't tell a cost of the F10 fix apart from run-to-run or host variation, and no code before the fix was run in the same session to compare.
 - **Run-to-run variation on `1468d11`:** one run only.
 - **The git state at image build time** wasn't recorded by `load/run.sh` (F11). It still can't be: the §2 provenance fields record the checkout at run time and the image ID, not the image's source commit. It is inferred from the timestamps and the `dist/` comparison above.
-- **These files are untracked** in git when this section was written (`git status`), like `hot-account-bc7adbf3-*` and `many-accounts-06e6a282-*` (QA report F11), and they are still untracked at `9880430`. Every number in §9 comes from files a clone of the repository doesn't contain. Committing them is the developer's decision.
+- **These files are untracked** in git when this section was written (`git status`), like `hot-account-bc7adbf3-*` and `many-accounts-06e6a282-*` (QA report F11), and they were still untracked at `9880430`. They were committed on 2026-10-22, so a clone now contains them.
 - **Why `many-accounts-06e6a282` is faster**, and why it reports 2 API processes (see above).
 
 
@@ -494,7 +495,93 @@ These runs were performed on commit `c5857ed5a748b53a4fe1617ae16b57f57d33e304` u
 
 - **Hot account:** all correctness checks passed and no HTTP errors were observed. Throughput was 108.2 req/s, above the documented TP-LOAD-04 range of 85.2–103.3 req/s. Because the current criterion says “within range,” this does not strictly pass TP-LOAD-04. Decide whether the upper bound is a hard limit or whether the intended criterion is minimum throughput before changing its status or definition.
 - **Many accounts:** all correctness checks passed, with no HTTP errors. The run recorded `WORKERS=1` and `api_node_processes=1`. This provides a clean additional measurement but does not explain the earlier anomalous `many-accounts-06e6a282` result.
-- **Provenance:** both runs record commit `c5857ed5a748b53a4fe1617ae16b57f57d33e304`, zero tracked changes, and zero untracked files at run time. The generated result files remain untracked in the current working tree, so these raw results are not included in a clean clone unless intentionally committed.
+- **Provenance:** both runs record commit `c5857ed5a748b53a4fe1617ae16b57f57d33e304`, zero tracked changes, and zero untracked files at run time. The generated result files were committed on 2026-10-22, so a clean clone includes these raw results.
 - **Environment caveat:** host swap usage was about 1,952 MiB during these runs. This was observed during testing; it has not been established as the cause of any measured throughput.
 
 The earlier §9 observations remain historical records and have not been replaced by these reruns.
+
+## 11. A/B: the round-trip prototype vs the current transaction (2026-10-22)
+
+**What is compared.** Two API images built from the same tree. The only difference is `src/services/consume.service.ts`: the baseline is the current production transaction (with this session's decision snapshot), and the prototype is [`docs/prototypes/consume-round-trips.patch`](prototypes/consume-round-trips.patch), 8 → 4 statements under the account lock ([CONSUME_ROUND_TRIPS.md](CONSUME_ROUND_TRIPS.md)). The prototype is **not** in production code.
+
+| | |
+|---|---|
+| Session | `load/results/ab-cde5938a.txt` (index, per-run numbers, medians), and the 26 run IDs it lists (`<scenario>-<run_id>-*`) |
+| Images | baseline `sha256:a9d491eb8c50…`, prototype `sha256:ac0d0c590117…`, both built 2026-10-22 16:38 +03:00 from copies of the working tree in the session scratch directory (so `git_commit` reads `unknown` in `-env.txt`: the copies aren't checkouts) |
+| Host | the same machine as §1–§10: `host_cpus 12`, `host_mem_total_mib 7625`, `host_swap_used_mib` ≈ 2,047; Docker 29.9.0, Compose 5.6.0, k6 `grafana/k6:1.3.0` |
+| Database | `postgres:16` (16.15), image defaults (`max_connections` 100, `shared_buffers` 128MB, `synchronous_commit` on, `fsync` on). **One database for both images**: a fresh Compose project `quotaab` with its own volume, removed afterwards. The developer's `quota-service` stack kept running, idle |
+| API | one process (`WORKERS=1`), pool of 10, Node v22.23.4 (from the image) |
+| Workload | 50 VUs, 30 s, closed loop, the four scenarios: `hot-account`, `many-accounts`, `retry-storm`, and `mixed` (new: 1 account, 200 users on 100/month · 10/request, 1–15 units) |
+| Order | 1 warm-up run per image (10 s hot-account, excluded), then 3 rounds × 4 scenarios in ABBA order (round 1: baseline first, round 2: prototype first, round 3: baseline first) |
+| Command | `A_IMAGE=quota-ab:baseline B_IMAGE=quota-ab:prototype A_LABEL=baseline B_LABEL=prototype COMPOSE_PROJECT_NAME=quotaab DB_PORT=5434 AB_API_PORT=3100 load/ab.sh` |
+
+### Results (medians of 3 runs; ranges in brackets)
+
+| Scenario | Image | RPS | p50 | p95 | p99 | Errors | Invariant violations |
+|---|---|---:|---:|---:|---:|---:|---:|
+| hot account | baseline | 159.4 [126.3–160.6] | 316.5 ms | 387.3 ms | 408.5 ms | 0 | 0 |
+| hot account | prototype | **230.9** [230.9–247.4] (+44.9%) | 217.9 ms | 275.5 ms | 297.6 ms | 0 | 0 |
+| many accounts | baseline | 600.8 [578.1–624.7] | 81.7 ms | 106.7 ms | 125.2 ms | 0 | 0 |
+| many accounts | prototype | **710.8** [679.9–753.8] (+18.3%) | 68.3 ms | 93.0 ms | 108.4 ms | 0 | 0 |
+| retry storm | baseline | 474.9 [429.7–500.7] | 296.1 ms | 543.8 ms | 612.9 ms | 0 | 0 |
+| retry storm | prototype | 506.8 [479.0–568.0] (+6.7%) | 277.7 ms | 481.0 ms | 529.1 ms | 0 | 0 |
+| mixed | baseline | 176.9 [163.9–179.4] | 288.1 ms | 355.0 ms | 374.0 ms | 0 | 0 |
+| mixed | prototype | 279.0 [275.9–281.2] | 181.2 ms | 230.7 ms | 250.8 ms | 0 | 0 |
+
+"Invariant violations" is the sum of checks 1–4 and 6 of `load/check-invariants.sql` after each run. In all 26 runs every check is 0, check 6 covered every request row (no row without a snapshot), k6's fresh decisions equal the run's request rows, and the API logged nothing (`log lines: 0`).
+
+### Reading the numbers
+
+- **Hot account, the target: +44.9%, and the ranges don't overlap** (the worst prototype run, 230.9, is above the best baseline run, 160.6). The interval between decisions on the account drops from 1 / 159.4 = 6.27 ms to 1 / 230.9 = 4.33 ms. That's 1.9 ms saved by 4 fewer round trips, about 0.5 ms each, consistent with §4's estimate that most of the hold is per-statement cost in the API. The lock is still the limit: on average 8.1 of 10 connections wait on it with the prototype (8.3–8.4 baseline, `-run.txt`). DB CPU rose (avg 72–95% vs 54–67%) and API CPU didn't (64–73% both), because the database does the same work in less time. LOAD_TEST §6 item 1 had predicted ~+76% from round-trip arithmetic; the measured gain is smaller.
+- **Many accounts: +18.3%, ranges don't overlap.** There is no lock contention here; the gain is fewer statements per request (14 → 10) for the single API process.
+- **Retry storm: +6.7%, ranges overlap, so this is not a demonstrated gain.** Fresh decisions/s: 103.4 → 106.9 (medians of k6 `fresh`). Duplicates still queue on the account row behind the recheck. LOAD_TEST §6 item 2 (a per-`requestId` advisory lock) is the change aimed at that, and it was not prototyped.
+- **Mixed: no like-for-like throughput comparison.** The faster prototype used up the users' monthly allowances: about 19,800 of the 20,000 units (200 users × 100) were accepted, against about 17,500 for the baseline (check 5 in `-sql.txt`). So 55% of its requests were rejections, against 38%, and rejections are cheaper (no increments). Its RPS gain is partly this workload shift. What `mixed` does show: rejected and accepted paths mixed under contention, with check 6 confirming every rejection was outside, and every acceptance inside, the limits it recorded.
+- **Absolute numbers differ from §3, §9 and §10** (e.g. hot account 85.2 then, 159.4 here for the baseline). Both images in this section ran in the same session on the same database, alternating, which is what the comparison relies on. Comparing across sessions on this host is not supported: host load and swap differ between days, and these images also write the decision snapshot.
+
+### Not verified (§11)
+
+- Only 3 measured runs per cell. The hot-account and many-accounts ranges separate cleanly; retry storm doesn't.
+- 200-VU behavior (the pool-timeout regime of §4 and §8) wasn't measured with the prototype.
+- `WORKERS` > 1 wasn't combined with the prototype.
+- The images' source commit can't be proven from `-env.txt` (copies, not checkouts). The image IDs are recorded, and the only source difference is the patch above (verified with `diff -r` of `src/` and `drizzle/` before building).
+
+## 12. A/B, second session: 5 ABBA rounds, an equal-work mixed scenario (2026-10-22)
+
+The same comparison as §11 (production transaction vs [`docs/prototypes/consume-round-trips.patch`](prototypes/consume-round-trips.patch)), repeated with three changes to the method:
+- `load/mixed.js` now sends the same request mix to both builds. Users and units come from a generator seeded by (VU, iteration), and quota state doesn't drift: 40 users are exhausted in setup and the other 160 can't run out. §11's `mixed` rows are not comparable (38.5% vs 54.8% rejected); here the rejected share is 46.1% vs 46.0%.
+- `load/ab.sh` runs `ANALYZE` before every run. In §11 the first runs of both images were slowed by a new database's missing statistics (`requests` read by sequential scan: 0 index scans on `requests_account_id_request_id_unique` in the first 4 runs).
+- 5 rounds instead of 3, analyzed **pair by pair** with `load/ab-paired.py`. Each round's two runs of a scenario are back to back, and their ratio cancels drift between rounds.
+
+| | |
+|---|---|
+| Index | `load/results/ab-d29bcad1.txt`; paired analysis `load/results/ab-d29bcad1-paired.txt` (and `ab-cde5938a-paired.txt` for §11) |
+| Images | baseline `sha256:fe5e56f5aa90…`, prototype `sha256:651c1f2a0456…`, built from exports of the working tree and the working tree + patch. `diff -r` of `src/` showed only `consume.service.ts` differing |
+| Setup | as §11: fresh Compose project `quotaab2`, its own volume (removed afterwards), 50 VUs × 30 s, 1 warm-up per image, then 5 ABBA rounds of hot-account, mixed, many-accounts, retry-storm |
+| Command | `A_IMAGE=quota-ab2:baseline B_IMAGE=quota-ab2:prototype A_LABEL=baseline B_LABEL=prototype ROUNDS=5 SCENARIOS="hot-account mixed many-accounts retry-storm" COMPOSE_PROJECT_NAME=quotaab2 DB_PORT=5434 AB_API_PORT=3100 load/ab.sh`, then `python3 load/ab-paired.py load/results/ab-d29bcad1.txt "14:host suspended 14:46:58-14:51:23 UTC" "31:host suspended 15:06:14-17:25:00 UTC"` |
+
+### The host was not stable during this session
+
+- **The laptop suspended twice** (kernel log `PM: suspend entry/exit`), first from 14:46:58 to 14:51:23 UTC and then from 15:06:14 to 17:25:00 UTC.
+- **Run 14** (baseline, mixed) contains the first suspend. It shows a 266 s stall, p99 265,872 ms, and 10 errors: 8 overload 503s and 2 failed queries during the stall.
+- **Run 31** (prototype, many-accounts) contains the second suspend. Its wall time was 8,359 s, and its errors were 4 broken connections after resume. **Both runs and their pairs are excluded.** No other run had an error.
+- After the first resume the host was out of memory: swap 2,043 of 2,047 MiB used and about 350 MiB free. Desktop applications (browser, editors) held that memory; the benchmark containers used under 300 MiB. Both images slowed by about half from round 2 or 3 on, so **absolute numbers in this session aren't comparable across rounds or with §11**. Only the paired ratios are meaningful.
+
+### Paired results (prototype / baseline, valid pairs only)
+
+| Scenario | Valid pairs | RPS ratio per pair | Geometric mean | Prototype faster | p95 ratio (median) | p99 ratio (median) | Rejected share base / proto |
+|---|---:|---|---:|---:|---:|---:|---|
+| hot account | 5 | 1.305, 1.559, 1.399, 1.551, 1.322 | **1.423 (+42.3%)** | 5/5 | 0.704 | 0.691 | 0 / 0 |
+| mixed | 4 | 1.695, 1.418, 1.407, 1.758 | 1.562 (+56.2%) | 4/4 | 0.706 | 0.674 | 45.9–46.4% / 45.8–46.2% |
+| many accounts | 4 | 1.212, 1.263, 1.141, 1.176 | 1.197 (+19.7%) | 4/4 | 0.907 | 0.864 | 0 / 0 |
+| retry storm | 5 | 1.226, 1.088, 1.134, 1.144, 1.427 | 1.198 (+19.8%) | 5/5 | 0.884 | 0.843 | 0 / 0 |
+
+- **Variability.** Unpaired, the run-to-run spread is large because of the host. Hot-account baseline runs range from 97.2 to 153.0 req/s (CV 21%) and prototype runs from 128.5 to 238.5 (CV 25%), so the unpaired ranges overlap. Paired, the hot-account ratio stays between 1.305 and 1.559 in every round, in clean, memory-starved and post-resume conditions alike.
+- **Significance.** With 5 pairs, an exact two-sided sign-flip test can't go below p = 2/32 = 0.0625, which is what 5/5 gives. Adding §11's 3 hot-account pairs (ratios 1.435, 1.552, 1.438; same source, separately built images) gives 8/8 pairs, p = 2/256 = 0.0078.
+- **Errors and invariants.** No errors in any valid run. **0 invariant violations in all 42 runs**, including the two invalid ones (checks 1–4 and 6). k6 fresh decisions equal request rows in every run.
+- **Mixed is now like-for-like** (equal rejected share), and the prototype is faster in every pair. That's consistent with its rejected path also skipping two statements under the lock: the merged recheck and plan read, and the insert written alone.
+- **Retry storm:** §11's +6.7% was within noise. Here 5/5 pairs are faster (geometric mean +19.8%), but the ratios are spread (1.088–1.427). Read it as a smaller gain than hot account.
+
+### Not verified (§12)
+
+- A session on a stable host (no suspend, no memory pressure). The direction and the paired ratios are consistent across both sessions; absolute throughput is not established.
+- 200 VUs, and `WORKERS` > 1, with the prototype.

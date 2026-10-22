@@ -1,0 +1,5 @@
+
+many_accounts: 8864 consumes in 30s with 50 VUs → 295.5 req/s
+  latency p50 156.8ms  p95 243.1ms  p99 282.9ms  max 590.0ms
+  errors (non-200) 0 (0.00%)  accepted 8864  rejected 0  fresh 8864  replayed 0
+SUMMARY_JSON {"scenario":"many_accounts","runId":"af3999c3","vus":50,"durationSeconds":30,"requests":8864,"rps":295.5,"p50":156.772128,"p95":243.11649140000006,"p99":282.9030549300009,"max":589.955844,"errors":0,"errorRate":0,"accepted":8864,"rejected":0,"replayed":0,"fresh":8864}

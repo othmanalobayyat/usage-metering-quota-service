@@ -1,0 +1,84 @@
+# The README's own commands, on every push and pull request. Nothing here is CI-only: each step
+# is a package.json script or a documented docker compose command.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      # Same image and credentials as docker-compose.yml, on the same host port (5433), so the tests'
+      # default TEST_DATABASE_URL (postgres://quota:quota@localhost:5433/quota_test) works unchanged.
+      # tests/global-setup.ts creates, migrates and seeds quota_test.
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: quota
+          POSTGRES_PASSWORD: quota
+          POSTGRES_DB: quota
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U quota -d quota"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    env:
+      # An unreachable database fails the run instead of silently skipping the integration suites.
+      REQUIRE_DB: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            client/package-lock.json
+      - run: npm ci
+      - run: npm ci --prefix client
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
+      # The client image compiles with client/tsconfig.json, not the root one.
+      - run: npm run typecheck --prefix client
+      - run: npm test
+
+  compose:
+    # The brief's setup command from a clean checkout: build, migrate + seed on startup, all three
+    # services healthy, then a smoke test through the published ports.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: docker compose up --build
+        run: docker compose up --build --detach --wait --wait-timeout 180
+      - name: Smoke test
+        run: |
+          set -euo pipefail
+          curl -fsS http://localhost:3000/healthz
+          key=$(curl -fsS -X POST http://localhost:3000/accounts -H 'Content-Type: application/json' \
+            -d '{"name":"ci"}' | jq -er .apiKey)
+          curl -fsS -X POST http://localhost:3000/users -H "X-API-Key: $key" -H 'Content-Type: application/json' \
+            -d '{"externalUserId":"alice"}' >/dev/null
+          curl -fsS -X POST http://localhost:3000/consume -H "X-API-Key: $key" -H 'Content-Type: application/json' \
+            -d '{"externalUserId":"alice","units":10,"requestId":"ci-1"}' | jq -e '.status == "ACCEPTED"'
+          # The example client's full demo against the API, server to server.
+          curl -fsS -X POST http://localhost:8081/demo/run | jq -e '.ok == true and (.steps | length) > 0'
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs --no-color
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

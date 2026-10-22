@@ -1,0 +1,41 @@
+== hot-account (prototype / baseline)
+round  A run        B run        A rps   B rps  ratio  p95 A->B          p99 A->B          rejected% A/B  status
+    1   3 918e5f89   4 ba0f7427   141.8   185.0  1.305    446.9->354.4       465.9->388.1     0.0/ 0.0     ok
+    2  12 399fadaf  11 96d5e4dc   153.0   238.5  1.559    437.4->262.7       562.1->282.6     0.0/ 0.0     ok
+    3  19 ef0c78fc  20 d66f415d   106.9   149.5  1.399    537.7->395.9       562.6->444.3     0.0/ 0.0     ok
+    4  28 0fc839f0  27 f875a717   100.2   155.4  1.551    592.7->376.0       637.2->401.5     0.0/ 0.0     ok
+    5  35 fedda233  36 eb3cdbf3    97.2   128.5  1.322    730.2->513.7       813.1->561.5     0.0/ 0.0     ok
+valid pairs 5: ratio min 1.305  median 1.399  max 1.559  geometric mean 1.423; prototype faster in 5/5; exact two-sided permutation p = 2/32 = 0.0625
+median p95 ratio 0.704, median p99 ratio 0.691
+
+== mixed (prototype / baseline)
+round  A run        B run        A rps   B rps  ratio  p95 A->B          p99 A->B          rejected% A/B  status
+    1   5 19c20d68   6 d1addc2c   138.1   234.1  1.695    517.6->371.9       606.8->414.0    46.0/45.8     ok
+    2  14 4f1afc46  13 181596bd   120.7   273.2  2.263    679.3->236.4    265872.4->274.0    46.2/45.9     EXCLUDED (run 14: host suspended 14:46:58-14:51:23 UTC)
+    3  21 307ef1fc  22 d6ffd70a   111.6   158.3  1.418    519.3->373.7       589.9->397.9    46.2/46.1     ok
+    4  30 d0edcea2  29 476a0a46   110.5   155.5  1.407    549.2->380.8       602.1->406.1    46.4/46.2     ok
+    5  37 df006d16  38 dc4eef6f    89.1   156.6  1.758    678.8->383.2       762.4->449.1    45.9/46.2     ok
+valid pairs 4: ratio min 1.407  median 1.557  max 1.758  geometric mean 1.562; prototype faster in 4/4; exact two-sided permutation p = 2/16 = 0.1250
+median p95 ratio 0.706, median p99 ratio 0.674
+
+== many-accounts (prototype / baseline)
+round  A run        B run        A rps   B rps  ratio  p95 A->B          p99 A->B          rejected% A/B  status
+    1   7 4e8e4c65   8 3c206c7d   571.6   692.7  1.212    111.9->97.0        136.8->112.1     0.0/ 0.0     ok
+    2  16 af3999c3  15 59951b09   295.5   373.1  1.263    243.1->192.5       282.9->221.3     0.0/ 0.0     ok
+    3  23 ff39fee9  24 339f590f   311.4   355.3  1.141    209.7->216.0       232.3->273.5     0.0/ 0.0     ok
+    4  32 783bc9f3  31 ba4bb46d   264.5   249.0  0.941    288.7->335.4       356.7->404.5     0.0/ 0.0     EXCLUDED (run 31: host suspended 15:06:14-17:25:00 UTC)
+    5  39 5bca36b0  40 35466020   291.8   343.2  1.176    234.8->222.3       284.6->258.3     0.0/ 0.0     ok
+valid pairs 4: ratio min 1.141  median 1.194  max 1.263  geometric mean 1.197; prototype faster in 4/4; exact two-sided permutation p = 2/16 = 0.1250
+median p95 ratio 0.907, median p99 ratio 0.864
+
+== retry-storm (prototype / baseline)
+round  A run        B run        A rps   B rps  ratio  p95 A->B          p99 A->B          rejected% A/B  status
+    1   9 7a9c64fa  10 6b9accbf   462.0   566.6  1.226    538.6->462.3       598.1->517.8     0.0/ 0.0     ok
+    2  18 5546f004  17 0728bfed   219.8   239.2  1.088    904.9->800.0      1006.4->848.6     0.0/ 0.0     ok
+    3  25 f3ecebcf  26 bddd67c1   193.2   219.1  1.134   1018.0->942.7      1127.8->1000.7    0.0/ 0.0     ok
+    4  34 588fafe5  33 784c33d5   189.0   216.3  1.144   1024.7->952.5      1224.2->1032.0    0.0/ 0.0     ok
+    5  41 3794b249  42 3a2eb0cb   150.2   214.4  1.427   1322.7->908.5      1420.6->965.1     0.0/ 0.0     ok
+valid pairs 5: ratio min 1.088  median 1.144  max 1.427  geometric mean 1.198; prototype faster in 5/5; exact two-sided permutation p = 2/32 = 0.0625
+median p95 ratio 0.884, median p99 ratio 0.843
+
+errors by run: {14: 10, 31: 4} | invariant violations, all runs: 0

@@ -9,7 +9,7 @@ Stack: TypeScript, Express 5, Drizzle ORM, PostgreSQL 16, Zod, Vitest + Supertes
 1. [Quick start](#quick-start): [demo client](#demo-client), [tests](#tests), [configuration](#configuration), [running without Docker](#running-the-api-without-docker)
 2. [Accounts, users and API keys](#accounts-users-and-api-keys)
 3. [API reference](#api-reference): [errors](#errors)
-4. [Rules](#rules): [supported rules](#supported-rules), [predefined plans](#predefined-plans), [check order](#check-order), [plan changes](#plan-changes), [retries and replays](#retries-and-replays), [plan changes under concurrency](#plan-changes-under-concurrency)
+4. [Rules](#rules): [supported rules](#supported-rules), [predefined plans](#predefined-plans), [check order](#check-order), [plan changes](#plan-changes), [retries and replays](#retries-and-replays), [plan changes under concurrency](#plan-changes-under-concurrency), [decision snapshots](#decision-snapshots)
 5. [Design decisions](#design-decisions): [the consume transaction](#the-consume-transaction), [other decisions](#other-decisions), [WORKERS](#workers)
 6. [Assumptions](#assumptions)
    - [API shape](#api-shape)
@@ -39,7 +39,7 @@ This starts three services:
 
 No manual steps are needed on a fresh clone. The seed is idempotent, so restarting the API is safe. `docker compose down -v` stops everything and drops the database volume.
 
-All data (accounts, plans, usage, request history) is in PostgreSQL, on the named Compose volume `db-data`. It survives `docker compose down` followed by `up`, which was checked by hand on an earlier commit. `docker compose restart` keeps the same containers and volume, so the data should survive it too, but that hasn't been tested. Only `docker compose down -v` deletes it.
+All data (accounts, plans, usage, request history) is in PostgreSQL, on the named Compose volume `db-data`. It survives `docker compose restart`, and `docker compose down` followed by a rebuild and `up`: both were checked on 2026-10-22 on a fresh stack (usage, history and replays unchanged; [docs/ENGINEERING_AUDIT.md](docs/ENGINEERING_AUDIT.md) §6). Only `docker compose down -v` deletes it.
 
 ### Demo client
 
@@ -70,6 +70,8 @@ npm test
 ```
 
 `tests/global-setup.ts` creates, migrates and seeds `quota_test` before the first test file. Tests truncate its tables, so the setup refuses any database whose name doesn't end in `_test`. Override the URL with `TEST_DATABASE_URL` (default `postgres://quota:quota@localhost:5433/quota_test`). If the database is unreachable, the integration suites skip themselves. Set `REQUIRE_DB=1` to make that a failure instead.
+
+**CI.** `.github/workflows/ci.yml` runs the same commands on every push and pull request: `npm ci` (root and `client/`), typecheck, lint, build, the client's own typecheck, and `npm test` with `REQUIRE_DB=1` against a `postgres:16` service on port 5433. A second job runs `docker compose up --build --wait` from the checkout and smoke-tests the API and the example client's demo.
 
 Other commands:
 
@@ -114,9 +116,9 @@ Without `DATABASE_URL`, the server exits on startup with `Invalid environment co
 
 Both plans apply to every consume. A larger user plan doesn't increase the account's shared allowance.
 
-**Getting a key.** [`POST /accounts`](#post-accounts) creates the account and returns its key once. It is the only endpoint, besides `/healthz`, that needs no key. The key is `mk_` followed by 32 random bytes in base64url. The service stores only its SHA-256 hash, so a lost key can't be recovered or shown again.
+**Getting a key.** [`POST /accounts`](#post-accounts) creates the account and returns its key once. It is the only endpoint, besides `/healthz`, that needs no key. The key is `mk_` followed by 32 random bytes in base64url (43 characters). The service stores only its SHA-256 hash, so a lost key can't be recovered or shown again. The response that carries it is sent with `Cache-Control: no-store`, so no browser, proxy or HTTP client cache keeps a copy.
 
-**Using it.** Send the key in the `X-API-Key` header on every other request. It identifies the account. Every query is scoped to that account, and any resource of another account (a user, a custom plan) returns 404, the same as one that doesn't exist.
+**Using it.** Send the key in the `X-API-Key` header on every other request. It identifies the account. A value that doesn't have the key format (`mk_` + 43 base64url characters) gets the same `401 Invalid API key` as an unknown key, without a database lookup. Every query is scoped to that account, and any resource of another account (a user, a custom plan) returns 404, the same as one that doesn't exist.
 
 ## API reference
 
@@ -1000,7 +1002,7 @@ curl -s http://localhost:3000/users/alice/usage -H "X-API-Key: $KEY"
 
 ### GET /requests
 
-Decision history, newest first. Query: `externalUserId` (optional; unknown → 404), `month` (optional; default all months), `limit`, `cursor`. Each entry is the snapshot stored with the decision, including the plan IDs it was decided against. Replays add no entry.
+Decision history, newest first. Query: `externalUserId` (optional; unknown → 404), `month` (optional; default all months), `limit`, `cursor`. Each entry is the snapshot stored with the decision, including the plan IDs it was decided against and, in `snapshot`, the limits and usage `evaluate()` was given (see [Decision snapshots](#decision-snapshots)). Replays add no entry.
 
 ```sh
 curl -s "http://localhost:3000/requests?limit=2" -H "X-API-Key: $KEY"
@@ -1049,6 +1051,8 @@ curl -s "http://localhost:3000/requests?limit=2" -H "X-API-Key: $KEY"
   "nextCursor": "WyIyMDI2LTEwLTE4VDE3OjU5OjQzLjEwNloiLCI1YmE1MTM5ZS1iYzlmLTQzNWItOWQwZi0wOGI2YTI0ZmFiZTMiXQ"
 }
 ```
+
+These entries were captured before migration `0001`. Today every entry also carries `snapshot` (real output in [Decision snapshots](#decision-snapshots)), between `userPlanId` and `createdAt`.
 
 Filtered by user and month:
 
@@ -1209,7 +1213,62 @@ Consume reads both plans after taking the usage row locks, in one statement, at 
 
 - A consume that starts after a plan change has committed uses the new plan.
 - A consume that read the old plan and commits after the change is ordered before the change. That is a valid serial order, because plan updates never read usage, so no extra locking on plan rows is needed.
-- Each request row stores the plan IDs it was decided against (`accountPlanId`, `userPlanId` in the history), so the history shows which plan applied.
+- Each request row stores the plan IDs it was decided against (`accountPlanId`, `userPlanId` in the history) and the limits they had at that moment (`snapshot`), so the history shows which plan applied and what it allowed.
+
+### Decision snapshots
+
+Every decision stores exactly what `evaluate()` was given, on its request row (migration `0001_decision_snapshot`), and `GET /requests` returns it as `snapshot`. Real output, captured on 2026-10-22 from a fresh `docker compose up --build` of this working tree: Alice on Basic consumed 10 (`f-1`), then asked for 25 (`f-2`):
+
+```sh
+curl -s "http://localhost:3000/requests?limit=1" -H "X-API-Key: $KEY"
+```
+
+`200`:
+
+```json
+{
+  "data": [
+    {
+      "requestId": "f-2",
+      "externalUserId": "alice",
+      "units": 25,
+      "month": "2026-10",
+      "status": "REJECTED",
+      "reasonCode": "PER_REQUEST_LIMIT_EXCEEDED",
+      "rejectedBy": "USER",
+      "limit": 20,
+      "remaining": {
+        "account": 9990,
+        "user": 990
+      },
+      "accountPlanId": "00000000-0000-4000-8000-000000000001",
+      "userPlanId": "00000000-0000-4000-8000-000000000003",
+      "snapshot": {
+        "account": {
+          "monthlyLimit": 10000,
+          "perRequestLimit": 100,
+          "unitsUsedBefore": 10
+        },
+        "user": {
+          "monthlyLimit": 1000,
+          "perRequestLimit": 20,
+          "unitsUsedBefore": 10
+        }
+      },
+      "createdAt": "2026-10-22T14:02:27.187Z"
+    }
+  ],
+  "nextCursor": "WyIyMDI2LTEwLTIyVDE0OjAyOjI3LjE4N1oiLCI3YTc2OWZhMS0xMDRlLTRkNTYtODczMi0xZDg2NDBlNmNiZTgiXQ"
+}
+```
+
+- `monthlyLimit` and `perRequestLimit` are each plan's limits as read under the lock; `unitsUsedBefore` is the month's usage before this request. With `units`, they are the whole input of the decision, so `evaluate()` on them gives back the stored `status`, `reasonCode`, `rejectedBy`, `limit` and `remaining`, however the plans were edited or switched since. `tests/decision-snapshot.db.test.ts` checks this for accepted and rejected decisions across a user plan `PATCH`, an account allowance lowered below usage, and a switch to a predefined plan.
+- Under concurrency the accepted snapshots chain: each starts at the usage the previous accepted decision on that account left, which is the row lock's serial order made visible.
+- `snapshot` is `null` for a decision recorded before `0001`. Those rows keep the plan IDs and, for a rejection, the blocking `limit`, but their plans' limits at the time can't be recovered, so nothing is backfilled from today's limits.
+- A database CHECK (`requests_snapshot_check`) makes the six columns all-or-nothing, with the same bounds as the plan columns.
+- `load/check-invariants.sql` check 6 uses the snapshot: no accepted decision exceeded the limits it recorded, no rejection was within them, and every `remaining` matches. Unlike checks 2 and 3, it stays valid while plans change.
+
+**Upgrading an existing database.** The container entrypoint applies `0001` on startup like any migration (`npm run db:migrate` outside Docker). It only adds six nullable columns and the CHECK: no table rewrite, existing rows are kept unchanged with a `null` snapshot, and the API's response gains one field. `tests/decision-snapshot.db.test.ts` applies it to a database populated under `0000` and compares every existing row before and after.
 
 ## Design decisions
 
@@ -1226,7 +1285,7 @@ Consume reads both plans after taking the usage row locks, in one statement, at 
 7. Load the account plan and the user plan in one join query.
 8. `evaluate()`.
 9. If accepted, increment both usage rows.
-10. Insert the request row with its snapshot: plan IDs, limit, remaining.
+10. Insert the request row with its snapshot: plan IDs, limit, remaining, and both plans' limits and usage before the request.
 11. `COMMIT`.
 12. On a unique violation (`23505`) of `(account_id, request_id)`, roll back, re-read the stored decision and return it.
 
@@ -1238,7 +1297,7 @@ Why it is built this way:
 - **Recheck after the lock (step 6).** The fast path (step 2) runs without a lock, so two copies of the same request can both miss it. The copy that gets the lock second waits until the first commits, then sees its request row and replays it. The recheck is the real idempotency guarantee. The fast path only keeps plain retries off the account lock. Step 12 covers the remaining case, where two copies hold different locks (for example on two sides of a month boundary) and the unique constraint stops the second insert.
 - **Plans read after the lock (step 7).** Reading plans before locking could decide against a plan that changed while the request waited. One join gives both plans from one snapshot, without locking plan rows. See [Plan changes under concurrency](#plan-changes-under-concurrency) for the guarantee.
 - **Rules outside the transaction code.** `evaluate()` is pure, so its rules are unit-tested without a database, and a new rule (for example a daily cap) goes there without touching the locking.
-- **Snapshots on the request row (step 10).** A replay is built from that row alone, which is what makes it identical to the original response.
+- **Snapshots on the request row (step 10).** A replay is built from that row alone, which is what makes it identical to the original response. The row also keeps every input of the decision, so it can be re-derived later ([Decision snapshots](#decision-snapshots)).
 - **One clock read per request** picks the usage month and every timestamp the request writes (see [Consume and retries](#consume-and-retries)).
 
 Invariant: for every account and month, account usage equals the sum of its users' usage. Steps 9 and 10 commit together, so the invariant holds after every commit. The tests assert it, and `load/check-invariants.sql` checks it after every load run.
@@ -1315,9 +1374,9 @@ Behavior the brief leaves unspecified, with the reason for each choice.
 - **`month` is strict `YYYY-MM`:** the usage endpoints and `GET /requests` accept exactly four digits, a dash and `01`-`12`, so years run 0001-9999: four digits can't express more, and 0000 is rejected because `toUtcMonth()` only accepts years from 1. Anything else, including `2026-1`, a full date, an empty value or a repeated param, is 400. A loose parser would turn typos into a silently different month.
 - **Any month can be queried, past or future:** a month with no usage row (before the account existed, or not reached yet) reads as `consumed: 0`, and reading creates nothing. Rejecting such months would need a rule for "too early" or "too late" with no benefit to the caller.
 - **Unused allowance doesn't roll over:** each UTC calendar month gets the plan's full `monthlyLimit`, however much of the previous month's allowance was left. The brief defines the allowance as the units available during one calendar month, and carrying units over would let an account build up more than its plan allows in a single month.
-- **`remaining` for any month uses the current plan:** only the current plan assignment is stored, so `remaining` for a past month is `max(0, current monthlyLimit - consumed)`. The plan that actually applied to each decision is in that request's history entry (`accountPlanId`, `userPlanId`).
+- **`remaining` for any month uses the current plan:** only the current plan assignment is stored, so `remaining` for a past month is `max(0, current monthlyLimit - consumed)`. The plan that actually applied to each decision, and its limits at the time, are in that request's history entry (`accountPlanId`, `userPlanId`, `snapshot`).
 - **History without `month` covers all months:** `GET /requests` defaults to every month, unlike the usage endpoints, which default to the current one. A usage total only makes sense for one month, but a history list is already bounded by its page size, and "everything, newest first" is what a caller browsing history expects.
-- **History entries are the stored snapshot:** each entry returns the decision as it was made (`status`, `reasonCode`, `rejectedBy`, `limit`, `remaining` after the decision, the two plan IDs, `units`, `month`, `createdAt`), plus the user's `externalUserId`. No request or response field carries an internal UUID (the row ID, the user ID). Replays add no entry, since they decide nothing new.
+- **History entries are the stored snapshot:** each entry returns the decision as it was made (`status`, `reasonCode`, `rejectedBy`, `limit`, `remaining` after the decision, the two plan IDs, the `snapshot` of limits and usage it was decided with, `units`, `month`, `createdAt`), plus the user's `externalUserId`. No request or response field carries an internal UUID (the row ID, the user ID). Replays add no entry, since they decide nothing new.
 - **A malformed `externalUserId` query param is 400, not 404:** on `GET /requests` it is query input, and the error table maps invalid query input to 400 (as in the `/consume` body). Only in a URL path does a malformed ID mean "no such resource" and return 404. A well-formed but unknown `externalUserId` is 404 in both places.
 
 ### Example client
@@ -1336,7 +1395,7 @@ Behavior the brief leaves unspecified, with the reason for each choice.
 
 - **History filtered by both `externalUserId` and `month` has no exact index:** that query uses `(account_id, user_id, created_at DESC, id DESC)` and checks `month` row by row, so an old month of a busy user scans that user's newer rows first. It's still in index order, with no Sort. An index on `(account_id, user_id, month, created_at DESC, id DESC)` would fix it at scale.
 - **Users named `.` or `..` from before that rule are not migrated.** The rule is only in input validation, so a user registered with one of those IDs before it existed is kept: it still appears in `GET /users`, and its past usage still counts toward the account's total, but it can't be addressed by path or charged any more (404 by path, 400 in `/consume`).
-- **Only the current plan assignment is stored.** There is no plan history, so a past month's `remaining` is computed against the current plan. Each request row keeps the plan IDs it was decided against, and a rejected request also keeps the `limit` of the rule that blocked it. The row doesn't keep a full snapshot of both plans' limits at the time, so a later `PATCH` of a custom plan changes what that ID means.
+- **Only the current plan assignment is stored.** There is no plan history, so a past month's `remaining` from the usage endpoints is computed against the current plan. Each decision's own limits are kept on its request row instead ([Decision snapshots](#decision-snapshots)), except for decisions recorded before migration `0001`: those keep only the plan IDs (and, for a rejection, the blocking `limit`), and their `snapshot` is `null`, because a later `PATCH` may have changed what those IDs mean.
 - **History isn't a change feed.**
   - **Why:** consume reads the clock once (`src/services/consume.service.ts:76`), after the API key, user and `requestId` lookups and before its transaction, and that instant is the entry's `createdAt`. The request can then still wait up to 2s for a pooled connection, and up to 3s at each of three row locks: the two usage upserts and the account usage row. So in the worst case it commits about 11s after its `createdAt`, plus execution time. That figure is derived from the configured timeouts (`src/db/client.ts:9-15`), not measured.
   - **Effect:** a decision that commits late is listed behind newer entries, which may already have been returned.
@@ -1353,7 +1412,7 @@ Behavior the brief leaves unspecified, with the reason for each choice.
 
 ## Load test summary
 
-Full method, raw evidence and analysis: [docs/LOAD_TEST.md](docs/LOAD_TEST.md). The committed baseline evidence is documented in §1–§8. Historical results in §9 and the supplemental reruns in §10 use local, untracked files under `load/results/`; those raw results are not included in a clean clone unless intentionally committed. The 2026-10-21 hot-account rerun recorded 108.2 req/s with no errors or invariant violations, but it is above the internal TP-LOAD-04 upper bound, so it is not a strict pass under the criterion as currently written.
+Full method, raw evidence and analysis: [docs/LOAD_TEST.md](docs/LOAD_TEST.md). The committed baseline evidence is documented in §1–§8. Historical results in §9, the supplemental reruns in §10 and the A/B sessions in §11–§12 use raw files under `load/results/`, committed on 2026-10-22, so a clean clone includes them. The 2026-10-21 hot-account rerun recorded 108.2 req/s with no errors or invariant violations, but it is above the internal TP-LOAD-04 upper bound, so it is not a strict pass under the criterion as currently written.
 
 Setup: k6 (`grafana/k6:1.3.0`) under the Compose profile `load`, on one Linux machine (`host_cpus 12`) shared by k6, the API and PostgreSQL 16 with image defaults. Each run is 50 VUs for 30s, no think time, and only `POST /consume` is measured. The custom plans allow 2,000,000,000 units/month and 1,000/request, so every request is accepted and takes the full write path.
 
@@ -1362,6 +1421,7 @@ Setup: k6 (`grafana/k6:1.3.0`) under the Compose profile `load`, on one Linux ma
 | hot account | 1 account, 200 users, a new `requestId` per request. Every consume locks the same account usage row. |
 | many accounts | 100 accounts × 5 users, same request mix |
 | retry storm | 1 account, 50 users, 5,000 `requestId`s; each iteration sends the same request 3 times at once |
+| mixed (added 2026-10-22) | 1 account, 200 users on 100/month · 10/request, 1–15 units: per-request and monthly rejections mixed with acceptances |
 
 ### Baseline (one API process)
 
@@ -1392,7 +1452,7 @@ In the retry storm, 1,339 of the 4,647 responses were fresh decisions and 3,308 
 
 In both sessions the W1 and W4 ranges don't overlap, and correctness held in all 28 runs. This is why the default stays `WORKERS=1` ([WORKERS](#workers)).
 
-A single account needs a shorter lock hold, not more processes. Proposed, not implemented: fewer round trips while the row is locked (7 down to 4, estimated ~85 → ~150 decisions/s), and taking concurrent duplicates off the account row with a per-`requestId` advisory lock. See docs/LOAD_TEST.md §6.
+A single account needs a shorter lock hold, not more processes. **Prototyped and measured, not integrated:** holding the account lock for 4 statements instead of 8 ([docs/CONSUME_ROUND_TRIPS.md](docs/CONSUME_ROUND_TRIPS.md)). In an A/B session on one host and one database (`load/ab.sh`, 3 ABBA rounds, medians), hot account went from 159.4 to 230.9 req/s (+44.9%, ranges don't overlap) and many accounts from 600.8 to 710.8 req/s (+18.3%). The retry storm gained only +6.7%, within noise. There were 0 errors and 0 invariant violations in all 26 runs ([docs/LOAD_TEST.md](docs/LOAD_TEST.md) §11). Those absolute numbers are from a different day than the table above and aren't comparable with it. Still proposed: taking concurrent duplicates off the account row with a per-`requestId` advisory lock (LOAD_TEST §6).
 
 ### Pool timeouts at 200 VUs
 
@@ -1421,6 +1481,9 @@ load/run.sh retry-storm
 VUS=200 DURATION=20s load/run.sh hot-account     # the stress probe
 load/uncontended.sh                              # single-request timings
 load/compare.sh                                  # WORKERS=1 vs WORKERS=4, alternating
+load/run.sh mixed                                # accepted and rejected decisions mixed
+A_IMAGE=<image> B_IMAGE=<image> load/ab.sh       # two API builds, ABBA, same DB (LOAD_TEST §11)
+python3 load/ab-paired.py load/results/ab-<session>.txt   # paired A/B ratios per round (LOAD_TEST §12)
 ```
 
-Each `run.sh` run samples `pg_stat_activity` and container CPU during the k6 run, runs `load/check-invariants.sql` afterwards, and saves everything to `load/results/<scenario>-<run_id>-*`. Its `-env.txt` also records the git commit and checkout state and the API image ID. That ties a run to an image, but not to the commit the image was built from ([docs/LOAD_TEST.md](docs/LOAD_TEST.md) §2). Runs already in `load/results/` predate this and don't have these fields. `WORKERS=n load/run.sh <scenario>` runs it against n API processes. `DURATION` (default `30s`) must be whole seconds such as `20s` or `90s`: the summary divides by it for req/s, so `1m` or `500ms` is refused before the run starts. Load runs leave their accounts in the database; `docker compose down -v` removes them. The absolute numbers are specific to the test host.
+Each `run.sh` run samples `pg_stat_activity` and container CPU during the k6 run, runs `load/check-invariants.sql` afterwards (check 6 re-checks every decision against the limits and usage it recorded, so it stays valid while plans change), and saves everything to `load/results/<scenario>-<run_id>-*`. Its `-env.txt` also records the git commit and checkout state and the API image ID. That ties a run to an image, but not to the commit the image was built from ([docs/LOAD_TEST.md](docs/LOAD_TEST.md) §2). Runs already in `load/results/` predate this and don't have these fields. `WORKERS=n load/run.sh <scenario>` runs it against n API processes. `DURATION` (default `30s`) must be whole seconds such as `20s` or `90s`: the summary divides by it for req/s, so `1m` or `500ms` is refused before the run starts. Load runs leave their accounts in the database; `docker compose down -v` removes them. The absolute numbers are specific to the test host.

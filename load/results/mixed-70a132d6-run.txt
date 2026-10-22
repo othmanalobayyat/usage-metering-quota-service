@@ -1,0 +1,87 @@
+run_id 70a132d6
+scenario mixed
+vus 50 (default)
+duration 30s (default)
+started_utc 2026-10-22T13:58:53Z
+host_cpus 12
+host_mem_total_mib 7625
+host_swap_used_mib 2047
+docker 29.9.0
+compose 5.6.0
+k6_image grafana/k6:1.3.0
+db_image postgres:16
+api_node v22.23.4
+api_workers_env 1
+api_node_processes 1
+git_commit unknown
+git_tracked_changes unknown
+git_untracked_files unknown
+api_image sha256:ac0d0c5901171b0af10bea98a33404400ceff6107017297020903711b3df6f39
+api_image_created 2026-10-22T16:38:20.336341265+03:00
+pg_fsync on
+pg_max_connections 100
+pg_server_version 16.15 (Debian 16.15-1.pgdg13+2)
+pg_shared_buffers 128MB
+pg_synchronous_commit on
+pg_wal_sync_method fdatasync
+
+mixed: 8435 consumes in 30s with 50 VUs → 281.2 req/s
+  latency p50 178.9ms  p95 230.7ms  p99 250.8ms  max 299.0ms
+  errors (non-200) 0 (0.00%)  accepted 3806  rejected 4629  fresh 8435  replayed 0
+SUMMARY_JSON {"scenario":"mixed","runId":"70a132d6","vus":50,"durationSeconds":30,"requests":8435,"rps":281.2,"p50":178.870196,"p95":230.6616413,"p99":250.80440326,"max":298.977635,"errors":0,"errorRate":0,"accepted":3806,"rejected":4629,"replayed":0,"fresh":8435}
+
+k6 wall time (container start, setup, run, teardown): 32s
+
+== SQL invariants ==
+1. account usage = sum of its users usage, every account and month (violations, must be 0)
+ usage_sum_violations 
+----------------------
+                    0
+
+2. no account over its plan monthly limit, current UTC month (violations, must be 0)
+ account_over_limit 
+--------------------
+                  0
+
+3. no user over its plan monthly limit, current UTC month (violations, must be 0)
+ user_over_limit 
+-----------------
+               0
+
+4. account usage = sum of its ACCEPTED request units, every account and month: no retry counted twice (violations, must be 0)
+ usage_vs_requests_violations 
+------------------------------
+                            0
+
+5. this run's accounts
+ accounts | request_rows | accepted_rows | rejected_rows | accepted_units | account_units_used | user_units_used 
+----------+--------------+---------------+---------------+----------------+--------------------+-----------------
+        1 |         8435 |          3806 |          4629 |          19799 |              19799 |           19799
+
+6. every decision matches the limits and usage it recorded (snapshot rows; violations, must be 0)
+ rows_without_snapshot | accepted_over_recorded_limit | rejected_within_recorded_limits | remaining_mismatch 
+-----------------------+------------------------------+---------------------------------+--------------------
+                     0 |                            0 |                               0 |                  0
+
+== DB connections while k6 ran (pg_stat_activity, 0.5s samples with API traffic) ==
+busy samples 60 (with a lock waiter: 60)  avg conns 10.00  active(cpu) 0.73  lock_wait 8.10 (max 9)  idle_in_tx 0.78  idle 0.38
+lock waits by sample (samples · wait events · waiting queries):
+     57 transactionid+tuple ·  with a as ( select "units_used" from "account_usage" where "account_id" = $1 and "month" = $2 for update ), u as ( select "units_used" from "user_usage" where "account_id" = $3 and "user_id" = $4 and "month" = $5 and exists (select 1 from a) for update ) select a."units_used" as account_used, u."units_used" as user_used from a, u
+      1 tuple ·  with a as ( select "units_used" from "account_usage" where "account_id" = $1 and "month" = $2 for update ), u as ( select "units_used" from "user_usage" where "account_id" = $3 and "user_id" = $4 and "month" = $5 and exists (select 1 from a) for update ) select a."units_used" as account_used, u."units_used" as user_used from a, u
+      1 transactionid+tuple · insert into "user_usage" ("user_id", "account_id", "month", "units_used", "updated_at") values ($1, $2, $3, $4, $5) on conflict do nothing ;;  with a as ( select "units_used" from "account_usage" where "account_id" = $1 and "month" = $2 for update ), u as ( select "units_used" from "user_usage" where "account_id" = $3 and "user_id" = $4 and "month" = $5 and exists (select 1 from a) for update ) select a."units_used" as account_used, u."units_used" as user_used from a, u
+      1 transactionid+tuple · insert into "account_usage" ("account_id", "month", "units_used", "updated_at") values ($1, $2, $3, $4) on conflict do nothing ;;  with a as ( select "units_used" from "account_usage" where "account_id" = $1 and "month" = $2 for update ), u as ( select "units_used" from "user_usage" where "account_id" = $3 and "user_id" = $4 and "month" = $5 and exists (select 1 from a) for update ) select a."units_used" as account_used, u."units_used" as user_used from a, u
+== Container CPU (100% = one core) ==
+api avg 73% max 115% (17 samples)
+db avg 75% max 103% (17 samples)
+== API log during the run ==
+log lines: 0  unhandled errors: 0  service unavailable (overload): 0
+== Fresh decisions (k6) vs request rows (SQL) ==
+k6 fresh=8435  request rows=8435  OK
+== Index scans during the run ==
+account_usage_account_id_month_pk 21346
+requests_account_id_request_id_unique 16870
+user_usage_user_id_month_pk 20683
+consume transactions = request-index scans − consumes = 16870 − 8435 = 8435
+  fresh decisions 8435, replays inside a transaction 0, fast-path replays 0
+
+Raw output: load/results/mixed-70a132d6-*

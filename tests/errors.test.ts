@@ -4,9 +4,13 @@ import { describe, expect, it, vi } from 'vitest';
 import { createApp } from '../src/app.js';
 import type { Db } from '../src/db/client.js';
 import { ERROR_STATUS } from '../src/errors/codes.js';
+import { generateApiKey } from '../src/lib/api-key.js';
 import { errorHandler } from '../src/middleware/errors.js';
 import { expectError } from './helpers/api.js';
 import { noDb } from './helpers/db.js';
+
+/** Passes the format check, so auth goes on to the database lookup. */
+const WELL_FORMED_KEY = generateApiKey();
 
 // No database: these paths must all be answered before (or without) a DB query.
 const app = createApp({ db: noDb, pingDb: async () => {} });
@@ -57,7 +61,7 @@ describe('central error handling', () => {
   it('an unexpected failure → 500 INTERNAL_ERROR without details', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     // noDb throws a plain Error the moment the auth lookup touches the database.
-    const res = await request(app).get('/account').set('X-API-Key', 'mk_anything');
+    const res = await request(app).get('/account').set('X-API-Key', WELL_FORMED_KEY);
     expect(res.status).toBe(500);
     expect(res.body).toEqual({ error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } });
     expect(JSON.stringify(res.body)).not.toMatch(/noDb|stack/);
@@ -94,7 +98,7 @@ describe('overload → 503 SERVICE_UNAVAILABLE', () => {
   const call = (err: Error) =>
     request(createApp({ db: failingDb(err), pingDb: async () => {} }))
       .get('/account')
-      .set('X-API-Key', 'mk_anything');
+      .set('X-API-Key', WELL_FORMED_KEY);
 
   it.each([
     ['pg-pool checkout timeout', new Error('timeout exceeded when trying to connect')],
@@ -145,6 +149,23 @@ describe('missing API key → 401', () => {
 
   it('an empty X-API-Key header counts as missing', async () => {
     expectError(await request(app).get('/account').set('X-API-Key', ''), 401, 'UNAUTHORIZED');
+  });
+
+  // The app has noDb here, which throws on any use: a 401 proves the key was rejected before any
+  // database lookup, and the message is the same one an unknown well-formed key gets.
+  it.each([
+    ['no prefix', 'x'.repeat(46)],
+    ['wrong prefix', `sk_${'A'.repeat(43)}`],
+    ['too short', `mk_${'A'.repeat(42)}`],
+    ['too long', `mk_${'A'.repeat(44)}`],
+    ['standard base64 characters', `mk_${'+'.repeat(43)}`],
+    ['padding', `mk_${'A'.repeat(42)}=`],
+    ['a short guess', 'mk_nope'],
+    ['a very long value', `mk_${'A'.repeat(8_000)}`],
+  ])('a malformed key (%s) → 401 Invalid API key, without a database lookup', async (_name, key) => {
+    const res = await request(app).get('/account').set('X-API-Key', key);
+    expectError(res, 401, 'UNAUTHORIZED');
+    expect(res.body.error.message).toBe('Invalid API key');
   });
 
   it('POST /accounts and /healthz need no key', async () => {

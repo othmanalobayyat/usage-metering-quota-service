@@ -1,0 +1,5 @@
+
+mixed: 2674 consumes in 30s with 50 VUs → 89.1 req/s
+  latency p50 556.5ms  p95 678.8ms  p99 762.4ms  max 959.1ms
+  errors (non-200) 0 (0.00%)  accepted 1446  rejected 1228  fresh 2674  replayed 0
+SUMMARY_JSON {"scenario":"mixed","runId":"df006d16","vus":50,"durationSeconds":30,"requests":2674,"rps":89.1,"p50":556.4897625,"p95":678.7517118,"p99":762.43143575,"max":959.089195,"errors":0,"errorRate":0,"accepted":1446,"rejected":1228,"replayed":0,"fresh":2674}

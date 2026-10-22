@@ -8,6 +8,9 @@
 --   after a reduction (the service then rejects further use), and these checks would report it as a
 --   violation. The scenarios in load/ never change a plan during a run, so their results are unaffected.
 --   Section 5 covers this run only: accounts named load-<scenario>-<run_id>-<n>, matched exactly on the run ID.
+--   Check 6 has no such precondition: it compares each decision with the limits and usage stored on its
+--   own row (migration 0001), so it stays valid while plans change. Rows written before 0001 have no
+--   snapshot and are counted separately, not checked.
 \pset footer off
 
 \echo '1. account usage = sum of its users usage, every account and month (violations, must be 0)'
@@ -53,3 +56,28 @@ SELECT (SELECT COUNT(*) FROM run_accounts) AS accounts,
          AS user_units_used
 FROM requests r
 WHERE r.account_id IN (SELECT id FROM run_accounts);
+
+\echo '6. every decision matches the limits and usage it recorded (snapshot rows; violations, must be 0)'
+SELECT COUNT(*) FILTER (WHERE account_used_before IS NULL) AS rows_without_snapshot,
+       COUNT(*) FILTER (
+         WHERE account_used_before IS NOT NULL
+           AND status = 'ACCEPTED'
+           AND (units > user_per_request_limit OR units > account_per_request_limit
+                OR user_used_before + units > user_monthly_limit
+                OR account_used_before + units > account_monthly_limit)
+       ) AS accepted_over_recorded_limit,
+       COUNT(*) FILTER (
+         WHERE account_used_before IS NOT NULL
+           AND status = 'REJECTED'
+           AND units <= user_per_request_limit AND units <= account_per_request_limit
+           AND user_used_before + units <= user_monthly_limit
+           AND account_used_before + units <= account_monthly_limit
+       ) AS rejected_within_recorded_limits,
+       COUNT(*) FILTER (
+         WHERE account_used_before IS NOT NULL
+           AND (remaining_account <> GREATEST(0, account_monthly_limit - account_used_before
+                                                 - CASE WHEN status = 'ACCEPTED' THEN units ELSE 0 END)
+                OR remaining_user <> GREATEST(0, user_monthly_limit - user_used_before
+                                                 - CASE WHEN status = 'ACCEPTED' THEN units ELSE 0 END))
+       ) AS remaining_mismatch
+FROM requests;

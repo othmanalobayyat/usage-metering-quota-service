@@ -1,0 +1,26 @@
+13:39:21.696|1|0|0|0|1|-|-
+13:39:21.697|1|0|0|0|1|-|-
+13:39:22.198|1|0|0|0|1|-|-
+13:39:22.699|1|0|0|0|1|-|-
+13:39:23.197|6|1|0|0|5|-|-
+13:39:23.698|10|0|8|1|1|transactionid+tuple|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+13:39:24.197|10|1|8|1|0|transactionid+tuple|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+13:39:24.697|10|0|8|2|0|transactionid+tuple|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+13:39:25.197|10|0|8|1|1|transactionid+tuple|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+13:39:25.697|10|1|8|0|1|transactionid+tuple|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+13:39:26.197|10|0|8|2|0|transactionid+tuple|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+13:39:26.697|10|1|8|1|0|transactionid+tuple|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+13:39:27.197|10|1|7|2|0|transactionid+tuple|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+13:39:27.697|10|0|9|1|0|transactionid+tuple|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+13:39:28.197|10|1|9|0|0|transactionid+tuple|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+13:39:28.697|10|0|8|2|0|transactionid+tuple|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+13:39:29.197|10|0|8|2|0|transactionid+tuple|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+13:39:29.697|10|1|8|1|0|transactionid+tuple|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+13:39:30.197|10|1|7|2|0|transactionid+tuple|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+13:39:30.697|10|0|8|1|1|transactionid+tuple|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+13:39:31.197|10|0|8|1|1|transactionid+tuple|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+13:39:31.697|10|0|7|2|1|transactionid+tuple|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+13:39:32.198|10|1|8|1|0|transactionid+tuple|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+13:39:32.697|10|0|9|1|0|transactionid+tuple|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+13:39:33.197|10|1|9|0|0|transactionid+tuple|select "units_used" from "account_usage" where ("account_usage"."account_id" = $1 and "account_usage"."month" = $2) for update
+13:39:33.698|10|0|0|0|10|-|-

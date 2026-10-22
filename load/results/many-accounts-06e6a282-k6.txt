@@ -1,0 +1,5 @@
+
+many_accounts: 10187 consumes in 30s with 50 VUs → 339.6 req/s
+  latency p50 136.9ms  p95 211.5ms  p99 247.9ms  max 352.2ms
+  errors (non-200) 0 (0.00%)  accepted 10187  rejected 0  fresh 10187  replayed 0
+SUMMARY_JSON {"scenario":"many_accounts","runId":"06e6a282","vus":50,"durationSeconds":30,"requests":10187,"rps":339.6,"p50":136.905325,"p95":211.5213115,"p99":247.8525276999999,"max":352.177357,"errors":0,"errorRate":0,"accepted":10187,"rejected":0,"replayed":0,"fresh":10187}

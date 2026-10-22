@@ -17,7 +17,10 @@ export function accountsRouter(deps: ServiceDeps): Router {
 
   router.post('/', async (req, res) => {
     const input = parseInput(createAccountSchema, req.body);
-    res.status(201).json(await createAccount(deps, input));
+    const created = await createAccount(deps, input);
+    // The only response that carries a plaintext key: no browser, proxy or client cache may keep it.
+    res.set('Cache-Control', 'no-store');
+    res.status(201).json(created);
   });
 
   return router;

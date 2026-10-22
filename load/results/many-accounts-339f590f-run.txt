@@ -1,0 +1,84 @@
+run_id 339f590f
+scenario many-accounts
+vus 50 (default)
+duration 30s (default)
+started_utc 2026-10-22T14:59:52Z
+host_cpus 12
+host_mem_total_mib 7625
+host_swap_used_mib 1968
+docker 29.9.0
+compose 5.6.0
+k6_image grafana/k6:1.3.0
+db_image postgres:16
+api_node v22.23.4
+api_workers_env 1
+api_node_processes 1
+git_commit unknown
+git_tracked_changes unknown
+git_untracked_files unknown
+api_image sha256:651c1f2a045649fa4d5eabdf3cfbfb9897988e085cc10a5b2b8231c6e8b1a9f5
+api_image_created 2026-10-22T16:38:20.336341265+03:00
+pg_fsync on
+pg_max_connections 100
+pg_server_version 16.15 (Debian 16.15-1.pgdg13+2)
+pg_shared_buffers 128MB
+pg_synchronous_commit on
+pg_wal_sync_method fdatasync
+
+many_accounts: 10659 consumes in 30s with 50 VUs → 355.3 req/s
+  latency p50 123.6ms  p95 216.0ms  p99 273.5ms  max 516.6ms
+  errors (non-200) 0 (0.00%)  accepted 10659  rejected 0  fresh 10659  replayed 0
+SUMMARY_JSON {"scenario":"many_accounts","runId":"339f590f","vus":50,"durationSeconds":30,"requests":10659,"rps":355.3,"p50":123.590667,"p95":215.9727425,"p99":273.45067874,"max":516.631108,"errors":0,"errorRate":0,"accepted":10659,"rejected":0,"replayed":0,"fresh":10659}
+
+k6 wall time (container start, setup, run, teardown): 35s
+
+== SQL invariants ==
+1. account usage = sum of its users usage, every account and month (violations, must be 0)
+ usage_sum_violations 
+----------------------
+                    0
+
+2. no account over its plan monthly limit, current UTC month (violations, must be 0)
+ account_over_limit 
+--------------------
+                  0
+
+3. no user over its plan monthly limit, current UTC month (violations, must be 0)
+ user_over_limit 
+-----------------
+               0
+
+4. account usage = sum of its ACCEPTED request units, every account and month: no retry counted twice (violations, must be 0)
+ usage_vs_requests_violations 
+------------------------------
+                            0
+
+5. this run's accounts
+ accounts | request_rows | accepted_rows | rejected_rows | accepted_units | account_units_used | user_units_used 
+----------+--------------+---------------+---------------+----------------+--------------------+-----------------
+      100 |        10659 |         10659 |             0 |          32132 |              32132 |           32132
+
+6. every decision matches the limits and usage it recorded (snapshot rows; violations, must be 0)
+ rows_without_snapshot | accepted_over_recorded_limit | rejected_within_recorded_limits | remaining_mismatch 
+-----------------------+------------------------------+---------------------------------+--------------------
+                     0 |                            0 |                               0 |                  0
+
+== DB connections while k6 ran (pg_stat_activity, 0.5s samples with API traffic) ==
+busy samples 61 (with a lock waiter: 8)  avg conns 9.93  active(cpu) 1.93  lock_wait 0.13 (max 1)  idle_in_tx 4.98  idle 2.89
+lock waits by sample (samples · wait events · waiting queries):
+      8 transactionid ·  with a as ( select "units_used" from "account_usage" where "account_id" = $1 and "month" = $2 for update ), u as ( select "units_used" from "user_usage" where "account_id" = $3 and "user_id" = $4 and "month" = $5 and exists (select 1 from a) for update ) select a."units_used" as account_used, u."units_used" as user_used from a, u
+== Container CPU (100% = one core) ==
+api avg 110% max 171% (18 samples)
+db avg 152% max 219% (18 samples)
+== API log during the run ==
+log lines: 0  unhandled errors: 0  service unavailable (overload): 0
+== Fresh decisions (k6) vs request rows (SQL) ==
+k6 fresh=10659  request rows=10659  OK
+== Index scans during the run ==
+account_usage_account_id_month_pk 32220
+requests_account_id_request_id_unique 21318
+user_usage_user_id_month_pk 31989
+consume transactions = request-index scans − consumes = 21318 − 10659 = 10659
+  fresh decisions 10659, replays inside a transaction 0, fast-path replays 0
+
+Raw output: load/results/many-accounts-339f590f-*

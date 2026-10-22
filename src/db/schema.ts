@@ -145,6 +145,15 @@ export const requests = pgTable(
       .references(() => plans.id),
     remainingAccount: integer('remaining_account').notNull(),
     remainingUser: integer('remaining_user').notNull(),
+    // Decision snapshot (migration 0001): the limits evaluate() was given and the usage before
+    // this request, so the decision can be re-derived after the plan is edited. NULL only on rows
+    // written before 0001; requests_snapshot_check makes the six all-or-nothing.
+    accountMonthlyLimit: integer('account_monthly_limit'),
+    accountPerRequestLimit: integer('account_per_request_limit'),
+    accountUsedBefore: integer('account_used_before'),
+    userMonthlyLimit: integer('user_monthly_limit'),
+    userPerRequestLimit: integer('user_per_request_limit'),
+    userUsedBefore: integer('user_used_before'),
     createdAt: timestamptz('created_at').notNull(),
   },
   (t) => [
@@ -171,6 +180,26 @@ export const requests = pgTable(
         AND ${t.reasonCode} IS NOT NULL
         AND ${t.rejectedBy} IS NOT NULL
         AND ${t.limitValue} IS NOT NULL
+      )`,
+    ),
+    // IS NOT NULL is spelled out in the second branch: a comparison with NULL is NULL, which a
+    // CHECK lets through, so `>= 0` alone would accept a row with only some snapshot columns set.
+    check(
+      'requests_snapshot_check',
+      sql`(
+        ${t.accountMonthlyLimit} IS NULL
+        AND ${t.accountPerRequestLimit} IS NULL
+        AND ${t.accountUsedBefore} IS NULL
+        AND ${t.userMonthlyLimit} IS NULL
+        AND ${t.userPerRequestLimit} IS NULL
+        AND ${t.userUsedBefore} IS NULL
+      ) OR (
+        ${t.accountMonthlyLimit} IS NOT NULL AND ${t.accountMonthlyLimit} >= 0
+        AND ${t.accountPerRequestLimit} IS NOT NULL AND ${t.accountPerRequestLimit} > 0
+        AND ${t.accountUsedBefore} IS NOT NULL AND ${t.accountUsedBefore} >= 0
+        AND ${t.userMonthlyLimit} IS NOT NULL AND ${t.userMonthlyLimit} >= 0
+        AND ${t.userPerRequestLimit} IS NOT NULL AND ${t.userPerRequestLimit} > 0
+        AND ${t.userUsedBefore} IS NOT NULL AND ${t.userUsedBefore} >= 0
       )`,
     ),
     // History indexes. NULLS FIRST is Postgres' default for DESC; Drizzle otherwise emits

@@ -1,0 +1,14 @@
+quotaab2-api-1 76.42%
+quotaab2-db-1 12.65%
+quotaab2-api-1 107.92%
+quotaab2-db-1 81.11%
+quotaab2-api-1 73.05%
+quotaab2-db-1 89.07%
+quotaab2-api-1 77.90%
+quotaab2-db-1 90.65%
+quotaab2-api-1 77.92%
+quotaab2-db-1 91.20%
+quotaab2-api-1 66.54%
+quotaab2-db-1 94.77%
+quotaab2-api-1 10.20%
+quotaab2-db-1 1.28%

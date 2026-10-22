@@ -4,7 +4,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { accounts, accountUsage } from '../src/db/schema.js';
 import { PREDEFINED_PLAN_IDS } from '../src/db/seed.js';
-import { hashApiKey } from '../src/lib/api-key.js';
+import { generateApiKey, hashApiKey } from '../src/lib/api-key.js';
 import { createCustomPlan, createTestApp, expectError, signUp } from './helpers/api.js';
 import { createTestDb, dbAvailable, resetDatabase, type TestDb } from './helpers/db.js';
 
@@ -49,6 +49,12 @@ describe.skipIf(!(await dbAvailable()))('accounts and auth', () => {
       const me = await request(app).get('/account').set('X-API-Key', res.body.apiKey);
       expect(me.status).toBe(200);
       expect(me.body).not.toHaveProperty('apiKey');
+    });
+
+    it('the response carrying the plaintext key is marked Cache-Control: no-store', async () => {
+      const res = await request(app).post('/accounts').send({ name: 'Acme' });
+      expect(res.status).toBe(201);
+      expect(res.headers['cache-control']).toBe('no-store');
     });
 
     it.each([{}, { name: '' }, { name: '   ' }, { name: 42 }, { name: 'x'.repeat(201) }, { name: 'ok', extra: 1 }, []])(
@@ -110,6 +116,14 @@ describe.skipIf(!(await dbAvailable()))('accounts and auth', () => {
       expectError(await request(app).get('/account').set('X-API-Key', 'mk_not-a-real-key'), 401, 'UNAUTHORIZED');
       expectError(await request(app).get('/account').set('X-API-Key', `${apiKey}x`), 401, 'UNAUTHORIZED');
       expectError(await request(app).get('/account').set('X-API-Key', apiKey.toUpperCase()), 401, 'UNAUTHORIZED');
+    });
+
+    it('a well-formed key that was never issued → the same 401 as a malformed one', async () => {
+      await signUp(app);
+      const unknown = await request(app).get('/account').set('X-API-Key', generateApiKey());
+      const malformed = await request(app).get('/account').set('X-API-Key', 'mk_not-a-real-key');
+      expectError(unknown, 401, 'UNAUTHORIZED');
+      expect(unknown.body).toEqual(malformed.body);
     });
 
     it('identifies each account by its own key', async () => {

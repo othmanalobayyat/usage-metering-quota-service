@@ -1,0 +1,189 @@
+--- a/src/services/consume.service.ts
++++ b/src/services/consume.service.ts
+@@ -86,37 +86,45 @@
+         .values({ userId: user.id, accountId, month, unitsUsed: 0, updatedAt: at })
+         .onConflictDoNothing();
+ 
+-      // 5. Lock the account usage row, THEN the user usage row. Every consume takes them in
+-      //    this order, so two consumes can never wait on each other in a cycle (deadlock).
+-      const [accountRow] = await tx
+-        .select({ unitsUsed: accountUsage.unitsUsed })
+-        .from(accountUsage)
+-        .where(and(eq(accountUsage.accountId, accountId), eq(accountUsage.month, month)))
+-        .for('update');
+-      const [userRow] = await tx
+-        .select({ unitsUsed: userUsage.unitsUsed })
+-        .from(userUsage)
+-        .where(and(eq(userUsage.accountId, accountId), eq(userUsage.userId, user.id), eq(userUsage.month, month)))
+-        .for('update');
+-      if (!accountRow || !userRow) throw new Error('consume: usage row missing after upsert');
+-
+-      // 6. Recheck after locking. A concurrent consume with this requestId in the same month
+-      //    held the same account lock and has committed by now, so this read sees its row.
+-      const stored = await findRequest(tx, accountId, requestId);
+-      if (stored) return replay(stored, user.id, units);
+-
+-      // 7. Both plans in one statement after the lock: one snapshot, no locks on plan rows,
+-      //    and any plan change committed before we got the lock is visible.
++      // 5. PROTOTYPE: lock the account usage row, THEN the user usage row, in ONE statement. The
++      //    user row's scan has `EXISTS (SELECT 1 FROM a)` in its WHERE clause, so it can't run until
++      //    the account row is locked: the order is forced by data, not by planner choice. Rows locked
++      //    FOR UPDATE are returned at their latest committed version (READ COMMITTED re-check), so
++      //    these counts are current even after waiting.
++      const locked = await tx.execute<{ account_used: number; user_used: number }>(sql`
++        with a as (
++          select "units_used" from "account_usage"
++          where "account_id" = ${accountId} and "month" = ${month}
++          for update
++        ), u as (
++          select "units_used" from "user_usage"
++          where "account_id" = ${accountId} and "user_id" = ${user.id} and "month" = ${month}
++            and exists (select 1 from a)
++          for update
++        )
++        select a."units_used" as account_used, u."units_used" as user_used from a, u`);
++      const lockedRow = locked.rows[0];
++      if (!lockedRow) throw new Error('consume: usage row missing after upsert');
++      const accountRow = { unitsUsed: lockedRow.account_used };
++      const userRow = { unitsUsed: lockedRow.user_used };
++
++      // 6 + 7. PROTOTYPE: the recheck and both plans in ONE statement. It is a new statement, so in
++      //    READ COMMITTED it takes a new snapshot, after the lock: it sees a concurrent consume's
++      //    committed request row and any plan change committed before we got the lock. (Folding this
++      //    into the locking statement above would NOT be safe: that statement's snapshot predates
++      //    the lock wait, so it would miss both.)
+       const accountPlan = alias(plans, 'account_plan');
+       const userPlan = alias(plans, 'user_plan');
+       const [planRow] = await tx
+-        .select({ accountPlan, userPlan })
++        .select({ accountPlan, userPlan, stored: requests })
+         .from(accounts)
+         .innerJoin(accountPlan, eq(accountPlan.id, accounts.planId))
+         .innerJoin(users, and(eq(users.accountId, accounts.id), eq(users.id, user.id)))
+         .innerJoin(userPlan, eq(userPlan.id, users.planId))
++        .leftJoin(requests, and(eq(requests.accountId, accounts.id), eq(requests.requestId, requestId)))
+         .where(eq(accounts.id, accountId));
+       if (!planRow) throw new Error('consume: account or user plan missing');
++      if (planRow.stored) return replay(planRow.stored, user.id, units);
+ 
+       // 8. The pure decision.
+       const decision = evaluate({
+@@ -127,45 +135,59 @@
+         units,
+       });
+ 
+-      // 9. Accepted: add the units to both rows, which keeps account usage = sum of user usage.
+-      if (decision.status === 'ACCEPTED') {
+-        await tx
+-          .update(accountUsage)
+-          .set({ unitsUsed: sql`${accountUsage.unitsUsed} + ${units}`, updatedAt: at })
+-          .where(and(eq(accountUsage.accountId, accountId), eq(accountUsage.month, month)));
+-        await tx
+-          .update(userUsage)
+-          .set({ unitsUsed: sql`${userUsage.unitsUsed} + ${units}`, updatedAt: at })
+-          .where(and(eq(userUsage.accountId, accountId), eq(userUsage.userId, user.id), eq(userUsage.month, month)));
+-      }
+-
+-      // 10. Record the decision with its snapshot; replays are answered from this row alone.
+-      const [row] = await tx
+-        .insert(requests)
+-        .values({
+-          accountId,
+-          userId: user.id,
+-          requestId,
+-          units,
+-          month,
+-          status: decision.status,
+-          reasonCode: decision.reasonCode,
+-          rejectedBy: decision.rejectedBy,
+-          limitValue: decision.limit,
+-          accountPlanId: planRow.accountPlan.id,
+-          userPlanId: planRow.userPlan.id,
+-          remainingAccount: decision.remaining.account,
+-          remainingUser: decision.remaining.user,
+-          // Exactly what evaluate() was given, so the decision stays explainable after a plan edit.
+-          accountMonthlyLimit: planRow.accountPlan.monthlyLimit,
+-          accountPerRequestLimit: planRow.accountPlan.perRequestLimit,
+-          accountUsedBefore: accountRow.unitsUsed,
+-          userMonthlyLimit: planRow.userPlan.monthlyLimit,
+-          userPerRequestLimit: planRow.userPlan.perRequestLimit,
+-          userUsedBefore: userRow.unitsUsed,
+-          createdAt: at,
+-        })
+-        .returning();
++      // 9 + 10. PROTOTYPE: both increments and the request row in ONE statement. The UPDATEs are
++      //    data-modifying CTEs of the INSERT: all three run in this statement or none does, and a
++      //    failure in any (e.g. a CHECK) fails the statement and the transaction rolls back.
++      const values = {
++        accountId,
++        userId: user.id,
++        requestId,
++        units,
++        month,
++        status: decision.status,
++        reasonCode: decision.reasonCode,
++        rejectedBy: decision.rejectedBy,
++        limitValue: decision.limit,
++        accountPlanId: planRow.accountPlan.id,
++        userPlanId: planRow.userPlan.id,
++        remainingAccount: decision.remaining.account,
++        remainingUser: decision.remaining.user,
++        accountMonthlyLimit: planRow.accountPlan.monthlyLimit,
++        accountPerRequestLimit: planRow.accountPlan.perRequestLimit,
++        accountUsedBefore: accountRow.unitsUsed,
++        userMonthlyLimit: planRow.userPlan.monthlyLimit,
++        userPerRequestLimit: planRow.userPlan.perRequestLimit,
++        userUsedBefore: userRow.unitsUsed,
++        createdAt: at,
++      };
++      const accepted = decision.status === 'ACCEPTED';
++      const increments = accepted
++        ? sql`with acc as (
++              update "account_usage" set "units_used" = "units_used" + ${units}, "updated_at" = ${at}
++              where "account_id" = ${accountId} and "month" = ${month}
++              returning 1
++            ), usr as (
++              update "user_usage" set "units_used" = "units_used" + ${units}, "updated_at" = ${at}
++              where "account_id" = ${accountId} and "user_id" = ${user.id} and "month" = ${month}
++              returning 1
++            ) `
++        : sql``;
++      const written = await tx.execute<{ id: string; acc: number; usr: number }>(sql`${increments}
++        insert into "requests" ("account_id", "user_id", "request_id", "units", "month", "status", "reason_code",
++          "rejected_by", "limit_value", "account_plan_id", "user_plan_id", "remaining_account", "remaining_user",
++          "account_monthly_limit", "account_per_request_limit", "account_used_before", "user_monthly_limit",
++          "user_per_request_limit", "user_used_before", "created_at")
++        values (${values.accountId}, ${values.userId}, ${values.requestId}, ${values.units}, ${values.month},
++          ${values.status}, ${values.reasonCode}, ${values.rejectedBy}, ${values.limitValue}, ${values.accountPlanId},
++          ${values.userPlanId}, ${values.remainingAccount}, ${values.remainingUser}, ${values.accountMonthlyLimit},
++          ${values.accountPerRequestLimit}, ${values.accountUsedBefore}, ${values.userMonthlyLimit},
++          ${values.userPerRequestLimit}, ${values.userUsedBefore}, ${values.createdAt.toISOString()})
++        returning "id", ${accepted ? sql`(select count(*) from acc)::int` : sql`1`} as acc,
++                  ${accepted ? sql`(select count(*) from usr)::int` : sql`1`} as usr`);
++      const out = written.rows[0];
++      // Both rows are locked by this transaction, so each UPDATE must hit exactly one row.
++      if (!out || out.acc !== 1 || out.usr !== 1) throw new Error('consume: usage increment did not apply');
++      const row: RequestRow = { id: out.id, ...values };
+       return decisionView(row!, false);
+     });
+   } catch (err) {
+--- a/tests/consume.db.test.ts
++++ b/tests/consume.db.test.ts
+@@ -315,7 +315,7 @@
+         for (let i = 0; i < 200; i++) {
+           const { rowCount } = await testDb.pool.query(
+             `select 1 from pg_stat_activity
+-             where datname = current_database() and wait_event_type = 'Lock' and query ilike 'insert into "requests"%'`,
++             where datname = current_database() and wait_event_type = 'Lock' and query ilike '%insert into "requests"%'`,
+           );
+           if (rowCount) return;
+           await new Promise((r) => setTimeout(r, 10));
+@@ -668,7 +668,7 @@
+         for (let tries = 0; ; tries++) {
+           const { rows } = await testDb.pool.query<{ n: number }>(
+             `select count(*)::int as n from pg_stat_activity
+-             where datname = current_database() and wait_event_type = 'Lock' and query ilike '%from "account_usage"%for update'`,
++             where datname = current_database() and wait_event_type = 'Lock' and query ilike '%from "account_usage"%for update%'`,
+           );
+           if (rows[0]!.n === QUEUED) break;
+           if (tries > 200) throw new Error(`only ${rows[0]!.n} of ${QUEUED} consumes queued on the account row`);

@@ -1,0 +1,5 @@
+
+mixed: 3622 consumes in 30s with 50 VUs → 120.7 req/s
+  latency p50 346.3ms  p95 679.3ms  p99 265872.4ms  max 266045.8ms
+  errors (non-200) 10 (0.28%)  accepted 1944  rejected 1668  fresh 3612  replayed 0
+SUMMARY_JSON {"scenario":"mixed","runId":"4f1afc46","vus":50,"durationSeconds":30,"requests":3622,"rps":120.7,"p50":346.2759065,"p95":679.3085504999995,"p99":265872.39372758,"max":266045.784717,"errors":10,"errorRate":0.0027609055770292656,"accepted":1944,"rejected":1668,"replayed":0,"fresh":3612}

@@ -1,0 +1,10 @@
+# Used by load/ab.sh only (through COMPOSE_FILE): the API runs from a prebuilt image, API_IMAGE,
+# instead of being built from this checkout, so two builds can take turns against the same database.
+# AB_API_PORT moves the published API port, so a stack already on port 3000 can keep running.
+services:
+  api:
+    image: ${API_IMAGE:?load/ab.sh sets API_IMAGE}
+    build: !reset null
+    pull_policy: never
+    ports: !override
+      - "${AB_API_PORT:-3000}:3000"

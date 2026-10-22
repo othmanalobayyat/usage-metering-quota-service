@@ -1,0 +1,30 @@
+1. account usage = sum of its users usage, every account and month (violations, must be 0)
+ usage_sum_violations 
+----------------------
+                    0
+
+2. no account over its plan monthly limit, current UTC month (violations, must be 0)
+ account_over_limit 
+--------------------
+                  0
+
+3. no user over its plan monthly limit, current UTC month (violations, must be 0)
+ user_over_limit 
+-----------------
+               0
+
+4. account usage = sum of its ACCEPTED request units, every account and month: no retry counted twice (violations, must be 0)
+ usage_vs_requests_violations 
+------------------------------
+                            0
+
+5. this run's accounts
+ accounts | request_rows | accepted_rows | rejected_rows | accepted_units | account_units_used | user_units_used 
+----------+--------------+---------------+---------------+----------------+--------------------+-----------------
+        1 |         4182 |          2277 |          1905 |          12583 |              12583 |           12583
+
+6. every decision matches the limits and usage it recorded (snapshot rows; violations, must be 0)
+ rows_without_snapshot | accepted_over_recorded_limit | rejected_within_recorded_limits | remaining_mismatch 
+-----------------------+------------------------------+---------------------------------+--------------------
+                     0 |                            0 |                               0 |                  0
+

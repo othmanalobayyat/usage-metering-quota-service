@@ -156,6 +156,13 @@ export async function consume({ db, now }: ServiceDeps, accountId: string, input
           userPlanId: planRow.userPlan.id,
           remainingAccount: decision.remaining.account,
           remainingUser: decision.remaining.user,
+          // Exactly what evaluate() was given, so the decision stays explainable after a plan edit.
+          accountMonthlyLimit: planRow.accountPlan.monthlyLimit,
+          accountPerRequestLimit: planRow.accountPlan.perRequestLimit,
+          accountUsedBefore: accountRow.unitsUsed,
+          userMonthlyLimit: planRow.userPlan.monthlyLimit,
+          userPerRequestLimit: planRow.userPlan.perRequestLimit,
+          userUsedBefore: userRow.unitsUsed,
           createdAt: at,
         })
         .returning();

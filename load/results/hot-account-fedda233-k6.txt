@@ -1,0 +1,5 @@
+
+hot_account: 2915 consumes in 30s with 50 VUs → 97.2 req/s
+  latency p50 496.7ms  p95 730.2ms  p99 813.1ms  max 884.7ms
+  errors (non-200) 0 (0.00%)  accepted 2915  rejected 0  fresh 2915  replayed 0
+SUMMARY_JSON {"scenario":"hot_account","runId":"fedda233","vus":50,"durationSeconds":30,"requests":2915,"rps":97.2,"p50":496.695227,"p95":730.2155965999997,"p99":813.0606287200001,"max":884.693844,"errors":0,"errorRate":0,"accepted":2915,"rejected":0,"replayed":0,"fresh":2915}

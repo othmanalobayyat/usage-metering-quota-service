@@ -1,0 +1,26 @@
+run_id f00b4b5a
+scenario hot-account
+vus 50 (default)
+duration 10s
+started_utc 2026-10-22T14:37:06Z
+host_cpus 12
+host_mem_total_mib 7625
+host_swap_used_mib 2047
+docker 29.9.0
+compose 5.6.0
+k6_image grafana/k6:1.3.0
+db_image postgres:16
+api_node v22.23.4
+api_workers_env 1
+api_node_processes 1
+git_commit unknown
+git_tracked_changes unknown
+git_untracked_files unknown
+api_image sha256:651c1f2a045649fa4d5eabdf3cfbfb9897988e085cc10a5b2b8231c6e8b1a9f5
+api_image_created 2026-10-22T16:38:20.336341265+03:00
+pg_fsync on
+pg_max_connections 100
+pg_server_version 16.15 (Debian 16.15-1.pgdg13+2)
+pg_shared_buffers 128MB
+pg_synchronous_commit on
+pg_wal_sync_method fdatasync

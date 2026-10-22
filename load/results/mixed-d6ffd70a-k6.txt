@@ -1,0 +1,5 @@
+
+mixed: 4750 consumes in 30s with 50 VUs → 158.3 req/s
+  latency p50 316.7ms  p95 373.7ms  p99 397.9ms  max 515.6ms
+  errors (non-200) 0 (0.00%)  accepted 2560  rejected 2190  fresh 4750  replayed 0
+SUMMARY_JSON {"scenario":"mixed","runId":"d6ffd70a","vus":50,"durationSeconds":30,"requests":4750,"rps":158.3,"p50":316.6916925,"p95":373.74242499999997,"p99":397.92906573000005,"max":515.557454,"errors":0,"errorRate":0,"accepted":2560,"rejected":2190,"replayed":0,"fresh":4750}

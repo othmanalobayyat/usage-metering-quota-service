@@ -3,7 +3,7 @@ import type { Request, RequestHandler } from 'express';
 import type { Db } from '../db/client.js';
 import { accounts } from '../db/schema.js';
 import { AppError } from '../errors/app-error.js';
-import { hashApiKey } from '../lib/api-key.js';
+import { hashApiKey, isWellFormedApiKey } from '../lib/api-key.js';
 
 export interface AuthenticatedAccount {
   id: string;
@@ -19,13 +19,17 @@ declare module 'express-serve-static-core' {
 /**
  * Hashes the X-API-Key header and looks the account up by that hash (unique index).
  * Missing or unknown key → 401. The comparison happens on the hash, so response timing
- * can't reveal anything about a stored key.
+ * can't reveal anything about a stored key. A malformed key gets the same 401 as an unknown
+ * one, without a database round trip.
  */
 export function requireApiKey(db: Db): RequestHandler {
   return async (req, _res, next) => {
     const key = req.get('x-api-key');
     if (!key) {
       throw new AppError('UNAUTHORIZED', 'Missing X-API-Key header');
+    }
+    if (!isWellFormedApiKey(key)) {
+      throw new AppError('UNAUTHORIZED', 'Invalid API key');
     }
     const [account] = await db
       .select({ id: accounts.id })

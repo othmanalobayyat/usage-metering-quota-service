@@ -105,6 +105,10 @@ describe.skipIf(!(await dbAvailable()))('GET /requests', () => {
           remaining: { account: 10_000 - 10, user: 1_000 - 10 },
           accountPlanId: PREDEFINED_PLAN_IDS.STARTER,
           userPlanId: PREDEFINED_PLAN_IDS.BASIC,
+          snapshot: {
+            account: { monthlyLimit: 10_000, perRequestLimit: 100, unitsUsedBefore: 10 },
+            user: { monthlyLimit: 1_000, perRequestLimit: 20, unitsUsedBefore: 10 },
+          },
           createdAt: '2026-10-15T12:00:01.000Z',
         },
         {
@@ -119,6 +123,10 @@ describe.skipIf(!(await dbAvailable()))('GET /requests', () => {
           remaining: { account: 10_000 - 10, user: 1_000 - 10 },
           accountPlanId: PREDEFINED_PLAN_IDS.STARTER,
           userPlanId: PREDEFINED_PLAN_IDS.BASIC,
+          snapshot: {
+            account: { monthlyLimit: 10_000, perRequestLimit: 100, unitsUsedBefore: 0 },
+            user: { monthlyLimit: 1_000, perRequestLimit: 20, unitsUsedBefore: 0 },
+          },
           createdAt: '2026-10-15T12:00:00.000Z',
         },
       ],

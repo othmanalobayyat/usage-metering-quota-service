@@ -1,0 +1,67 @@
+13:48:23.638|1|0|0|0|1|-|-
+13:48:23.639|1|0|0|0|1|-|-
+13:48:24.141|1|0|0|0|1|-|-
+13:48:24.640|1|0|0|0|1|-|-
+13:48:25.139|6|2|0|0|4|-|-
+13:48:25.639|6|1|0|0|5|-|-
+13:48:26.139|10|1|0|2|7|-|-
+13:48:26.639|10|1|0|6|3|-|-
+13:48:27.139|10|2|0|5|3|-|-
+13:48:27.639|10|2|0|7|1|-|-
+13:48:28.139|10|3|0|5|2|-|-
+13:48:28.639|10|3|0|3|4|-|-
+13:48:29.139|10|1|0|7|2|-|-
+13:48:29.639|10|1|0|5|4|-|-
+13:48:30.139|10|1|0|2|7|-|-
+13:48:30.639|10|1|0|8|1|-|-
+13:48:31.139|10|3|0|5|2|-|-
+13:48:31.639|10|1|0|7|2|-|-
+13:48:32.139|10|1|0|5|4|-|-
+13:48:32.639|10|4|0|5|1|-|-
+13:48:33.139|10|3|1|5|1|transactionid| with a as ( select "units_used" from "account_usage" where "account_id" = $1 and "month" = $2 for update ), u as ( select "units_used" from "user_usage" where "account_id" = $3 and "user_id" = $4 and "month" = $5 and exists (select 1 from a) for update ) select a."units_used" as account_used, u."units_used" as user_used from a, u
+13:48:33.639|10|4|1|2|3|transactionid| with a as ( select "units_used" from "account_usage" where "account_id" = $1 and "month" = $2 for update ), u as ( select "units_used" from "user_usage" where "account_id" = $3 and "user_id" = $4 and "month" = $5 and exists (select 1 from a) for update ) select a."units_used" as account_used, u."units_used" as user_used from a, u
+13:48:34.139|10|0|0|5|5|-|-
+13:48:34.639|10|2|0|5|3|-|-
+13:48:35.138|10|3|1|3|3|transactionid| with a as ( select "units_used" from "account_usage" where "account_id" = $1 and "month" = $2 for update ), u as ( select "units_used" from "user_usage" where "account_id" = $3 and "user_id" = $4 and "month" = $5 and exists (select 1 from a) for update ) select a."units_used" as account_used, u."units_used" as user_used from a, u
+13:48:35.639|10|2|0|5|3|-|-
+13:48:36.139|10|4|0|5|1|-|-
+13:48:36.639|10|4|1|3|2|transactionid|insert into "account_usage" ("account_id", "month", "units_used", "updated_at") values ($1, $2, $3, $4) on conflict do nothing
+13:48:37.139|10|1|0|5|4|-|-
+13:48:37.639|10|1|0|3|6|-|-
+13:48:38.139|10|2|0|5|3|-|-
+13:48:38.639|10|4|0|3|3|-|-
+13:48:39.139|10|5|0|1|4|-|-
+13:48:39.639|10|3|0|5|2|-|-
+13:48:40.139|10|0|0|6|4|-|-
+13:48:40.639|10|0|0|6|4|-|-
+13:48:41.139|10|1|0|5|4|-|-
+13:48:41.639|10|0|0|8|2|-|-
+13:48:42.139|10|2|0|6|2|-|-
+13:48:42.639|10|2|0|4|4|-|-
+13:48:43.139|10|0|0|8|2|-|-
+13:48:43.639|10|2|0|5|3|-|-
+13:48:44.139|10|2|0|6|2|-|-
+13:48:44.639|10|3|0|5|2|-|-
+13:48:45.139|10|5|0|4|1|-|-
+13:48:45.639|10|0|0|8|2|-|-
+13:48:46.139|10|2|0|4|4|-|-
+13:48:46.639|10|2|0|6|2|-|-
+13:48:47.139|10|4|0|5|1|-|-
+13:48:47.639|10|2|1|3|4|transactionid| with a as ( select "units_used" from "account_usage" where "account_id" = $1 and "month" = $2 for update ), u as ( select "units_used" from "user_usage" where "account_id" = $3 and "user_id" = $4 and "month" = $5 and exists (select 1 from a) for update ) select a."units_used" as account_used, u."units_used" as user_used from a, u
+13:48:48.139|10|1|0|4|5|-|-
+13:48:48.639|10|2|0|5|3|-|-
+13:48:49.139|10|3|0|4|3|-|-
+13:48:49.639|10|5|0|3|2|-|-
+13:48:50.139|10|1|0|6|3|-|-
+13:48:50.639|10|1|0|5|4|-|-
+13:48:51.139|10|2|0|3|5|-|-
+13:48:51.639|10|1|0|5|4|-|-
+13:48:52.139|10|3|0|4|3|-|-
+13:48:52.639|10|2|0|4|4|-|-
+13:48:53.139|10|3|0|5|2|-|-
+13:48:53.639|10|1|0|5|4|-|-
+13:48:54.139|10|4|2|4|0|transactionid|insert into "account_usage" ("account_id", "month", "units_used", "updated_at") values ($1, $2, $3, $4) on conflict do nothing ;;  with a as ( select "units_used" from "account_usage" where "account_id" = $1 and "month" = $2 for update ), u as ( select "units_used" from "user_usage" where "account_id" = $3 and "user_id" = $4 and "month" = $5 and exists (select 1 from a) for update ) select a."units_used" as account_used, u."units_used" as user_used from a, u
+13:48:54.639|10|1|0|6|3|-|-
+13:48:55.139|10|1|0|5|4|-|-
+13:48:55.639|10|1|0|7|2|-|-
+13:48:56.140|10|0|0|0|10|-|-

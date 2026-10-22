@@ -1,0 +1,5 @@
+
+many_accounts: 17344 consumes in 30s with 50 VUs → 578.1 req/s
+  latency p50 84.8ms  p95 110.0ms  p99 125.1ms  max 218.6ms
+  errors (non-200) 0 (0.00%)  accepted 17344  rejected 0  fresh 17344  replayed 0
+SUMMARY_JSON {"scenario":"many_accounts","runId":"da6c2d03","vus":50,"durationSeconds":30,"requests":17344,"rps":578.1,"p50":84.7887135,"p95":110.02670199999999,"p99":125.12839447999998,"max":218.613426,"errors":0,"errorRate":0,"accepted":17344,"rejected":0,"replayed":0,"fresh":17344}

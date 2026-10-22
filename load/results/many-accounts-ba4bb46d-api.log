@@ -1,0 +1,137 @@
+unhandled error DrizzleQueryError: Failed query: insert into "account_usage" ("account_id", "month", "units_used", "updated_at") values ($1, $2, $3, $4) on conflict do nothing
+params: 109557b1-5cd8-43ea-9372-156f97984725,2026-10-01,0,2026-10-22T15:06:14.108Z
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async file:///app/dist/services/consume.service.js:63:13
+    ... 2 lines matching cause stack trace ...
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'insert into "account_usage" ("account_id", "month", "units_used", "updated_at") values ($1, $2, $3, $4) on conflict do nothing',
+  params: [
+    '109557b1-5cd8-43ea-9372-156f97984725',
+    '2026-10-01',
+    0,
+    '2026-10-22T15:06:14.108Z'
+  ],
+  cause: Error: Client has encountered a connection error and is not queryable
+      at /app/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:113:20
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/dist/services/consume.service.js:63:13
+      at async inTransaction (file:///app/dist/db/client.js:59:24)
+      at async consume (file:///app/dist/services/consume.service.js:61:16)
+      at async file:///app/dist/routes/consume.js:17:18
+}
+unhandled error Error: Client has encountered a connection error and is not queryable
+    at /app/node_modules/pg/lib/client.js:694:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async inTransaction (file:///app/dist/db/client.js:60:9)
+    at async consume (file:///app/dist/services/consume.service.js:61:16)
+    at async file:///app/dist/routes/consume.js:17:18
+unhandled error DrizzleQueryError: Failed query: insert into "account_usage" ("account_id", "month", "units_used", "updated_at") values ($1, $2, $3, $4) on conflict do nothing
+params: 849e1241-4b34-40de-bc05-5237cf996664,2026-10-01,0,2026-10-22T15:06:14.108Z
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async file:///app/dist/services/consume.service.js:63:13
+    ... 2 lines matching cause stack trace ...
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: 'insert into "account_usage" ("account_id", "month", "units_used", "updated_at") values ($1, $2, $3, $4) on conflict do nothing',
+  params: [
+    '849e1241-4b34-40de-bc05-5237cf996664',
+    '2026-10-01',
+    0,
+    '2026-10-22T15:06:14.108Z'
+  ],
+  cause: error: terminating connection due to idle-in-transaction timeout
+      at /app/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:113:20
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/dist/services/consume.service.js:63:13
+      at async inTransaction (file:///app/dist/db/client.js:59:24)
+      at async consume (file:///app/dist/services/consume.service.js:61:16)
+      at async file:///app/dist/routes/consume.js:17:18 {
+    length: 122,
+    severity: 'FATAL',
+    code: '25P03',
+    detail: undefined,
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'postgres.c',
+    line: '3438',
+    routine: 'ProcessInterrupts'
+  }
+}
+unhandled error DrizzleQueryError: Failed query: 
+        with a as (
+          select "units_used" from "account_usage"
+          where "account_id" = $1 and "month" = $2
+          for update
+        ), u as (
+          select "units_used" from "user_usage"
+          where "account_id" = $3 and "user_id" = $4 and "month" = $5
+            and exists (select 1 from a)
+          for update
+        )
+        select a."units_used" as account_used, u."units_used" as user_used from a, u
+params: dfc91041-5054-4168-84cf-da87bb6693ce,2026-10-01,dfc91041-5054-4168-84cf-da87bb6693ce,80b9025b-9d84-453e-bdb0-526180be7a32,2026-10-01
+    at NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:41:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async file:///app/dist/services/consume.service.js:73:28
+    ... 2 lines matching cause stack trace ...
+    at async file:///app/dist/routes/consume.js:17:18 {
+  query: '\n' +
+    '        with a as (\n' +
+    '          select "units_used" from "account_usage"\n' +
+    '          where "account_id" = $1 and "month" = $2\n' +
+    '          for update\n' +
+    '        ), u as (\n' +
+    '          select "units_used" from "user_usage"\n' +
+    '          where "account_id" = $3 and "user_id" = $4 and "month" = $5\n' +
+    '            and exists (select 1 from a)\n' +
+    '          for update\n' +
+    '        )\n' +
+    '        select a."units_used" as account_used, u."units_used" as user_used from a, u',
+  params: [
+    'dfc91041-5054-4168-84cf-da87bb6693ce',
+    '2026-10-01',
+    'dfc91041-5054-4168-84cf-da87bb6693ce',
+    '80b9025b-9d84-453e-bdb0-526180be7a32',
+    '2026-10-01'
+  ],
+  cause: error: terminating connection due to idle-in-transaction timeout
+      at /app/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:113:20
+      at async NodePgPreparedQuery.queryWithCache (file:///app/node_modules/drizzle-orm/pg-core/session.js:39:16)
+      at async file:///app/dist/services/consume.service.js:73:28
+      at async inTransaction (file:///app/dist/db/client.js:59:24)
+      at async consume (file:///app/dist/services/consume.service.js:61:16)
+      at async file:///app/dist/routes/consume.js:17:18 {
+    length: 122,
+    severity: 'FATAL',
+    code: '25P03',
+    detail: undefined,
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'postgres.c',
+    line: '3438',
+    routine: 'ProcessInterrupts'
+  }
+}

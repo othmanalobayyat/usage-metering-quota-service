@@ -1,0 +1,86 @@
+run_id 0728bfed
+scenario retry-storm
+vus 50 (default)
+duration 30s (default)
+started_utc 2026-10-22T14:53:45Z
+host_cpus 12
+host_mem_total_mib 7625
+host_swap_used_mib 1968
+docker 29.9.0
+compose 5.6.0
+k6_image grafana/k6:1.3.0
+db_image postgres:16
+api_node v22.23.4
+api_workers_env 1
+api_node_processes 1
+git_commit unknown
+git_tracked_changes unknown
+git_untracked_files unknown
+api_image sha256:651c1f2a045649fa4d5eabdf3cfbfb9897988e085cc10a5b2b8231c6e8b1a9f5
+api_image_created 2026-10-22T16:38:20.336341265+03:00
+pg_fsync on
+pg_max_connections 100
+pg_server_version 16.15 (Debian 16.15-1.pgdg13+2)
+pg_shared_buffers 128MB
+pg_synchronous_commit on
+pg_wal_sync_method fdatasync
+
+retry_storm: 7176 consumes in 30s with 50 VUs → 239.2 req/s
+  latency p50 650.6ms  p95 800.0ms  p99 848.6ms  max 1111.0ms
+  errors (non-200) 0 (0.00%)  accepted 7176  rejected 0  fresh 1925  replayed 5251
+SUMMARY_JSON {"scenario":"retry_storm","runId":"0728bfed","vus":50,"durationSeconds":30,"requests":7176,"rps":239.2,"p50":650.618213,"p95":799.9666415,"p99":848.641263,"max":1111.041703,"errors":0,"errorRate":0,"accepted":7176,"rejected":0,"replayed":5251,"fresh":1925}
+
+k6 wall time (container start, setup, run, teardown): 32s
+
+== SQL invariants ==
+1. account usage = sum of its users usage, every account and month (violations, must be 0)
+ usage_sum_violations 
+----------------------
+                    0
+
+2. no account over its plan monthly limit, current UTC month (violations, must be 0)
+ account_over_limit 
+--------------------
+                  0
+
+3. no user over its plan monthly limit, current UTC month (violations, must be 0)
+ user_over_limit 
+-----------------
+               0
+
+4. account usage = sum of its ACCEPTED request units, every account and month: no retry counted twice (violations, must be 0)
+ usage_vs_requests_violations 
+------------------------------
+                            0
+
+5. this run's accounts
+ accounts | request_rows | accepted_rows | rejected_rows | accepted_units | account_units_used | user_units_used 
+----------+--------------+---------------+---------------+----------------+--------------------+-----------------
+        1 |         1925 |          1925 |             0 |           5816 |               5816 |            5816
+
+6. every decision matches the limits and usage it recorded (snapshot rows; violations, must be 0)
+ rows_without_snapshot | accepted_over_recorded_limit | rejected_within_recorded_limits | remaining_mismatch 
+-----------------------+------------------------------+---------------------------------+--------------------
+                     0 |                            0 |                               0 |                  0
+
+== DB connections while k6 ran (pg_stat_activity, 0.5s samples with API traffic) ==
+busy samples 62 (with a lock waiter: 61)  avg conns 9.94  active(cpu) 0.84  lock_wait 7.61 (max 9)  idle_in_tx 0.90  idle 0.58
+lock waits by sample (samples · wait events · waiting queries):
+     58 transactionid+tuple ·  with a as ( select "units_used" from "account_usage" where "account_id" = $1 and "month" = $2 for update ), u as ( select "units_used" from "user_usage" where "account_id" = $3 and "user_id" = $4 and "month" = $5 and exists (select 1 from a) for update ) select a."units_used" as account_used, u."units_used" as user_used from a, u
+      2 transactionid+tuple · insert into "user_usage" ("user_id", "account_id", "month", "units_used", "updated_at") values ($1, $2, $3, $4, $5) on conflict do nothing ;;  with a as ( select "units_used" from "account_usage" where "account_id" = $1 and "month" = $2 for update ), u as ( select "units_used" from "user_usage" where "account_id" = $3 and "user_id" = $4 and "month" = $5 and exists (select 1 from a) for update ) select a."units_used" as account_used, u."units_used" as user_used from a, u
+      1 tuple ·  with a as ( select "units_used" from "account_usage" where "account_id" = $1 and "month" = $2 for update ), u as ( select "units_used" from "user_usage" where "account_id" = $3 and "user_id" = $4 and "month" = $5 and exists (select 1 from a) for update ) select a."units_used" as account_used, u."units_used" as user_used from a, u
+== Container CPU (100% = one core) ==
+api avg 88% max 146% (17 samples)
+db avg 75% max 92% (17 samples)
+== API log during the run ==
+log lines: 0  unhandled errors: 0  service unavailable (overload): 0
+== Fresh decisions (k6) vs request rows (SQL) ==
+k6 fresh=1925  request rows=1925  OK
+== Index scans during the run ==
+account_usage_account_id_month_pk 13762
+requests_account_id_request_id_unique 12935
+user_usage_user_id_month_pk 13504
+consume transactions = request-index scans − consumes = 12935 − 7176 = 5759
+  fresh decisions 1925, replays inside a transaction 3834, fast-path replays 1417
+
+Raw output: load/results/retry-storm-0728bfed-*

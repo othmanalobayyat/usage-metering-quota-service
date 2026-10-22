@@ -72,18 +72,21 @@ function post(path, body, apiKey, tag) {
 /**
  * Creates `accountCount` accounts, each on its own large custom ACCOUNT plan with `usersPerAccount`
  * users on a large custom USER plan. Returns [{ apiKey, users: [externalUserId] }].
+ * `limits` overrides either plan's limits (load/mixed.js uses small user plans to get rejections).
  */
-export function createAccounts(scenario, accountCount, usersPerAccount) {
+export function createAccounts(scenario, accountCount, usersPerAccount, limits = {}) {
+  const accountPlan = limits.accountPlan || ACCOUNT_PLAN;
+  const userPlan = limits.userPlan || USER_PLAN;
   const names = Array.from({ length: accountCount }, (_, i) => `load-${scenario}-${RUN_ID}-${i}`);
   const created = batched(names.map((name) => post('/accounts', { name }, null, 'setup')), 'POST /accounts');
   const keys = created.map((a) => a.apiKey);
 
   const accountPlans = batched(
-    keys.map((key) => post('/plans', { name: 'load-account', type: 'ACCOUNT', ...ACCOUNT_PLAN }, key, 'setup')),
+    keys.map((key) => post('/plans', { name: 'load-account', type: 'ACCOUNT', ...accountPlan }, key, 'setup')),
     'POST /plans (ACCOUNT)',
   );
   const userPlans = batched(
-    keys.map((key) => post('/plans', { name: 'load-user', type: 'USER', ...USER_PLAN }, key, 'setup')),
+    keys.map((key) => post('/plans', { name: 'load-user', type: 'USER', ...userPlan }, key, 'setup')),
     'POST /plans (USER)',
   );
   batched(

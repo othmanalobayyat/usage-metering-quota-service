@@ -1,0 +1,5 @@
+
+hot_account: 3788 consumes in 30s with 50 VUs → 126.3 req/s
+  latency p50 405.2ms  p95 489.1ms  p99 514.9ms  max 539.8ms
+  errors (non-200) 0 (0.00%)  accepted 3788  rejected 0  fresh 3788  replayed 0
+SUMMARY_JSON {"scenario":"hot_account","runId":"86425d58","vus":50,"durationSeconds":30,"requests":3788,"rps":126.3,"p50":405.218695,"p95":489.1271879,"p99":514.9320032,"max":539.783617,"errors":0,"errorRate":0,"accepted":3788,"rejected":0,"replayed":0,"fresh":3788}

@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { AppError } from '../src/errors/app-error.js';
-import { generateApiKey, hashApiKey } from '../src/lib/api-key.js';
+import { generateApiKey, hashApiKey, isWellFormedApiKey } from '../src/lib/api-key.js';
 import { decodeCursor, encodeCursor } from '../src/lib/cursor.js';
 
 describe('API keys', () => {
@@ -11,6 +11,17 @@ describe('API keys', () => {
     expect(Buffer.from(key.slice(3), 'base64url')).toHaveLength(32);
     expect(generateApiKey()).not.toBe(key);
   });
+
+  it('every generated key passes the format check', () => {
+    for (let i = 0; i < 1_000; i++) expect(isWellFormedApiKey(generateApiKey())).toBe(true);
+  });
+
+  it.each(['', 'mk_', 'mk_nope', `MK_${'A'.repeat(43)}`, `mk_${'A'.repeat(43)}\n`, ` mk_${'A'.repeat(43)}`])(
+    'the format check rejects %j',
+    (key) => {
+      expect(isWellFormedApiKey(key)).toBe(false);
+    },
+  );
 
   it('hash to 64 hex chars of SHA-256', () => {
     const key = generateApiKey();

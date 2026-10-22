@@ -11,7 +11,7 @@
 #   api.log     API container log lines written during the run
 #   run.txt     everything this script printed, including the summaries below
 #
-# Usage:    [WORKERS=1] [VUS=50] [DURATION=30s] load/run.sh hot-account|many-accounts|retry-storm
+# Usage:    [WORKERS=1] [VUS=50] [DURATION=30s] load/run.sh hot-account|many-accounts|retry-storm|mixed
 #           DURATION is whole seconds: 20s, 30s, 90s. Not 1m, 1m30s or 500ms (see load/duration.js).
 # Requires: bash, Docker with Compose v2, jq (parses k6's SUMMARY_JSON line), od.
 # Assumes nothing else uses the API or DB during the run: the index scan deltas count all traffic.
@@ -21,7 +21,7 @@ cd "$(dirname "$0")/.."
 # meta, git_provenance, image_provenance, compose_image, host_memory.
 source load/provenance.sh
 
-usage="usage: [WORKERS=n] [VUS=n] [DURATION=<n>s, whole seconds, default 30s] load/run.sh hot-account|many-accounts|retry-storm"
+usage="usage: [WORKERS=n] [VUS=n] [DURATION=<n>s, whole seconds, default 30s] load/run.sh hot-account|many-accounts|retry-storm|mixed"
 scenario="${1:?$usage}"
 [[ -f "load/$scenario.js" ]] || { echo "unknown scenario: $scenario ($usage)" >&2; exit 2; }
 # Same pattern as load/duration.js, checked here so a bad value stops before anything starts or is saved.
@@ -160,7 +160,8 @@ summary="$(sed -n 's/^SUMMARY_JSON //p' "$out-k6.txt")"
 consumes="$(jq '.requests' <<<"$summary")"
 fresh="$(jq '.fresh' <<<"$summary")"
 rows="$("${psql_db[@]}" -Atc "SELECT COUNT(*) FROM requests r JOIN accounts a ON a.id = r.account_id
-  WHERE a.name LIKE 'load-%' AND split_part(a.name, '-', 3) = '$run_id'")"
+  WHERE a.name LIKE 'load-%' AND split_part(a.name, '-', 3) = '$run_id' AND r.request_id NOT LIKE '%-setup-%'")"
+# Setup consumes (load/mixed.js, requestId <run_id>-setup-<n>) aren't k6 consume requests, so they're excluded.
 echo "k6 fresh=$fresh  request rows=$rows  $([[ "$fresh" == "$rows" ]] && echo OK || echo MISMATCH)"
 
 echo "== Index scans during the run =="

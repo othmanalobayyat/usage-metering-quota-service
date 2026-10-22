@@ -16,9 +16,9 @@ Planned stack: TypeScript, Express, Drizzle ORM, PostgreSQL, Zod, Vitest + Super
 - `npm start`: run the compiled server (`node dist/server.js`).
 - `npm run typecheck`: `tsc --noEmit` over `src/`, `tests/` and `client/src/`.
 - `npm run lint`: ESLint (flat config, typescript-eslint).
-- `npm test`: run all Vitest tests once. `npm run test:watch` for watch mode.
+- `npm test`: run all Vitest tests once. CI (`.github/workflows/ci.yml`) runs typecheck, lint, build, the client typecheck and `npm test` with `REQUIRE_DB=1`, plus a `docker compose up --build` smoke job. `npm run test:watch` for watch mode.
 - Single test file: `npx vitest run tests/healthz.test.ts`. Single test by name: `npx vitest run -t "returns 503"`.
-- `load/run.sh hot-account|many-accounts|retry-storm`: one k6 load run (30s) plus pg_stat_activity samples, CPU, API errors and the SQL invariant check. `WORKERS=n load/run.sh …` runs it against n API processes. `load/compare.sh`: `WORKERS=1` vs `WORKERS=4` back to back, alternating, 3 rounds of many-accounts and hot-account plus one 200-VU hot-account probe each, with medians in `load/results/compare-<session>.txt`. `load/uncontended.sh`: single-request timings (API and DB side). All three save their output to `load/results/`, which docs/LOAD_TEST.md cites.
+- `load/run.sh hot-account|many-accounts|retry-storm|mixed`: one k6 load run (30s; `mixed` adds per-request and monthly rejections) plus pg_stat_activity samples, CPU, API errors and the SQL invariant check. `WORKERS=n load/run.sh …` runs it against n API processes. `load/compare.sh`: `WORKERS=1` vs `WORKERS=4` back to back, alternating, 3 rounds of many-accounts and hot-account plus one 200-VU hot-account probe each, with medians in `load/results/compare-<session>.txt`. `load/uncontended.sh`: single-request timings (API and DB side). `A_IMAGE=… B_IMAGE=… load/ab.sh`: two prebuilt API images alternating ABBA against one database (warm-up, 3 rounds of every scenario, invariant violations per run), index and medians in `load/results/ab-<session>.txt`. All four save their output to `load/results/`, which docs/LOAD_TEST.md cites.
 - `docker compose up --build`: start PostgreSQL 16 + the API on `http://localhost:3000`. `docker compose down -v` also drops the DB volume. The DB is published on host port `${DB_PORT:-5433}`.
 
 ## Architecture (as planned)
