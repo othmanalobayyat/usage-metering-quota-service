@@ -1,5 +1,0 @@
-
-many_accounts: 9335 consumes in 30s with 50 VUs → 311.2 req/s
-  latency p50 144.7ms  p95 249.9ms  p99 300.2ms  max 501.2ms
-  errors (non-200) 0 (0.00%)  accepted 9335  rejected 0  fresh 9335  replayed 0
-SUMMARY_JSON {"scenario":"many_accounts","runId":"b310d670","vus":50,"durationSeconds":30,"requests":9335,"rps":311.2,"p50":144.735264,"p95":249.8715229999999,"p99":300.19175784,"max":501.22722,"errors":0,"errorRate":0,"accepted":9335,"rejected":0,"replayed":0,"fresh":9335}

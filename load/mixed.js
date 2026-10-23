@@ -7,7 +7,7 @@
 //     quotas were drained. units 11–15 (1/3): USER per-request rejection. Otherwise an exhausted user
 //     (2/3 × 1/5 = 13.3%): USER monthly rejection. Otherwise (53.3%): accepted.
 // An earlier version gave every user 100 units, so a faster build used them up sooner and got more of
-// the cheaper rejections (docs/LOAD_TEST.md §11); its runs are not comparable between builds.
+// the cheaper rejections; its runs are not comparable between builds.
 import http from 'k6/http';
 import { BASE_URL, consumeRequest, createAccounts, options as baseOptions, record, RUN_ID, summary } from './lib.js';
 

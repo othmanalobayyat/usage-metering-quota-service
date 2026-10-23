@@ -6,15 +6,14 @@ import { PREDEFINED_PLAN_IDS } from '../src/db/seed.js';
 import { createCustomPlan, createTestApp, expectError, signUp } from './helpers/api.js';
 import { createTestDb, dbAvailable, resetDatabase, type TestDb } from './helpers/db.js';
 
-// F10 (docs/QA_REPORT.md): lone UTF-16 surrogates in caller-supplied strings reach node-postgres,
-// which encodes them as U+FFFD, so distinct IDs collide. Test IDs are from docs/TEST_PLAN.md §4.
-// Ill-formed UTF-16 is rejected like NUL (400 in a body or query, 404 in a path; decision D1), and
-// so is a body that isn't valid UTF-8 (400; D2). The F10 cases failed before the fix (QA_REPORT
-// rev 3); the valid-Unicode cases guard against a fix that also rejects well-formed text.
+// Lone UTF-16 surrogates in caller-supplied strings reach node-postgres, which encodes them as
+// U+FFFD, so distinct IDs would collide. Ill-formed UTF-16 is rejected like NUL (400 in a body or
+// query, 404 in a path), and so is a body that isn't valid UTF-8 (400). The valid-Unicode cases
+// guard against a fix that also rejects well-formed text.
 
 const FFFD = '\ufffd';
 
-/** Set S (TEST_PLAN §2): every shape of lone surrogate. */
+/** Set S: every shape of lone surrogate. */
 const ILL_FORMED: [label: string, value: string][] = [
   ['lone high \\ud800', '\ud800'],
   ['lone low \\udfff', '\udfff'],
@@ -218,7 +217,7 @@ describe.skipIf(!(await dbAvailable()))('F10: Unicode in identifiers and names',
 
   describe('§4.2 TP-ENC-08: raw invalid UTF-8 bytes in a JSON body', () => {
     // express.json() decodes with iconv-lite, which turns each invalid sequence into U+FFFD, so distinct
-    // byte strings would arrive as the same well-formed string (TEST_PLAN P4). The raw bytes are checked first.
+    // byte strings would arrive as the same well-formed string. The raw bytes are checked first.
     const ffBody = rawJson('{"externalUserId":"alice","units":1,"requestId":"r', [0xff], '"}');
     const feBody = rawJson('{"externalUserId":"alice","units":1,"requestId":"r', [0xfe], '"}');
 

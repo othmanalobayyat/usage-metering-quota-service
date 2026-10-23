@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { externalUserIdSchema, nameSchema, pageCursorSchema, requestIdSchema } from '../src/lib/schemas.js';
 
-// F10 (docs/QA_REPORT.md), TP-UNIT-01…04 (docs/TEST_PLAN.md §4.1): ill-formed UTF-16 is rejected
-// like NUL (decision D1), and well-formed text, U+FFFD included, is accepted unchanged.
+// Ill-formed UTF-16 is rejected like NUL, and well-formed text, U+FFFD included, is accepted
+// unchanged.
 
 /** Set S: every shape of lone surrogate (first, last, embedded, reversed, after a valid pair). */
 const ILL_FORMED: [label: string, value: string][] = [
@@ -47,7 +47,7 @@ describe('F10: ill-formed UTF-16 in caller-supplied strings', () => {
   describe('TP-UNIT-02: nameSchema and pageCursorSchema reject set S', () => {
     it.each(ILL_FORMED)('%s', (_label, value) => {
       expect(nameSchema.safeParse(value).success).toBe(false);
-      // Trimming doesn't remove a lone surrogate (TEST_PLAN P7).
+      // Trimming doesn't remove a lone surrogate.
       expect(nameSchema.safeParse(` ${value} `).success).toBe(false);
       expect(pageCursorSchema.safeParse(value).success).toBe(false);
     });

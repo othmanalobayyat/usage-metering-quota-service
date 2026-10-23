@@ -1,8 +1,0 @@
-index scans before:
-account_usage_account_id_month_pk 45466
-requests_account_id_request_id_unique 3736
-user_usage_user_id_month_pk 43786
-index scans after:
-account_usage_account_id_month_pk 102272
-requests_account_id_request_id_unique 39666
-user_usage_user_id_month_pk 100015

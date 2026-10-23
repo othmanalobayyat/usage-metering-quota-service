@@ -1,3 +1,0 @@
-account_usage_account_id_month_pk 21977
-requests_account_id_request_id_unique 13852
-user_usage_user_id_month_pk 20791

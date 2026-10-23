@@ -3,9 +3,9 @@ import { PREDEFINED_PLAN_IDS } from '../src/db/seed.js';
 import { createTestDb, dbAvailable, resetDatabase, TEST_DATABASE_URL, type TestDb } from './helpers/db.js';
 import { freePort, startTs, stopAll } from './helpers/process.js';
 
-// docs/TEST_PLAN.md TP-PERS-01: everything a caller wrote survives an API restart, because it is
-// all in PostgreSQL. Two real server processes against quota_test, one after the other. A restart
-// of PostgreSQL itself or of the Compose stack (TP-PERS-02) is not covered here.
+// Everything a caller wrote survives an API restart, because it is all in PostgreSQL. Two real
+// server processes against quota_test, one after the other. A restart of PostgreSQL itself or of
+// the Compose stack is not covered here.
 
 async function startApi(): Promise<{ url: string; stop: () => Promise<void> }> {
   const port = await freePort();

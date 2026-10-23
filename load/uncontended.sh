@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Uncontended costs behind docs/LOAD_TEST.md §4, saved to load/results/uncontended-<run_id>.txt:
+# Uncontended single-request costs, saved to load/results/uncontended-<run_id>.txt:
 #   1. API side: load/uncontended-api.mjs inside the API container (pg round trip, endpoint latencies).
 #   2. DB side: each consume transaction statement timed by psql (\timing), 20 measured iterations inside
 #      BEGIN … ROLLBACK, with literal values instead of the API's bind parameters, so an approximation.
